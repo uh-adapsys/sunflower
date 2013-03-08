@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?>
+
+<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="org.eclipse.cdt.core.default.config.76034305">
+			<storageModule buildSystemId="org.eclipse.cdt.core.defaultConfigDataProvider" id="org.eclipse.cdt.core.default.config.76034305" moduleId="org.eclipse.cdt.core.settings" name="Configuration">
+				<externalSettings/>
+				<extensions/>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration"/>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.core.pathentry">
+		<pathentry include="/usr/include" kind="inc" path="" system="true"/>
+		<pathentry include="/opt/ros/electric/stacks/common/actionlib/include" kind="inc" path="" system="true"/>
+		<pathentry include="/opt/ros/electric/stacks/ros_comm/clients/cpp/roscpp/include" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/include/c++/4.6" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/include/c++/4.6/backward" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/include/c++/4.6/x86_64-linux-gnu" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/include/x86_64-linux-gnu" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/lib/gcc/x86_64-linux-gnu" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/lib/gcc/x86_64-linux-gnu/4.6/include" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed" kind="inc" path="" system="true"/>
+		<pathentry include="/usr/local/include" kind="inc" path="" system="true"/>
+		<pathentry excluding="Includes/" kind="src" path=""/>
+		<pathentry kind="out" path=""/>
+	</storageModule>
+</cproject>
