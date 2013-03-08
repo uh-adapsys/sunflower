@@ -1,0 +1,7 @@
+#goal definition
+int32[] rgb
+---
+#result definition
+int32 result
+---
+#feedback
