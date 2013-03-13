@@ -7,6 +7,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/sf_robot</url>
   <depend package="sf_lights"/>
+  <depend package="sf_controller"/>
   <depend package="sf_dynamixel"/>
 </package>
 
