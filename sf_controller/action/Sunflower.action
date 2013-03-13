@@ -1,6 +1,7 @@
 #goal definition
 string component
-string postion
+string namedPosition
+float64[] jointPositions
 ---
 #result definition
 int32 result

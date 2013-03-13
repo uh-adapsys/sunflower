@@ -1,0 +1,13 @@
+<package>
+  <description brief="sf_robot">
+     sf_robot
+  </description>
+  <author>nathan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/sf_robot</url>
+  <depend package="sf_lights"/>
+  <depend package="sf_dynamixel"/>
+</package>
+
+

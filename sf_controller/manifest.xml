@@ -10,6 +10,8 @@
   <url>http://ros.org/wiki/sf_controller</url>
   <depend package="actionlib"/>
   <depend package="actionlib_msgs"/>
+  <depend package="std_msgs"/>
+  <depend package="dynamixel_msgs"/>  
 </package>
 
 

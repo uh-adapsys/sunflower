@@ -1,0 +1,9 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<include file="$(find sf_lights)/launch/start.launch"/>
+	<include file="$(find sf_dynamixel)/launch/start.launch">
+		<arg name="sf_version" value="sf11" />
+	</include>
+	<include file="$(find sf_controller)/launch/start.launch"/>
+</launch>

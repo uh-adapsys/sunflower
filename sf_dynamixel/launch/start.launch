@@ -1,0 +1,35 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+    <arg name="sf_version"/>
+
+    <node name="sf_dynamixel_manager" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
+        <rosparam>
+            namespace: dxl_manager
+            serial_ports:
+                joints_port:
+                    port_name: "/dev/ttyUSB0"
+                    baud_rate: 1000000
+                    min_motor_id: 0
+                    max_motor_id: 30
+                    update_rate: 20
+        </rosparam>
+    </node>
+
+    <rosparam file="$(find sf_dynamixel)/config/$(arg sf_version).yaml" command="load"/>
+
+    <rosparam command="load" ns="/sf_controller/head" file="$(find sf_dynamixel)/config/head_joint_configurations.yaml"/>
+    <rosparam command="load" ns="/sf_controller/tray" file="$(find sf_dynamixel)/config/tray_joint_configurations.yaml"/>
+
+    <node name="controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager 
+		--port=joints_port 
+		--type=simple 
+		tray_controller 
+		head_pan_controller 
+		head_tilt_controller 
+		neck_lower_controller 
+		neck_upper_controller"
+          output="screen"/>
+</launch>
+

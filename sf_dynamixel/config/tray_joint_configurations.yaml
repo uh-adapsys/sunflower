@@ -1,0 +1,4 @@
+joint_names: ["head_pan", "head_tilt", "neck_upper", "neck_lower"]
+open: [[1.0]]
+closed: [[0.0]]
+
