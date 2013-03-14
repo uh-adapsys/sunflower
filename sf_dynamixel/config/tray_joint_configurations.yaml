@@ -1,4 +1,4 @@
-joint_names: ["head_pan", "head_tilt", "neck_upper", "neck_lower"]
-open: [[1.0]]
+joint_names: ["tray"]
+open: [[-0.8]]
 closed: [[0.0]]
 
