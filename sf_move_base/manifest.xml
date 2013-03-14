@@ -1,0 +1,14 @@
+<package>
+  <description brief="sf_move_base">
+
+     sf_move_base
+
+  </description>
+  <author>Kheng Lee Koay</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/sf_move_base</url>
+
+</package>
+
+
