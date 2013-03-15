@@ -34,12 +34,8 @@ class SunflowerAction(object):
         
     def execute_cb(self, goal):
         success = True
-        rospy.loginfo("%s: Settings %s to %s",
-                self._action_name,
-                goal.component,
-                goal.namedPosition or goal.jointPositions)
-        
-        component_name = '/sf_controller/' + goal.component + '/'
+
+        component_name = '/sf_controller/' + goal.component
         joint_names = rospy.get_param(component_name + '/joint_names')
         joints = goal.jointPositions
         
@@ -47,7 +43,14 @@ class SunflowerAction(object):
             param = component_name + '/' + goal.namedPosition
             if(rospy.has_param(param)):
                 joints = rospy.get_param(param)[0]
+
+        rospy.loginfo("%s: Settings %s to %s (%s)",
+                self._action_name,
+                goal.component,
+                goal.namedPosition,
+                joints)
         
+
         subs = []
         
         for i in range(0, len(joint_names)):
@@ -68,7 +71,12 @@ class SunflowerAction(object):
                 while not sub.hasNewMessage:
                     time.sleep(0.01)
                 
-                reached = not sub.lastMessage.is_moving and abs(sub.lastMessage.current_pos - sub.lastMessage.goal_pos) < 10
+                if(sub.lastMessage.goal_pos != 0):
+                    reached = not sub.lastMessage.is_moving and abs(sub.lastMessage.current_pos - sub.lastMessage.goal_pos) / sub.lastMessage.goal_pos < .1
+                elif(sub.lastMessage.current_pos != 0):
+                    reached = not sub.lastMessage.is_moving and abs(sub.lastMessage.current_pos - sub.lastMessage.goal_pos) / sub.lastMessage.current_pos < .1
+                else:
+                    reached = True
                 done = done and reached
         
         if success:
@@ -87,6 +95,7 @@ class RosPublisher(Thread):
         
     def publish(self, msg):
         self._newMsg = msg
+        print "Msg recieved %s" % msg
         
     def unsubscribe(self):
         self._cancelRequested = True
@@ -101,6 +110,7 @@ class RosPublisher(Thread):
                 msg = self._newMsg
                 self._newMsg = None
                 self._pub.publish(msg)
+                print "Msg sent %s" % msg
             else:
                 time.sleep(0.01)
         

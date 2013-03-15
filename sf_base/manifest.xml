@@ -1,0 +1,17 @@
+<package>
+  <description brief="sf_base">
+
+     sf_base
+
+  </description>
+  <author>nathan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/sf_base</url>
+  <depend package="p2os_driver"/>
+  <depend package="p2os_urdf" />
+  <depend package="hokuyo_node" />
+
+</package>
+
+

@@ -1,0 +1,14 @@
+<package>
+  <description brief="sf_environments">
+
+     sf_environments
+
+  </description>
+  <author>Nathan Burke</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/sf_environments</url>
+
+</package>
+
+
