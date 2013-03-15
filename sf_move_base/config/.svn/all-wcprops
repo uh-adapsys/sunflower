@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/ros-pkg/!svn/ver/34789/branches/trunk_cturtle/stacks/create_robot/create_navigation/config
+END
+costmap_common_params.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/ros-pkg/!svn/ver/34789/branches/trunk_cturtle/stacks/create_robot/create_navigation/config/costmap_common_params.yaml
+END
+local_costmap_params.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/ros-pkg/!svn/ver/34789/branches/trunk_cturtle/stacks/create_robot/create_navigation/config/local_costmap_params.yaml
+END
+base_local_planner_params.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/svn/ros-pkg/!svn/ver/34789/branches/trunk_cturtle/stacks/create_robot/create_navigation/config/base_local_planner_params.yaml
+END
+amcl_create.launch
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/ros-pkg/!svn/ver/34789/branches/trunk_cturtle/stacks/create_robot/create_navigation/config/amcl_create.launch
+END
+global_costmap_params.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/ros-pkg/!svn/ver/34789/branches/trunk_cturtle/stacks/create_robot/create_navigation/config/global_costmap_params.yaml
+END

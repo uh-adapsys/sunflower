@@ -1,0 +1,3 @@
+<launch>
+  <node name="sf_navGoals" pkg="sf_navGoals" type="sf_navGoals" output="screen"/> 
+</launch>
