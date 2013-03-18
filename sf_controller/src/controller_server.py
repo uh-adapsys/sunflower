@@ -9,7 +9,6 @@ import roslib
 roslib.load_manifest('sf_controller')
 
 import time
-from threading import Thread
 
 import rospy
 import actionlib
@@ -27,15 +26,30 @@ class SunflowerAction(object):
         self._as = actionlib.SimpleActionServer(self._action_name, sf_controller.msg.SunflowerAction, execute_cb=self.execute_cb, auto_start=False)
         self._as.start()
         rospy.loginfo("Started Sunflower Controller ActionServer")
-        self._pubs = {}
+        self._pubs = self._connectToJoints()
+        self._motorState = self._connectToWheels()
         self._subs = {}
         self._feedback = sf_controller.msg.SunflowerFeedback()
         self._result = sf_controller.msg.SunflowerResult()
-
         
     def __del__(self):
         for pub in self._pubs:
             pub.unregister()
+
+    def _connectToWheels(self):
+        return rospy.Publisher('cmd_motor_state', MotorState)
+
+    def _connectToJoints(self):
+        pubs = {}
+        for value in rospy.get_param('/sf_controller').values():
+            if value.has_key('joint_names'):
+                for jointName in value['joint_names']:
+                    topic = jointName + '_controller'
+                    if not pubs.has_key(topic):
+                        pubs[topic] = rospy.Publisher(topic + '/command', Float64)
+                
+        return pubs
+                    
         
     def execute_cb(self, goal):
         
@@ -48,10 +62,7 @@ class SunflowerAction(object):
             
     def init(self, name):
         if name == 'base':
-            pub = RosPublisher('cmd_motor_state', MotorState)
-            pub.start()
-            pub.publish(MotorState(1))
-            self._result = 0
+            self._motorState.publish(MotorState(1))
             self._as.set_succeeded(self._result)
         
     def move(self, goal):      
@@ -77,7 +88,6 @@ class SunflowerAction(object):
             success = self.moveJoints(goal, joints)
         
         if success:
-            self._result = 0
             self._as.set_succeeded(self._result)
             
     def navigate(self, goal, positions):
@@ -99,7 +109,7 @@ class SunflowerAction(object):
         client_goal.target_pose = pose
         #print client_goal
         client.send_goal(client_goal)
-        #return client.wait_for_result()
+        return client.wait_for_result()
         return True
         
 
@@ -111,8 +121,7 @@ class SunflowerAction(object):
         for i in range(0, len(joint_names)):
             topic = joint_names[i] + '_controller'
             if not self._pubs.has_key(topic):
-                self._pubs[topic] = RosPublisher(topic + '/command', Float64)
-                self._pubs[topic].start()
+                rospy.logerr('Undefined joint controller %s', topic)
             
             subs.append(RosSubscriber(topic + '/state', JointState))
             self._pubs[topic].publish(Float64(positions[i]))
@@ -136,37 +145,6 @@ class SunflowerAction(object):
         
         return done
 
-class RosPublisher(Thread):
-    
-    def __init__(self, topic, dataType):
-        self._topic = topic
-        self._dataType = dataType;
-        self._newMsg = None
-        self._cancelRequested = False
-        super(RosPublisher, self).__init__()
-        
-    def publish(self, msg):
-        self._newMsg = msg
-        print "Msg recieved %s" % msg
-        
-    def unsubscribe(self):
-        self._cancelRequested = True
-        if self._pub != None:
-            self._pub.unsubscribe()
-        
-    def run(self):
-        self._pub = rospy.Publisher(self._topic, self._dataType)
-        
-        while not self._cancelRequested:
-            if self._newMsg != None:
-                msg = self._newMsg
-                self._newMsg = None
-                self._pub.publish(msg)
-                print "Msg sent %s" % msg
-            else:
-                time.sleep(0.01)
-        
-
 class RosSubscriber(object):
     
     def __init__(self, topic, dataType, idleTime=15):
@@ -184,6 +162,7 @@ class RosSubscriber(object):
         return self._newMessage
     
     @property
+    
     def lastMessage(self):
         self._touch()
         self._newMessage = False
@@ -201,6 +180,7 @@ class RosSubscriber(object):
        
     def _callback(self, msg):
         self._data = msg
+        
         self._newMessage = True
         if time.time() - self._lastAccess > self._idleTimeout:
             self.unregister()

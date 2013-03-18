@@ -1,5 +1,5 @@
 <!-- -*- mode: XML -*- -->
 
 <launch>
-	<node pkg="sf_lights" type="sf_lights" name="lights" respawn="true" required="true" output="screen" />
+	<node pkg="sf_lights" type="sf_lights" name="lights" required="true" output="screen" />
 </launch>

@@ -8,7 +8,7 @@
     <rosparam command="load" ns="/sf_controller/tray" file="$(find sf_dynamixel)/config/tray_joint_configurations.yaml"/>
 
 
-    <include file="$(find sf_dynamixel)/launch/manager.launch">
-    <include file="$(find sf_dynamixel)/launch/spawn.launch">
+    <include file="$(find sf_dynamixel)/launch/manager.launch" />
+    <include file="$(find sf_dynamixel)/launch/spawn.launch" />
 </launch>
 
