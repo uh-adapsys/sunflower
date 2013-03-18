@@ -3,7 +3,7 @@
 <launch>
    <node name="p2os" pkg="p2os_driver" type="p2os" output="screen" >
       <param name="port" value="/dev/ttyUSB1" />
-      <param name="use_sonar" value="true" />
+      <param name="use_sonar" value="false" />
       <remap from="pose" to="odom" />
    </node>
 </launch>

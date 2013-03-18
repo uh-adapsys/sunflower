@@ -12,7 +12,6 @@
                     max_motor_id: 30
                     update_rate: 20
         </rosparam>
-	<rosparam command="load" ns="/sf_controller/head" file="$(find sf_dynamixel)/config/head_joint_configurations.yaml"/>
     </node>
 </launch>
 
