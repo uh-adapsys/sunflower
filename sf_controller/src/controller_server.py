@@ -9,12 +9,17 @@ import roslib
 roslib.load_manifest('sf_controller')
 
 import time
+from threading import Thread
+
 import rospy
 import actionlib
 import sf_controller.msg
 from dynamixel_msgs.msg import JointState
+from geometry_msgs.msg import PoseStamped
+from p2os_driver.msg import MotorState
+from tf.transformations import quaternion_from_euler
 from std_msgs.msg import Float64
-from threading import Thread
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
 class SunflowerAction(object):
     def __init__(self, name):
@@ -33,14 +38,30 @@ class SunflowerAction(object):
             pub.unregister()
         
     def execute_cb(self, goal):
+        
+        if goal.action == 'move':
+            return self.move(goal)
+        elif goal.action == 'init':
+            return self.init(goal.component)
+        else:
+            rospy.logwarn("Unknown action %s", goal.action)
+            
+    def init(self, name):
+        if name == 'base':
+            pub = RosPublisher('cmd_motor_state', MotorState)
+            pub.start()
+            pub.publish(MotorState(1))
+            self._result = 0
+            self._as.set_succeeded(self._result)
+        
+    def move(self, goal):      
+        
         success = True
 
-        component_name = '/sf_controller/' + goal.component
-        joint_names = rospy.get_param(component_name + '/joint_names')
         joints = goal.jointPositions
         
         if(goal.namedPosition != '' and goal.namedPosition != None):
-            param = component_name + '/' + goal.namedPosition
+            param = '/sf_controller/' + goal.component + '/' + goal.namedPosition
             if(rospy.has_param(param)):
                 joints = rospy.get_param(param)[0]
 
@@ -50,9 +71,43 @@ class SunflowerAction(object):
                 goal.namedPosition,
                 joints)
         
+        if goal.component == 'base':
+            success = self.navigate(goal, joints)
+        else:
+            success = self.moveJoints(goal, joints)
+        
+        if success:
+            self._result = 0
+            self._as.set_succeeded(self._result)
+            
+    def navigate(self, goal, positions):
+        pose = PoseStamped()
+        pose.header.stamp = rospy.Time.now()
+        pose.header.frame_id = "/map"
+        pose.pose.position.x = positions[0]
+        pose.pose.position.y = positions[1]
+        pose.pose.position.z = 0.0
+        q = quaternion_from_euler(0, 0, positions[2])
+        pose.pose.orientation.x = q[0]
+        pose.pose.orientation.y = q[1]
+        pose.pose.orientation.z = q[2]
+        pose.pose.orientation.w = q[3]
+        
+        
+        client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
+        client_goal = MoveBaseGoal()
+        client_goal.target_pose = pose
+        #print client_goal
+        client.send_goal(client_goal)
+        #return client.wait_for_result()
+        return True
+        
 
+    def moveJoints(self, goal, positions):
         subs = []
         
+        component_name = '/sf_controller/' + goal.component
+        joint_names = rospy.get_param(component_name + '/joint_names')
         for i in range(0, len(joint_names)):
             topic = joint_names[i] + '_controller'
             if not self._pubs.has_key(topic):
@@ -60,7 +115,7 @@ class SunflowerAction(object):
                 self._pubs[topic].start()
             
             subs.append(RosSubscriber(topic + '/state', JointState))
-            self._pubs[topic].publish(Float64(joints[i]))
+            self._pubs[topic].publish(Float64(positions[i]))
             
             
         #TODO: Timeouts
@@ -79,11 +134,8 @@ class SunflowerAction(object):
                     reached = True
                 done = done and reached
         
-        if success:
-            self._result = 0
-            self._as.set_succeeded(self._result)
-            
-            
+        return done
+
 class RosPublisher(Thread):
     
     def __init__(self, topic, dataType):

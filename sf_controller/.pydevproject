@@ -55,6 +55,10 @@
 <path>/usr/lib/python2.7/dist-packages/ubuntuone-storage-protocol</path>
 <path>/usr/lib/python2.7/dist-packages/wx-2.8-gtk2-unicode</path>
 <path>/opt/ros/electric/stacks/dynamixel_motor/dynamixel_msgs/src</path>
+<path>/opt/ros/electric/stacks/common_msgs/geometry_msgs/src</path>
+<path>/opt/ros/electric/stacks/geometry/tf/src</path>
+<path>/opt/ros/electric/stacks/navigation/move_base_msgs/src</path>
+<path>/opt/ros/electric/stacks/p2os/p2os_driver/src</path>
 </pydev_pathproperty>
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/sf_controller/src</path>

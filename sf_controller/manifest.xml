@@ -8,10 +8,14 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/sf_controller</url>
+  <depend package="rospy"/>
   <depend package="actionlib"/>
-  <depend package="actionlib_msgs"/>
+  <depend package="dynamixel_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="p2os_driver"/>
+  <depend package="tf"/>
   <depend package="std_msgs"/>
-  <depend package="dynamixel_msgs"/>  
+  <depend package="move_base_msgs"/>
 </package>
 
 
