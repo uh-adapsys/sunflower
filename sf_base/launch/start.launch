@@ -1,0 +1,6 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+   <include file="$(find sf_base)/launch/platform.launch" />
+   <include file="$(find sf_base)/launch/hokuyo.launch" />
+</launch>

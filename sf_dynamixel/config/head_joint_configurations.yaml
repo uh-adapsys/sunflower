@@ -1,0 +1,4 @@
+joint_names: ["head_pan", "head_tilt", "neck_upper", "neck_lower"]
+home: [[0.0, 0.0, 0.0, 0.0]]
+back_right: [[-3.0, 0.0, 0.0, 0.0]]
+back_left: [[3.0, 0.0, 0.0, 0.0]]

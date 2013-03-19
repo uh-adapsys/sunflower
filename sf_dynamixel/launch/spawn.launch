@@ -1,0 +1,15 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+    <node name="controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager 
+		--port=joints_port 
+		--type=simple 
+		tray_controller 
+		head_pan_controller 
+		head_tilt_controller 
+		neck_lower_controller 
+		neck_upper_controller"
+          output="screen"/>
+</launch>
+

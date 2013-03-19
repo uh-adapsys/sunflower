@@ -1,0 +1,4 @@
+joint_names: ["tray"]
+open: [[-0.8]]
+closed: [[0.0]]
+

@@ -1,0 +1,5 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+  <node name="sf_controller" pkg="sf_controller" type="controller_server.py" output="screen"/>
+</launch>

@@ -1,0 +1,10 @@
+#goal definition
+string component
+string action
+string namedPosition
+float64[] jointPositions
+---
+#result definition
+int32 result
+---
+#feedback
