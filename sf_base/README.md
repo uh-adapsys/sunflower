@@ -1,7 +1,7 @@
 Sunflower Base Package
 ===
 
-ROS Stack for controlling the Pioneer 3 base
+ROS Package for controlling the Pioneer 3 base
 
 ##Launching
 
