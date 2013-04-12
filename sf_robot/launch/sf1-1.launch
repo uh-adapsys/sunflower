@@ -3,11 +3,11 @@
 <launch>
 	<include file="$(find sf_lights)/launch/start.launch"/>
 	<include file="$(find sf_dynamixel)/launch/start.launch">
-		<arg name="sf_version" value="sf11" />
+		<arg name="sf_version" value="sf1-1" />
 	</include>
 	<include file="$(find sf_base)/launch/start.launch" />
 	<include file="$(find sf_controller)/launch/start.launch"/>
 	<include file="$(find sf_robot)/launch/tf.launch" >
-		<arg name="sf_version" value="sf11" />
+		<arg name="sf_version" value="sf1-1" />
 	</include>
 </launch>
