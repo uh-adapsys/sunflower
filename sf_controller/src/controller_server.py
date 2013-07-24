@@ -103,15 +103,15 @@ class SunflowerAction(object):
         pose.pose.orientation.z = q[2]
         pose.pose.orientation.w = q[3]
         
-        
         client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
         client_goal = MoveBaseGoal()
         client_goal.target_pose = pose
-        #print client_goal
-        client.send_goal(client_goal)
-        return client.wait_for_result()
-        return True
-        
+
+        client.wait_for_server()        
+        rospy.loginfo("%s: Navigating to %s",
+                self._action_name,
+                pose)
+        return client.send_goal_and_wait(client_goal)
 
     def moveJoints(self, goal, positions):
         subs = []
@@ -186,6 +186,7 @@ class RosSubscriber(object):
             self.unregister()
 
 if __name__ == '__main__':
+    
     rospy.init_node('sf_controller')
     SunflowerAction(rospy.get_name())
     rospy.spin()
