@@ -9,12 +9,13 @@ import roslib
 roslib.load_manifest('sf_controller')
 
 import time
+import math
 
 import rospy
 import actionlib
 import sf_controller.msg
 from dynamixel_msgs.msg import JointState
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from p2os_driver.msg import MotorState
 from tf.transformations import quaternion_from_euler
 from std_msgs.msg import Float64
@@ -61,14 +62,12 @@ class SunflowerAction(object):
             rospy.logwarn("Unknown action %s", goal.action)
             
     def init(self, name):
-        if name == 'base':
+        if name == 'base' or name == 'base_direct':
             self._motorState.publish(MotorState(1))
             self._as.set_succeeded(self._result)
         
-    def move(self, goal):      
-        
+    def move(self, goal):        
         success = True
-
         joints = goal.jointPositions
         
         if(goal.namedPosition != '' and goal.namedPosition != None):
@@ -84,12 +83,53 @@ class SunflowerAction(object):
         
         if goal.component == 'base':
             success = self.navigate(goal, joints)
+        elif goal.component == 'base_direct':
+            success = self.moveBase(goal, joints)
         else:
             success = self.moveJoints(goal, joints)
         
         if success:
             self._as.set_succeeded(self._result)
+    
+    def moveBase(self, goal, positions):
+        LINEAR_RATE = 0.5
+        ROTATION_RATE = 0.5
+        
+        rotation = positions[0]
+        linear = positions[1]
+
+        #Rounded to the hundredths of a second (the rate at which p2os communicates with the base)
+        rotationTime = round(abs(rotation) / ROTATION_RATE, 1)
+        linearTime = round(abs(linear) / LINEAR_RATE, 1)
+        
+        try:
+            rospy.loginfo("Moving base %s rad and %s meters", rotation, linear)
             
+            cmdVel = rospy.Publisher('cmd_vel', Twist)
+            #first twist
+            msg = Twist()
+            msg.angular.z = math.copysign(ROTATION_RATE, rotation)
+            for _ in range(0, rotationTime, 0.1):
+                cmdVel.publish(msg)
+                rospy.sleep(0.1)
+            
+            #now move
+            msg = Twist()
+            msg.linear.x = math.copysign(LINEAR_RATE, linear)
+            for _ in range(0, linearTime, 0.1):
+                cmdVel.publish(msg)
+                rospy.sleep(0.1)
+        except Exception as e:
+            rospy.logerror("Error when moving base: %s", e)
+            return False
+        finally:
+            if cmdVel != None:
+                #full stop
+                cmdVel.publish(Twist())
+                cmdVel.unregister()
+                
+        return True
+    
     def navigate(self, goal, positions):
         pose = PoseStamped()
         pose.header.stamp = rospy.Time.now()
@@ -133,7 +173,7 @@ class SunflowerAction(object):
             done = True
             for sub in subs:
                 while not sub.hasNewMessage:
-                    time.sleep(0.01)
+                    rospy.sleep(0.01)
                 
                 if(sub.lastMessage.goal_pos != 0):
                     reached = not sub.lastMessage.is_moving and abs(sub.lastMessage.current_pos - sub.lastMessage.goal_pos) / sub.lastMessage.goal_pos < .1
