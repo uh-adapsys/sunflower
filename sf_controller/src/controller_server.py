@@ -10,6 +10,7 @@ roslib.load_manifest('sf_controller')
 
 import time
 import math
+from threading import thread
 
 import rospy
 import actionlib
@@ -23,6 +24,9 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
 
 class SunflowerAction(object):
+
+    _actionHandles = {}
+
     def __init__(self, name):
         self._action_name = name
         self._as = actionlib.SimpleActionServer(self._action_name, sf_controller.msg.SunflowerAction, execute_cb=self.execute_cb, auto_start=False)
@@ -57,6 +61,9 @@ class SunflowerAction(object):
             result = self.move(goal)
         elif goal.action == 'init':
             result = self.init(goal.component)
+        elif goal.action == 'stop':
+            self.stop(goal.component)
+            result = True
         else:
             rospy.logwarn("Unknown action %s", goal.action)
             self._result.result = -1
@@ -65,11 +72,24 @@ class SunflowerAction(object):
         if result:
             self._result.result = 0
             self._as.set_succeeded(self._result)
+        else:
+            self._result.result = -1
+            self._as.set_aborted(self._result)
 
     def init(self, name):
         if name == 'base' or name == 'base_direct':
             self._motorState.publish(MotorState(1))
-            self._as.set_succeeded(self._result)
+
+        self._as.set_succeeded(self._result)
+
+    def stop(self, name):
+        if name == 'base' or name == 'base_direct':
+            SunflowerAction._cancelledComponents['base'] = True
+            SunflowerAction._cancelledComponents['base_direct'] = True
+        else:
+            SunflowerAction._cancelledComponents[name] = True
+
+        self._as.set_succeeded(self._result)
 
     def move(self, goal):
         success = True
@@ -132,10 +152,11 @@ class SunflowerAction(object):
         twist.linear.x = x_vel
         twist.angular.z = rot_vel
         r = rospy.Rate(10)  # send velocity commands at 10 Hz
+        SunflowerAction._cancelledComponents[goal.component] = False
         end_time = rospy.Time.now() + duration_ros
-        while not rospy.is_shutdown() and rospy.Time.now() < end_time:
-                pub.publish(twist)
-                r.sleep()
+        while not rospy.is_shutdown() and rospy.Time.now() < end_time and not SunflowerAction._cancelledComponents[goal.component]:
+            pub.publish(twist)
+            r.sleep()
 
         if pub:
             pub.unregister()
@@ -162,7 +183,14 @@ class SunflowerAction(object):
         rospy.loginfo("%s: Navigating to %s",
                 self._action_name,
                 pose)
-        return client.send_goal_and_wait(client_goal)
+
+        client.send_goal(client_goal)
+        r = rospy.Rate(10)
+        SunflowerAction._cancelledComponents[goal.component] = False
+        while not rospy.is_shutdown() and not SunflowerAction._cancelledComponents[goal.component] and client.get_state() in ['ACTIVE', 'PENDING']:
+            r.sleep()
+
+        return client.get_result()
 
     def moveJoints(self, goal, positions):
         subs = []
@@ -179,11 +207,16 @@ class SunflowerAction(object):
 
         # TODO: Timeouts
         done = False
-        while(not done):
+        SunflowerAction._cancelledComponents[goal.component] = False
+        while not done:
             done = True
+            r = rospy.Rate(100)
             for sub in subs:
+                if rospy.is_shutdown() or SunflowerAction._cancelledComponents[goal.component]:
+                    return False
+
                 while not sub.hasNewMessage:
-                    rospy.sleep(0.01)
+                    r.sleep()
 
                 if(sub.lastMessage.goal_pos != 0):
                     reached = not sub.lastMessage.is_moving and abs(sub.lastMessage.current_pos - sub.lastMessage.goal_pos) / sub.lastMessage.goal_pos < .1
@@ -195,7 +228,6 @@ class SunflowerAction(object):
 
         return done
 
-
 #------------------- action_handle section -------------------#
 # # Action handle class.
 #
@@ -205,46 +237,34 @@ class _ActionHandle(object):
         def __init__(self, simpleActionClient):
             self._client = simpleActionClient
 
+        @property
+        def result(self):
+            if self._waiting:
+                return 1
+
+            return self._result
+
         def wait(self, duration=None):
-            self.blocking = True
             self.wait_for_finished(duration, True)
 
-        def wait_inside(self, duration=None):
-            if self.blocking:
-                self.wait_for_finished(duration, True)
-            else:
-                thread.start_new_thread(self.wait_for_finished, (duration, False,))
-            return self.error_code
+        def waitAsync(self, duration=None):
+            thread.start_new_thread(self.wait_for_finished, (duration, False,))
 
-        def wait_for_finished(self, duration, logging):
+        def _wait_for_finished(self, duration):
+            self._waiting = True
             if duration is None:
-                if logging:
-                        rospy.loginfo("Wait for <<%s>> reaching <<%s>>...", self.component_name, self.parameter_name)
                 self.client.wait_for_result()
             else:
-                if logging:
-                    rospy.loginfo("Wait for <<%s>> reached <<%s>> (max %f secs)...", self.component_name, self.parameter_name, duration)
                 if not self.client.wait_for_result(rospy.Duration(duration)):
-                    if logging:
-                        rospy.logerr("Timeout while waiting for <<%s>> to reach <<%s>>. Continuing...", self.component_name, self.parameter_name)
-                    self.set_failed(10)
+                    self._result = 9
                     return
-            # check state of action server
-            # print self.client.get_state()
+
             if self.client.get_state() != 3:
-                if logging:
-                    rospy.logerr("...<<%s>> could not reach <<%s>>, aborting...", self.component_name, self.parameter_name)
-                self.set_failed(11)
+                self._result = 4
                 return
 
-            if logging:
-                rospy.loginfo("...<<%s>> reached <<%s>>", self.component_name, self.parameter_name)
+            self._result = 3
 
-            self.set_succeeded()  # full success
-
-        # # Cancel action
-        #
-        # Cancels action goal(s).
         def cancel(self):
                 self.client.cancel_all_goals()
 
