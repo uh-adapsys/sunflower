@@ -9,8 +9,15 @@ Sofware stack and hardware configurations for the University of Hertfordshire Su
 Sunflower relies on the p2os stack for basic platform functionality, this can be installed by running the following
 ```sudo apt-get install ros-{VERSION}-p2os```
 
+For Groovy:
+```http://www.ros.org/wiki/p2os-vanderbilt```
+
 The laser scanners rely on the laser-driver stack, installed via
 ```sudo apt-get install ros-{VERSION}-laser-drivers```
+
+For the dynamixel motors, the following package is needed
+```sudo apt-get install ros-{VERSION}-dynamixel-motor```
+
 
 Additionally, the robot model uses the hokoyo laser model from the pr2 common stack
 ```sudo apt-get install ros-{VERSION}-pr2-common```
