@@ -10,7 +10,7 @@ roslib.load_manifest('sf_controller')
 
 import time
 import math
-from threading import thread
+import thread
 
 import rospy
 import actionlib
@@ -26,6 +26,7 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 class SunflowerAction(object):
 
     _actionHandles = {}
+    _cancelledComponents = {}
 
     def __init__(self, name):
         self._action_name = name
@@ -100,11 +101,10 @@ class SunflowerAction(object):
             if(rospy.has_param(param)):
                 joints = rospy.get_param(param)[0]
 
-        rospy.loginfo("%s: Settings %s to %s (%s)",
+        rospy.loginfo("%s: Setting %s to %s",
                 self._action_name,
                 goal.component,
-                goal.namedPosition,
-                joints)
+                goal.namedPosition or joints)
 
         if goal.component == 'base':
             success = self.navigate(goal, joints)
@@ -112,6 +112,12 @@ class SunflowerAction(object):
             success = self.moveBase(goal, joints)
         else:
             success = self.moveJoints(goal, joints)
+            
+        rospy.loginfo("%s: '%s to %s' succeeded:%s",
+                self._action_name,
+                goal.component,
+                goal.namedPosition or joints,
+                success)
 
         return success
 
@@ -196,11 +202,16 @@ class SunflowerAction(object):
         subs = []
 
         component_name = '/sf_controller/' + goal.component
-        joint_names = rospy.get_param(component_name + '/joint_names')
+        try:
+            joint_names = rospy.get_param(component_name + '/joint_names')
+        except KeyError:
+            #assume component is a named joint
+            joint_names = [goal.component, ]
         for i in range(0, len(joint_names)):
             topic = joint_names[i] + '_controller'
             if topic not in self._pubs:
                 rospy.logerr('Undefined joint controller %s', topic)
+                return False
 
             subs.append(RosSubscriber(topic + '/state', JointState))
             self._pubs[topic].publish(Float64(positions[i]))
