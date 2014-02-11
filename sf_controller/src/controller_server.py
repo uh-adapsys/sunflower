@@ -35,7 +35,7 @@ class SunflowerAction(object):
         rospy.loginfo("Started Sunflower Controller ActionServer")
         self._pubs = self._connectToJoints()
         self._subs = {}
-        self._motorState = self._connectToWheels()
+        (self._cmdVel, self._motorState) = self._connectToWheels()
         self._feedback = sf_controller.msg.SunflowerFeedback()
         self._result = sf_controller.msg.SunflowerResult()
 
@@ -44,7 +44,7 @@ class SunflowerAction(object):
             pub.unregister()
 
     def _connectToWheels(self):
-        return rospy.Publisher('cmd_motor_state', MotorState)
+        return (rospy.Publisher('cmd_vel', Twist), rospy.Publisher('cmd_motor_state', MotorState))
 
     def _connectToJoints(self):
         pubs = {}
@@ -122,50 +122,52 @@ class SunflowerAction(object):
         return success
 
     def moveBase(self, goal, positions):
-        LINEAR_RATE = 0.5  # [m/s]
+        maxTrans = 1.5
+        LINEAR_RATE = 0.3  # [m/s]
+        maxRot = 2 * math.pi
         ROTATION_RATE = 0.5  # [rad/s]
-
+        
         rotation = positions[0]
         linear = positions[1]
-
+        
         rospy.loginfo("Moving base %s rad and %s meters", rotation, linear)
-
+        
         # step 0: check validity of parameters:
         if not isinstance(rotation, (int, float)) or not isinstance(linear, (int, float)):
                 rospy.logerr("Non-numeric rotation list, aborting moveBase")
                 return False
-        if math.sqrt(linear ** 2) >= 0.15:
-                rospy.logerr("Maximal relative translation step exceeded, aborting moveBase")
+        if abs(linear) >= maxTrans:
+                rospy.logerr("Maximal relative translation step exceeded(max: %sm), aborting moveBase" % maxTrans )
                 return False
-        if abs(rotation) >= math.pi / 2:
-                rospy.logerr("Maximal relative rotation step exceeded, aborting moveBase")
+        if abs(rotation) >= maxRot:
+                rospy.logerr("Maximal relative rotation step exceeded(max: %srad), aborting moveBase" % maxRot )
                 return False
-
+        
         # step 1: determine duration of motion so that upper thresholds for both translational as well as rotational velocity are not exceeded
-
-        duration_trans_sec = math.sqrt(linear ** 2) / LINEAR_RATE
-        duration_rot_sec = abs(rotation / ROTATION_RATE)
+        duration_trans_sec = abs(linear) / LINEAR_RATE
+        duration_rot_sec = abs(rotation) / ROTATION_RATE
         duration_sec = max(duration_trans_sec, duration_rot_sec)
         duration_ros = rospy.Duration.from_sec(duration_sec)  # duration of motion in ROS time
-
+        
         # step 2: determine actual velocities based on calculated duration
         x_vel = linear / duration_sec
         rot_vel = rotation / duration_sec
-
+        
         # step 3: send constant velocity command to base_controller for the calculated duration of motion
-        pub = rospy.Publisher('cmd_vel', Twist)
+#         pub = rospy.Publisher('cmd_vel', Twist)
         twist = Twist()
         twist.linear.x = x_vel
         twist.angular.z = rot_vel
         r = rospy.Rate(10)  # send velocity commands at 10 Hz
         SunflowerAction._cancelledComponents[goal.component] = False
         end_time = rospy.Time.now() + duration_ros
+        self._cmdVel.publish(twist)
         while not rospy.is_shutdown() and rospy.Time.now() < end_time and not SunflowerAction._cancelledComponents[goal.component]:
-            pub.publish(twist)
+            #pub.publish(twist) #p2os has issues if you republish, seems to continue using last received cmd_vel
             r.sleep()
-
-        if pub:
-            pub.unregister()
+        
+        self._cmdVel.publish(Twist()) #send a stop command, see above comment
+    
         return True
 
     def navigate(self, goal, positions):
@@ -205,7 +207,7 @@ class SunflowerAction(object):
         try:
             joint_names = rospy.get_param(component_name + '/joint_names')
         except KeyError:
-            #assume component is a named joint
+            # assume component is a named joint
             joint_names = [goal.component, ]
         for i in range(0, len(joint_names)):
             topic = joint_names[i] + '_controller'
