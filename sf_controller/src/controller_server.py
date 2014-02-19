@@ -14,7 +14,7 @@ import thread
 
 import rospy
 import actionlib
-import sf_controller.msg
+import sf_controller.msg, sf_lights.msg
 from dynamixel_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped, Twist
 from p2os_driver.msg import MotorState
@@ -37,7 +37,12 @@ class SunflowerAction(object):
         self._subs = {}
         (self._cmdVel, self._motorState) = self._connectToWheels()
         self._feedback = sf_controller.msg.SunflowerFeedback()
-        self._result = sf_controller.msg.SunflowerResult()
+        self._result = sf_controller.msg.SunflowerResult()        
+                
+        self._sfLight = actionlib.SimpleActionClient('/lights', sf_lights.msg.LightsAction)
+        print "Waiting for sf_lights..."
+        self._sfLight.wait_for_server()
+        print "Connected to sf_lights"
 
     def __del__(self):
         for pub in self._pubs:
@@ -58,6 +63,8 @@ class SunflowerAction(object):
         return pubs
 
     def execute_cb(self, goal):
+        if goal.component == 'light':
+            result = self.setlight(goal.jointPositions)
         if goal.action == 'move':
             result = self.move(goal)
         elif goal.action == 'init':
@@ -94,6 +101,10 @@ class SunflowerAction(object):
             SunflowerAction._cancelledComponents[name] = True
 
         self._as.set_succeeded(self._result)
+
+    def setlight(self, color):
+        goal = sf_lights.msg.LightsGoal(rgb=color)
+        return self._sfLight.send_goal_and_wait(goal)
 
     def move(self, goal):
         success = True

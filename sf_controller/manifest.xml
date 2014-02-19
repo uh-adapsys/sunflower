@@ -15,6 +15,7 @@
   <depend package="p2os_driver"/>
   <depend package="tf"/>
   <depend package="std_msgs"/>
+  <depend package="sf_lights"/>
   <depend package="move_base_msgs"/>
 </package>
 
