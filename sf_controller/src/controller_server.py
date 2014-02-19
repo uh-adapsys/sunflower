@@ -84,6 +84,9 @@ class SunflowerAction(object):
         self._as.set_succeeded(self._result)
 
     def stop(self, name):
+        rospy.loginfo("%s: Stopping %s",
+            self._action_name,
+            name)
         if name == 'base' or name == 'base_direct':
             SunflowerAction._cancelledComponents['base'] = True
             SunflowerAction._cancelledComponents['base_direct'] = True
@@ -219,10 +222,9 @@ class SunflowerAction(object):
             self._pubs[topic].publish(Float64(positions[i]))
 
         # TODO: Timeouts
-        done = False
         SunflowerAction._cancelledComponents[goal.component] = False
-        while not done:
-            done = True
+        reached = True
+        while True:
             r = rospy.Rate(100)
             for sub in subs:
                 if rospy.is_shutdown() or SunflowerAction._cancelledComponents[goal.component]:
@@ -231,15 +233,16 @@ class SunflowerAction(object):
                 while not sub.hasNewMessage:
                     r.sleep()
 
-                if(sub.lastMessage.goal_pos != 0):
-                    reached = not sub.lastMessage.is_moving and abs(sub.lastMessage.current_pos - sub.lastMessage.goal_pos) / sub.lastMessage.goal_pos < .1
-                elif(sub.lastMessage.current_pos != 0):
-                    reached = not sub.lastMessage.is_moving and abs(sub.lastMessage.current_pos - sub.lastMessage.goal_pos) / sub.lastMessage.current_pos < .1
-                else:
-                    reached = True
-                done = done and reached
+                if sub.lastMessage.is_moving:
+                    continue
+                
+                reached &= abs(sub.lastMessage.error) < 0.01
+                subs.remove(sub)
+            
+            if not subs:
+                break                            
 
-        return done
+        return reached
 
 #------------------- action_handle section -------------------#
 # # Action handle class.
