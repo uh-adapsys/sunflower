@@ -29,20 +29,16 @@ protected:
 public:
 
 	LightsAction(std::string name) :
-			as_(nh_, name, boost::bind(&LightsAction::executeCB, this, _1),
-					false), action_name_(name) {
+			as_(nh_, name, boost::bind(&LightsAction::executeCB, this, _1), false), action_name_(name) {
 #ifndef NOPHIDGET
+		CPhidget_enableLogging(PHIDGET_LOG_WARNING, NULL);
 		CPhidgetInterfaceKit_create(&phidgetInterface); //create Phidget Handle
 		CPhidget_open((CPhidgetHandle) phidgetInterface, -1); //open the port for connection to Phidget
-		int resultDisplay = CPhidget_waitForAttachment(
-				(CPhidgetHandle) phidgetInterface, 2000);
+		int resultDisplay = CPhidget_waitForAttachment((CPhidgetHandle) phidgetInterface, 2000);
 		if (resultDisplay > 0) {
 			const char *err;
-			char buf[1000];
-
 			CPhidget_getErrorDescription(resultDisplay, &err);
-			sprintf(buf, "error: %s\n", err);
-			ROS_INFO("Failed to open Phidget Device, error: %s", buf);
+			ROS_ERROR("Failed to open Phidget Device, error: %s", err);
 			return;
 		} else {
 			const char* name;
@@ -50,44 +46,66 @@ public:
 			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_RED, 0);
 			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_GREEN, 0);
 			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BLUE, 0);
-			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BOARD, 1); //turn on the board#
+			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BOARD, 0);
 			CPhidget_getDeviceName((CPhidgetHandle) phidgetInterface, &name);
 			ROS_INFO("Connected to Phidget: %s", name);
 		}
 #endif
-
 
 		ROS_INFO("Started Lights server");
 		as_.start();
 	}
 
 	~LightsAction(void) {
+#ifndef NOPHIDGET
+		CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_RED, 0);
+		CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_GREEN, 0);
+		CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BLUE, 0);
+		CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BOARD, 0); //turn off the board
+		CPhidget_disableLogging();
+#endif
+	}
+
+	int handleError(int errorCode, const char* deviceName, int value) {
+		// Everything is okay if errorCode = 0
+		if (errorCode != 0) {
+			const char *errorDescription;
+			int err = CPhidget_getErrorDescription(errorCode, &errorDescription);
+			if(err == 0){
+				ROS_ERROR("Settings state %i for %s failed, error: %s", value, deviceName, errorDescription);
+			} else {
+				ROS_ERROR("Settings state %i for %s failed", value, deviceName);
+				ROS_ERROR("An error occurred while retrieving error description.  Error code: %i", err);
+			}
+		}
+
+		return 0;
 	}
 
 	void executeCB(const sf_lights::LightsGoalConstPtr &goal) {
-		bool success = true;
+		bool red = goal->rgb[0];
+		bool green = goal->rgb[1];
+		bool blue = goal->rgb[2];
+		bool board = red || green || blue;
 
-		int red = goal->rgb[0];
-		int green = goal->rgb[1];
-		int blue = goal->rgb[2];
-
-		ROS_INFO("%s: Settings lights: R(%i) G(%i) B(%i)", action_name_.c_str(),
-				red, green, blue);
+		ROS_INFO("%s: Setting lights: R(%i) G(%i) B(%i)", action_name_.c_str(), red, green, blue);
 
 #ifndef NOPHIDGET
-		CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_RED, red);
-		CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_GREEN,
-				green);
-		CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BLUE,
-				blue);
-
+		int rErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_RED, red);
+		int gErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_GREEN, green);
+		int bErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BLUE, blue);
+		int oErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BOARD, board);
 #endif
 
-		result_.result = 0;
+		result_.result = rErr + gErr + bErr + oErr;
 
-		if (success) {
+		if (result_.result == 0) {
 			as_.setSucceeded(result_);
 		} else {
+			handleError(oErr, "Board", board);
+			handleError(rErr, "Red", red);
+			handleError(gErr, "Green", green);
+			handleError(bErr, "Blue", blue);
 			as_.setAborted(result_);
 		}
 	}

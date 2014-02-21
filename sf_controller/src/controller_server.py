@@ -10,7 +10,7 @@ roslib.load_manifest('sf_controller')
 
 import time
 import math
-import thread
+from threading import Thread
 
 import rospy
 import actionlib
@@ -26,7 +26,6 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 class SunflowerAction(object):
 
     _actionHandles = {}
-    _cancelledComponents = {}
 
     def __init__(self, name):
         self._action_name = name
@@ -38,11 +37,6 @@ class SunflowerAction(object):
         (self._cmdVel, self._motorState) = self._connectToWheels()
         self._feedback = sf_controller.msg.SunflowerFeedback()
         self._result = sf_controller.msg.SunflowerResult()        
-                
-        self._sfLight = actionlib.SimpleActionClient('/lights', sf_lights.msg.LightsAction)
-        print "Waiting for sf_lights..."
-        self._sfLight.wait_for_server()
-        print "Connected to sf_lights"
 
     def __del__(self):
         for pub in self._pubs:
@@ -53,19 +47,24 @@ class SunflowerAction(object):
 
     def _connectToJoints(self):
         pubs = {}
-        for value in rospy.get_param('/sf_controller').values():
-            if 'joint_names' in value:
-                for jointName in value['joint_names']:
-                    topic = jointName + '_controller'
-                    if topic not in pubs:
-                        pubs[topic] = rospy.Publisher(topic + '/command', Float64)
+        joints = rospy.get_param('/sf_controller', None)
+        if joints:
+            for value in joints.values():
+                if 'joint_names' in value:
+                    for jointName in value['joint_names']:
+                        topic = jointName + '_controller'
+                        if topic not in pubs:
+                            pubs[topic] = rospy.Publisher(topic + '/command', Float64)
+        else:
+            rospy.logerr("%s:  No joints received from parameter server",
+                          self._action_name)
 
         return pubs
 
     def execute_cb(self, goal):
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
-        if goal.action == 'move':
+        elif goal.action == 'move':
             result = self.move(goal)
         elif goal.action == 'init':
             result = self.init(goal.component)
@@ -94,20 +93,29 @@ class SunflowerAction(object):
         rospy.loginfo("%s: Stopping %s",
             self._action_name,
             name)
-        if name == 'base' or name == 'base_direct':
-            SunflowerAction._cancelledComponents['base'] = True
-            SunflowerAction._cancelledComponents['base_direct'] = True
+        if name == 'base':
+            client = actionlib.SimpleActionClient('/lights', sf_lights.msg.LightsAction)
+            client.wait_for_server()
+            client.cancel_all_goals()
+        elif name == 'light':
+            client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
+            client.wait_for_server()
+            client.cancel_all_goals()
         else:
-            SunflowerAction._cancelledComponents[name] = True
+            pass
 
         self._as.set_succeeded(self._result)
 
     def setlight(self, color):
+        client = actionlib.SimpleActionClient('/lights', sf_lights.msg.LightsAction)
+        client.wait_for_server()
         goal = sf_lights.msg.LightsGoal(rgb=color)
-        return self._sfLight.send_goal_and_wait(goal)
+        handle = _ActionHandle(client)
+        client.send_goal(goal)
+        handle.wait()
+        handle.result
 
     def move(self, goal):
-        success = True
         joints = goal.jointPositions
 
         if(goal.namedPosition != '' and goal.namedPosition != None):
@@ -121,19 +129,19 @@ class SunflowerAction(object):
                 goal.namedPosition or joints)
 
         if goal.component == 'base':
-            success = self.navigate(goal, joints)
+            result = self.navigate(goal, joints)
         elif goal.component == 'base_direct':
-            success = self.moveBase(goal, joints)
+            result = self.moveBase(goal, joints)
         else:
-            success = self.moveJoints(goal, joints)
+            result = self.moveJoints(goal, joints)
             
-        rospy.loginfo("%s: '%s to %s' succeeded:%s",
+        rospy.logdebug("%s: '%s to %s' Result:%s",
                 self._action_name,
                 goal.component,
                 goal.namedPosition or joints,
-                success)
+                result)
 
-        return success
+        return result == 3
 
     def moveBase(self, goal, positions):
         maxTrans = 1.5
@@ -161,28 +169,32 @@ class SunflowerAction(object):
         duration_trans_sec = abs(linear) / LINEAR_RATE
         duration_rot_sec = abs(rotation) / ROTATION_RATE
         duration_sec = max(duration_trans_sec, duration_rot_sec)
-        duration_ros = rospy.Duration.from_sec(duration_sec)  # duration of motion in ROS time
         
         # step 2: determine actual velocities based on calculated duration
         x_vel = linear / duration_sec
         rot_vel = rotation / duration_sec
         
         # step 3: send constant velocity command to base_controller for the calculated duration of motion
-#         pub = rospy.Publisher('cmd_vel', Twist)
+        #pub = rospy.Publisher('cmd_vel', Twist)
         twist = Twist()
         twist.linear.x = x_vel
         twist.angular.z = rot_vel
-        r = rospy.Rate(10)  # send velocity commands at 10 Hz
-        SunflowerAction._cancelledComponents[goal.component] = False
+        t = Thread(target=self._waitForBase, args=(duration_sec, twist))
+        t.setDaemon(True)
+        t.start()
+        t.join()
+    
+        return 3
+
+    def _waitForBase(self, duration_sec, twist):
+        duration_ros = rospy.Duration.from_sec(duration_sec)  # duration of motion in ROS time
+        r = rospy.Rate(50)
         end_time = rospy.Time.now() + duration_ros
         self._cmdVel.publish(twist)
-        while not rospy.is_shutdown() and rospy.Time.now() < end_time and not SunflowerAction._cancelledComponents[goal.component]:
-            #pub.publish(twist) #p2os has issues if you republish, seems to continue using last received cmd_vel
+        while not rospy.is_shutdown() and rospy.Time.now() < end_time: #pub.publish(twist) #p2os has issues if you republish, seems to continue using last received cmd_vel
             r.sleep()
         
         self._cmdVel.publish(Twist()) #send a stop command, see above comment
-    
-        return True
 
     def navigate(self, goal, positions):
         pose = PoseStamped()
@@ -206,16 +218,14 @@ class SunflowerAction(object):
                 self._action_name,
                 pose)
 
+        handle = _ActionHandle(client)
         client.send_goal(client_goal)
-        r = rospy.Rate(10)
-        SunflowerAction._cancelledComponents[goal.component] = False
-        while not rospy.is_shutdown() and not SunflowerAction._cancelledComponents[goal.component] and client.get_state() in ['ACTIVE', 'PENDING']:
-            r.sleep()
-
-        return client.get_result()
+        handle.wait()
+        return handle.result
 
     def moveJoints(self, goal, positions):
         subs = []
+        pubs = {}
 
         component_name = '/sf_controller/' + goal.component
         try:
@@ -230,30 +240,72 @@ class SunflowerAction(object):
                 return False
 
             subs.append(RosSubscriber(topic + '/state', JointState))
+            pubs[topic] = self._pubs[topic]
             self._pubs[topic].publish(Float64(positions[i]))
 
-        # TODO: Timeouts
-        SunflowerAction._cancelledComponents[goal.component] = False
-        reached = True
-        while True:
-            r = rospy.Rate(100)
-            for sub in subs:
-                if rospy.is_shutdown() or SunflowerAction._cancelledComponents[goal.component]:
-                    return False
+        handle = _SubscriberHandle(subs, pubs)
+        handle.wait()
+        return handle.result
 
-                while not sub.hasNewMessage:
-                    r.sleep()
 
-                if sub.lastMessage.is_moving:
-                    continue
+#------------------- action_handle section -------------------#
+# Subscriber handle class.
+#
+# The subscriber handle is used to implement asynchronous behaviour within the script.
+class _SubscriberHandle(object):
+        # Initialises the action handle.
+        def __init__(self, subscribers, publishers):
+            self._subscribers = subscribers
+            self._publishers = publishers
+            self._waiting = False
+            self._result = None
+
+        @property
+        def result(self):
+            if self._waiting:
+                return None
+
+            return self._result
+
+        def wait(self, duration=None):
+            t = self.waitAsync(duration)
+            t.join()
+
+        def waitAsync(self, duration=None):
+            thread = Thread(target=self._wait_for_finished, args=(duration, ))
+            thread.setDaemon(True)
+            thread.start()
+            return thread
+
+        def _wait_for_finished(self, duration):
+            self._waiting = True
+            reached = True
+            while True:
+                r = rospy.Rate(100)
+                for sub in self._subscribers:
+                    if rospy.is_shutdown():
+                        return False
+    
+                    while not sub.hasNewMessage:
+                        r.sleep()
+    
+                    if sub.lastMessage.is_moving:
+                        continue
+                    
+                    reached &= abs(sub.lastMessage.error) < 0.03
+                    if not reached:
+                        rospy.logwarn("%s unable to reach %s.  Error value: %s" % (sub.topic, sub.lastMessage.error))
+                    
+                    self._subscribers.remove(sub)
                 
-                reached &= abs(sub.lastMessage.error) < 0.01
-                subs.remove(sub)
+                if not self._subscribers:
+                    break                            
+    
+            self._result = 3 if reached else 4
             
-            if not subs:
-                break                            
-
-        return reached
+        def cancel(self):
+            for sub in self._subscribers:
+                self._publishers[sub.topic].publish(Float64(sub.lastMessage.current_pos))
 
 #------------------- action_handle section -------------------#
 # # Action handle class.
@@ -263,37 +315,38 @@ class _ActionHandle(object):
         # Initialises the action handle.
         def __init__(self, simpleActionClient):
             self._client = simpleActionClient
+            self._waiting = False
+            self._result = None
 
         @property
         def result(self):
             if self._waiting:
-                return 1
+                return None
 
             return self._result
 
         def wait(self, duration=None):
-            self.wait_for_finished(duration, True)
+            t = self.waitAsync(duration)
+            t.join()
 
         def waitAsync(self, duration=None):
-            thread.start_new_thread(self.wait_for_finished, (duration, False,))
+            thread = Thread(target=self._wait_for_finished, args=(duration, ))
+            thread.setDaemon(True)
+            thread.start()
+            return thread
 
         def _wait_for_finished(self, duration):
             self._waiting = True
             if duration is None:
-                self.client.wait_for_result()
+                self._client.wait_for_result()
             else:
-                if not self.client.wait_for_result(rospy.Duration(duration)):
-                    self._result = 9
-                    return
+                self._client.wait_for_result(rospy.Duration(duration))
 
-            if self.client.get_state() != 3:
-                self._result = 4
-                return
-
-            self._result = 3
+            self._result = self._client.get_state()
+            self._waiting = False
 
         def cancel(self):
-                self.client.cancel_all_goals()
+            self._client.cancel_all_goals()
 
 
 class RosSubscriber(object):
@@ -306,6 +359,10 @@ class RosSubscriber(object):
         self._newMessage = False
         self._idleTimeout = idleTime
         self._data = None
+
+    @property
+    def topic(self):
+        return self._topic
 
     @property
     def hasNewMessage(self):
