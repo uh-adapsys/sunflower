@@ -294,7 +294,7 @@ class _SubscriberHandle(object):
                     
                     reached &= abs(sub.lastMessage.error) < 0.03
                     if not reached:
-                        rospy.logwarn("%s unable to reach %s.  Error value: %s" % (sub.topic, sub.lastMessage.error))
+                        rospy.logwarn("%s unable to reach %s.  Error value: %s" % (sub.topic, sub.lastMessage.goal_pos, sub.lastMessage.error))
                     
                     self._subscribers.remove(sub)
                 
