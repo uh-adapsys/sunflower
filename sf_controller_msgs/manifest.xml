@@ -1,0 +1,14 @@
+<package>
+  <description brief="sf_controller_msgs">
+
+     sf_controller
+
+  </description>
+  <author>Nathan Burke</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/sf_controller_msgs</url>
+  <depend package="actionlib_msgs"/>
+</package>
+
+

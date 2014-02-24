@@ -14,7 +14,7 @@ from threading import Thread
 
 import rospy
 import actionlib
-import sf_controller.msg, sf_lights.msg
+import sf_controller_msgs.msg, sf_lights_msgs.msg
 from dynamixel_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped, Twist
 from p2os_driver.msg import MotorState
@@ -29,18 +29,32 @@ class SunflowerAction(object):
 
     def __init__(self, name):
         self._action_name = name
-        self._as = actionlib.SimpleActionServer(self._action_name, sf_controller.msg.SunflowerAction, execute_cb=self.execute_cb, auto_start=False)
+        self._as = actionlib.SimpleActionServer(self._action_name, sf_controller_msgs.msg.SunflowerAction, execute_cb=self.execute_cb, auto_start=False)
         self._as.start()
         rospy.loginfo("Started Sunflower Controller ActionServer")
         self._pubs = self._connectToJoints()
         self._subs = {}
         (self._cmdVel, self._motorState) = self._connectToWheels()
-        self._feedback = sf_controller.msg.SunflowerFeedback()
-        self._result = sf_controller.msg.SunflowerResult()        
+        self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
+        self._result = sf_controller_msgs.msg.SunflowerResult()        
 
     def __del__(self):
         for pub in self._pubs:
             pub.unregister()
+
+    def park(self):
+        g = sf_controller_msgs.msg.SunflowerAction()
+        g.component = 'head'
+        g.positions = [0,0,-1.67,1.67]
+        self.execute_cb(g)
+        g = sf_controller_msgs.msg.SunflowerAction()
+        g.component = 'tray'
+        g.positions = [0,]
+        self.execute_cb(g)
+        g = sf_controller_msgs.msg.SunflowerAction()
+        g.component = 'lights'
+        g.positions = [0,0,0]
+        self.execute_cb(g)
 
     def _connectToWheels(self):
         return (rospy.Publisher('cmd_vel', Twist), rospy.Publisher('cmd_motor_state', MotorState))
@@ -71,6 +85,9 @@ class SunflowerAction(object):
         elif goal.action == 'stop':
             self.stop(goal.component)
             result = True
+        elif goal.action == 'park':
+            self.park()
+            result = True
         else:
             rospy.logwarn("Unknown action %s", goal.action)
             self._result.result = -1
@@ -94,7 +111,7 @@ class SunflowerAction(object):
             self._action_name,
             name)
         if name == 'base':
-            client = actionlib.SimpleActionClient('/lights', sf_lights.msg.LightsAction)
+            client = actionlib.SimpleActionClient('/lights', sf_lights_msgs.msg.LightsAction)
             client.wait_for_server()
             client.cancel_all_goals()
         elif name == 'light':
@@ -107,9 +124,9 @@ class SunflowerAction(object):
         self._as.set_succeeded(self._result)
 
     def setlight(self, color):
-        client = actionlib.SimpleActionClient('/lights', sf_lights.msg.LightsAction)
+        client = actionlib.SimpleActionClient('/lights', sf_lights_msgs.msg.LightsAction)
         client.wait_for_server()
-        goal = sf_lights.msg.LightsGoal(rgb=color)
+        goal = sf_lights_msgs.msg.LightsGoal(rgb=color)
         handle = _ActionHandle(client)
         client.send_goal(goal)
         handle.wait()

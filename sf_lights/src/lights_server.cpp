@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
-#include <sf_lights/LightsAction.h>
+#include <sf_lights_msgs/LightsAction.h>
 #include <phidget21.h>
 #include <exception>
 
@@ -10,10 +10,10 @@ class LightsAction {
 protected:
 
 	ros::NodeHandle nh_;
-	actionlib::SimpleActionServer<sf_lights::LightsAction> as_;
+	actionlib::SimpleActionServer<sf_lights_msgs::LightsAction> as_;
 	std::string action_name_;
-	sf_lights::LightsFeedback feedback_;
-	sf_lights::LightsResult result_;
+	sf_lights_msgs::LightsFeedback feedback_;
+	sf_lights_msgs::LightsResult result_;
 
 #ifndef NOPHIDGET
 	CPhidgetInterfaceKitHandle phidgetInterface;
@@ -82,7 +82,7 @@ public:
 		return 0;
 	}
 
-	void executeCB(const sf_lights::LightsGoalConstPtr &goal) {
+	void executeCB(const sf_lights_msgs::LightsGoalConstPtr &goal) {
 		bool red = goal->rgb[0];
 		bool green = goal->rgb[1];
 		bool blue = goal->rgb[2];
