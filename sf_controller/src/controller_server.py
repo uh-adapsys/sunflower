@@ -14,7 +14,8 @@ from threading import Thread
 
 import rospy
 import actionlib
-import sf_controller_msgs.msg, sf_lights_msgs.msg
+import sf_controller_msgs.msg
+import sf_lights_msgs.msg
 from dynamixel_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped, Twist
 from p2os_driver.msg import MotorState
@@ -36,7 +37,7 @@ class SunflowerAction(object):
         self._subs = {}
         (self._cmdVel, self._motorState) = self._connectToWheels()
         self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
-        self._result = sf_controller_msgs.msg.SunflowerResult()        
+        self._result = sf_controller_msgs.msg.SunflowerResult()
 
     def __del__(self):
         for pub in self._pubs:
@@ -45,15 +46,15 @@ class SunflowerAction(object):
     def park(self):
         g = sf_controller_msgs.msg.SunflowerAction()
         g.component = 'head'
-        g.positions = [0,0,-1.67,1.67]
+        g.positions = [0, 0, -1.67, 1.67]
         self.execute_cb(g)
         g = sf_controller_msgs.msg.SunflowerAction()
         g.component = 'tray'
-        g.positions = [0,]
+        g.positions = [0, ]
         self.execute_cb(g)
         g = sf_controller_msgs.msg.SunflowerAction()
         g.component = 'lights'
-        g.positions = [0,0,0]
+        g.positions = [0, 0, 0]
         self.execute_cb(g)
 
     def _connectToWheels(self):
@@ -151,7 +152,7 @@ class SunflowerAction(object):
             result = self.moveBase(goal, joints)
         else:
             result = self.moveJoints(goal, joints)
-            
+
         rospy.logdebug("%s: '%s to %s' Result:%s",
                 self._action_name,
                 goal.component,
@@ -161,57 +162,58 @@ class SunflowerAction(object):
         return result == 3
 
     def moveBase(self, goal, positions):
+        # TODO: These should be in a config file
         maxTrans = 1.5
         LINEAR_RATE = 0.3  # [m/s]
         maxRot = 2 * math.pi
         ROTATION_RATE = 0.5  # [rad/s]
-        
+
         rotation = positions[0]
         linear = positions[1]
-        
+
         rospy.loginfo("Moving base %s rad and %s meters", rotation, linear)
-        
+
         # step 0: check validity of parameters:
         if not isinstance(rotation, (int, float)) or not isinstance(linear, (int, float)):
                 rospy.logerr("Non-numeric rotation list, aborting moveBase")
                 return False
         if abs(linear) >= maxTrans:
-                rospy.logerr("Maximal relative translation step exceeded(max: %sm), aborting moveBase" % maxTrans )
+                rospy.logerr("Maximal relative translation step exceeded(max: %sm), aborting moveBase" % maxTrans)
                 return False
         if abs(rotation) >= maxRot:
-                rospy.logerr("Maximal relative rotation step exceeded(max: %srad), aborting moveBase" % maxRot )
+                rospy.logerr("Maximal relative rotation step exceeded(max: %srad), aborting moveBase" % maxRot)
                 return False
-        
+
         # step 1: determine duration of motion so that upper thresholds for both translational as well as rotational velocity are not exceeded
         duration_trans_sec = abs(linear) / LINEAR_RATE
         duration_rot_sec = abs(rotation) / ROTATION_RATE
         duration_sec = max(duration_trans_sec, duration_rot_sec)
-        
+
         # step 2: determine actual velocities based on calculated duration
         x_vel = linear / duration_sec
         rot_vel = rotation / duration_sec
-        
+
         # step 3: send constant velocity command to base_controller for the calculated duration of motion
-        #pub = rospy.Publisher('cmd_vel', Twist)
+        # pub = rospy.Publisher('cmd_vel', Twist)
         twist = Twist()
         twist.linear.x = x_vel
         twist.angular.z = rot_vel
-        t = Thread(target=self._waitForBase, args=(duration_sec, twist))
-        t.setDaemon(True)
-        t.start()
-        t.join()
-    
-        return 3
-
-    def _waitForBase(self, duration_sec, twist):
         duration_ros = rospy.Duration.from_sec(duration_sec)  # duration of motion in ROS time
+
         r = rospy.Rate(50)
         end_time = rospy.Time.now() + duration_ros
         self._cmdVel.publish(twist)
-        while not rospy.is_shutdown() and rospy.Time.now() < end_time: #pub.publish(twist) #p2os has issues if you republish, seems to continue using last received cmd_vel
+        while not rospy.is_shutdown() and rospy.Time.now() < end_time:
+            # pub.publish(twist) #p2os has issues if you republish, seems to continue using last received cmd_vel
+            if self._as.isPreemptRequested():
+                rospy.loginfo('%s: Preempted' % self._action_name)
+                self._as.set_preempted()
+                return 2
             r.sleep()
-        
-        self._cmdVel.publish(Twist()) #send a stop command, see above comment
+
+        self._cmdVel.publish(Twist())  # send a stop command, see above comment
+
+        return 3
 
     def navigate(self, goal, positions):
         pose = PoseStamped()
@@ -289,7 +291,7 @@ class _SubscriberHandle(object):
             t.join()
 
         def waitAsync(self, duration=None):
-            thread = Thread(target=self._wait_for_finished, args=(duration, ))
+            thread = Thread(target=self._wait_for_finished, args=(duration,))
             thread.setDaemon(True)
             thread.start()
             return thread
@@ -302,24 +304,24 @@ class _SubscriberHandle(object):
                 for sub in self._subscribers:
                     if rospy.is_shutdown():
                         return False
-    
+
                     while not sub.hasNewMessage:
                         r.sleep()
-    
+
                     if sub.lastMessage.is_moving:
                         continue
-                    
+
                     reached &= abs(sub.lastMessage.error) < 0.03
                     if not reached:
                         rospy.logwarn("%s unable to reach %s.  Error value: %s" % (sub.topic, sub.lastMessage.goal_pos, sub.lastMessage.error))
-                    
+
                     self._subscribers.remove(sub)
-                
+
                 if not self._subscribers:
-                    break                            
-    
+                    break
+
             self._result = 3 if reached else 4
-            
+
         def cancel(self):
             for sub in self._subscribers:
                 self._publishers[sub.topic].publish(Float64(sub.lastMessage.current_pos))
@@ -347,7 +349,7 @@ class _ActionHandle(object):
             t.join()
 
         def waitAsync(self, duration=None):
-            thread = Thread(target=self._wait_for_finished, args=(duration, ))
+            thread = Thread(target=self._wait_for_finished, args=(duration,))
             thread.setDaemon(True)
             thread.start()
             return thread
