@@ -205,7 +205,7 @@ class SunflowerAction(object):
         self._cmdVel.publish(twist)
         while not rospy.is_shutdown() and rospy.Time.now() < end_time:
             # pub.publish(twist) #p2os has issues if you republish, seems to continue using last received cmd_vel
-            if self._as.isPreemptRequested():
+            if self._as.is_preempt_requested():
                 rospy.loginfo('%s: Preempted' % self._action_name)
                 self._as.set_preempted()
                 return 2
