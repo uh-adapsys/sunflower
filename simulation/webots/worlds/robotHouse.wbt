@@ -1,0 +1,84 @@
+#VRML_SIM V7.4.3 utf8
+WorldInfo {
+  info [
+    "Description: WeBots Model of the UH Robot House"
+    "Author: Nathan Burke <n.burke@natbur.com>"
+    "Date: 18 Oct 2014"
+  ]
+  title "robot house"
+  basicTimeStep 16
+}
+Viewpoint {
+  orientation 0 0.928477 0.371391 3.14159
+  position 1.5 12 -11.5
+}
+Background {
+  skyColor [
+    0.4 0.7 1
+  ]
+}
+DirectionalLight {
+  ambientIntensity 1
+  direction -0.33 -1 -0.5
+  castShadows TRUE
+}
+DEF FLOOR RectangleArena {
+  translation 1.5 0 2.2
+  floorSize 11 11
+  floorTextureUrl [
+    "textures/RobotHouseMap.png"
+  ]
+  floorTileSize 11 11
+  wallHeight 0.3
+}
+DEF Person Solid {
+  translation 3 0.9 -1
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 0.72549 0
+        }
+      }
+      geometry Cylinder {
+        height 1.8
+        radius 0.3
+      }
+    }
+  ]
+  name "researcher"
+  model "person"
+  description "Simulation Placeholder for a person"
+  boundingObject Cylinder {
+    height 1.8
+    radius 0.3
+  }
+  physics Physics {
+    density -1
+    mass 40
+    centerOfMass [
+      0 0 0
+    ]
+    inertiaMatrix [
+      148.864 22.9022 148.864
+      0 0 0
+    ]
+    damping Damping {
+    }
+  }
+}
+DEF Sunflower Pioneer3DX {
+  rotation 0 1 0 -1.5707
+  name "sunflower1_1"
+  controller "rosController"
+  extensionSlot [
+    Compass {
+    }
+    GPS {
+    }
+    Hokuyo_URG04LXUG01 {
+      translation 0 0.197 -0.15
+      name "front_laser"
+    }
+  ]
+}

@@ -1,0 +1,387 @@
+#VRML_SIM V7.4.3 utf8
+WorldInfo {
+  info [
+    "Description: WeBots Model of the UH Robot House"
+    "Author: Nathan Burke <n.burke@natbur.com>"
+    "Date: 18 Oct 2014"
+  ]
+  title "robot house"
+  basicTimeStep 16
+}
+Viewpoint {
+  orientation -0.00174471 0.944693 0.327951 3.16045
+  position 0.489367 11.8728 -12.4582
+}
+Background {
+  skyColor [
+    0.4 0.7 1
+  ]
+}
+DirectionalLight {
+  ambientIntensity 1
+  direction -0.33 -1 -0.5
+  castShadows TRUE
+}
+DEF FLOOR RectangleArena {
+  translation 1.5 0 2.2
+  floorSize 11 11
+  floorTextureUrl [
+    "/home/nathan/git/simulation/world/textures/RobotHouseMap.png"
+  ]
+  floorTileSize 11 11
+  wallHeight 0.3
+}
+SingleDoorCommon {
+  translation -1.97 0 0.07
+  rotation 0 1 0 1.5707
+}
+WallGap {
+  translation -0.65 0 -2.8
+}
+WallGap {
+  translation -0.95 0 -2.8
+}
+WallGap {
+  translation -1.25 0 -2.8
+}
+WallGap {
+  translation -1.55 0 -2.8
+}
+WallGap {
+  translation -1.55 0 -2.5
+}
+WallGap {
+  translation -1.55 0 -2.2
+}
+WallGap {
+  translation -1.55 0 -1.9
+}
+WallGap {
+  translation -1.55 0 -1.6
+}
+WallGap {
+  translation -1.55 0 -1.3
+}
+WallGap {
+  translation -1.55 0 -1
+}
+WallGap {
+  translation -1.55 0 -0.7
+}
+WallGap {
+  translation -1.55 0 -0.54
+}
+DEF Stairs Solid {
+  translation 1.87 0 1.9
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 0.407843 0.207843 0.00784314
+        }
+        texture ImageTexture {
+        }
+      }
+      geometry Box {
+        size 1.8 1 1.7
+      }
+    }
+  ]
+  boundingObject Box {
+    size 1.8 1 1.7
+  }
+  locked TRUE
+}
+SinkSurfaceElement {
+  translation -3.7 0.71 2.6
+  rotation 0 1 0 -1.5707
+}
+MiddleSizedLockerWithRightDoor {
+  translation -3.6 0.34 2.6
+}
+SinkSurfaceElement {
+  translation -3.7 0.71 2.16
+  rotation 0 1 0 -1.5707
+}
+MiddleSizedLockerWithLeftDoor {
+  translation -3.6 0.34 2.16
+}
+HotPlateSurfaceElement {
+  translation -2.69 0.71 3.5
+}
+CommonSurfaceElement {
+  translation -3.7 0.71 3.04
+  rotation 0 1 0 -1.5707
+}
+MiddleSizedLockerWithRightDoor {
+  translation -3.6 0.34 3.04
+}
+CommonSurfaceElement {
+  translation -3.7 0.71 3.48
+  rotation 0 1 0 -1.5707
+}
+CommonSurfaceElement {
+  translation -3.13 0.71 3.5
+}
+MiddleSizedLocker {
+  translation -3.13 0.34 3.5
+  rotation 0 1 0 1.5707
+}
+CommonSurfaceElement {
+  translation -3.7 0.71 1.72
+  rotation 0 1 0 -1.5707
+}
+MiddleSizedLockerWithLeftDoor {
+  translation -3.6 0.34 1.72
+}
+CommonSurfaceElement {
+  translation -3.7 0.71 1.28
+  rotation 0 1 0 -1.5707
+}
+MiddleSizedLocker {
+  translation -3.6 0.34 1.28
+  rotation 0 1 0 -3.14159
+}
+CommonSurfaceElement {
+  translation -3.7 0.71 0.84
+  rotation 0 1 0 -1.5707
+}
+CommonSurfaceElement {
+  translation -3.13 0.71 0.95
+}
+MiddleSizedLockerWithRightDoor {
+  translation -3.13 0.34 1.05
+  rotation 0 1 0 -1.5707
+}
+CommonSurfaceElement {
+  translation -2.69 0.71 0.95
+}
+MiddleSizedLockerWithRightDoor {
+  translation -2.69 0.34 1.05
+  rotation 0 1 0 -1.5707
+}
+CommonSurfaceElement {
+  translation -2.25 0.71 0.95
+}
+MiddleSizedLockerWithRightDoor {
+  translation -2.25 0.34 1.05
+  rotation 0 1 0 -1.5707
+}
+CommonSurfaceElement {
+  translation -1.81 0.71 0.95
+}
+MiddleSizedLocker {
+  translation -1.81 0.34 1.05
+  rotation 0 1 0 -1.5707
+}
+Fridge {
+  translation -2 0 3.5
+  rotation 0 1 0 1.5707
+}
+SingleDoorCommon {
+  translation -0.1 0 3.85
+}
+SingleDoorCommon {
+  translation 3.85 0 3.24
+  rotation 0 1 0 1.5707
+}
+WallGap {
+  translation 3.85 0 1
+}
+WallGap {
+  translation 3.85 0 1.3
+}
+WallGap {
+  translation 3.85 0 1.6
+}
+WallWithSingleDoorFrame {
+  translation 3.85 0 3.24
+  rotation 0 1 0 1.5707
+}
+Wall {
+  translation 6.92 0 -1.15
+  rotation 0 1 0 1.5707
+}
+Wall {
+  translation 6.92 0 1.85
+  rotation 0 1 0 1.5707
+}
+Wall {
+  translation -2.5 0 3.85
+}
+Oven {
+  translation -2.69 0.34 3.4
+  rotation 0 1 0 1.5707
+}
+WallGap {
+  translation -1.97 0 0.62
+}
+WallGap {
+  translation -1.85 0 -0.54
+}
+SingleDoorEntree {
+  translation -2.2 0 -1.9
+}
+WallGap {
+  translation -2.8 0 -1.9
+}
+WallGap {
+  translation -3.1 0 -1.9
+}
+WallGap {
+  translation -3.4 0 -1.9
+}
+WallGap {
+  translation -3.7 0 -1.9
+}
+WallWithDoubleWindowFrame {
+  translation 1 0 -2.8
+}
+WallGap {
+  translation 5.65 0 -2.8
+}
+WallGap {
+  translation -1.73 0 0.7
+}
+WallGap {
+  translation -2.03 0 0.7
+}
+WallGap {
+  translation -2.33 0 0.7
+}
+WallGap {
+  translation -2.63 0 0.7
+}
+WallGap {
+  translation -2.93 0 0.7
+}
+WallGap {
+  translation -3.23 0 0.7
+}
+WallGap {
+  translation -3.53 0 0.7
+}
+WallGap {
+  translation -3.83 0 0.7
+}
+WallGap {
+  translation 5.95 0 -2.8
+}
+WallGap {
+  translation 6.25 0 -2.8
+}
+WallGap {
+  translation 6.55 0 -2.8
+}
+WallGap {
+  translation 6.85 0 -2.8
+}
+WallWithDoubleWindowFrame {
+  translation -3.9 0 -0.5
+  rotation 0 1 0 1.5707
+}
+WallWithDoubleWindowFrame {
+  translation -3.9 0 2.3
+  rotation 0 1 0 1.5707
+}
+WallWithDoubleWindowFrame {
+  translation -3.9 0 5.3
+  rotation 0 1 0 1.5707
+}
+WallWithDoubleWindowFrame {
+  translation 4 0 -2.8
+}
+WallWithSingleDoorFrame {
+  translation -0.1 0 3.85
+}
+WallWithSingleDoorFrame {
+  translation -1.43 0 2.2
+  rotation 0 1 0 1.5707
+}
+WallGap {
+  translation 1.55 0 3.85
+}
+WallGap {
+  translation 1.85 0 3.85
+}
+WallGap {
+  translation 2.15 0 3.85
+}
+WallGap {
+  translation 2.45 0 3.85
+}
+WallGap {
+  translation 2.75 0 3.85
+}
+WallGap {
+  translation 3.05 0 3.85
+}
+WallGap {
+  translation 3.35 0 3.85
+}
+WallGap {
+  translation 3.65 0 3.85
+}
+Wall {
+  translation 5.27 0 1
+}
+Sofa {
+  translation 6.225 0 -0.92
+  rotation 0 1 0 3.14159
+}
+Sofa {
+  translation 4.23125 0 -2.175
+  rotation 0 1 0 -1.5707
+}
+Television {
+  translation 4.4375 1 0.81
+  rotation 0 1 0 3.14159
+}
+DEF Person Solid {
+  translation 3 0.9 -1
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 0.72549 0
+        }
+      }
+      geometry Cylinder {
+        height 1.8
+        radius 0.3
+      }
+    }
+  ]
+  name "researcher"
+  boundingObject Cylinder {
+    height 1.8
+    radius 0.3
+  }
+  physics Physics {
+    density -1
+    mass 40
+    centerOfMass [
+      0 0 0
+    ]
+    inertiaMatrix [
+      148.864 22.9022 148.864
+      0 0 0
+    ]
+    damping Damping {
+    }
+  }
+}
+DEF Sunflower Pioneer3DX {
+  name "sunflower1_1"
+  controller "rosController"
+  extensionSlot [
+    Compass {
+    }
+    GPS {
+    }
+    Hokuyo_URG04LXUG01 {
+      translation 0 0.197 -0.15
+      name "front_laser"
+    }
+  ]
+}
