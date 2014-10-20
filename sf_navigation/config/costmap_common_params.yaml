@@ -17,5 +17,11 @@ map_type: costmap
 
 observation_sources: front_laser
 
-front_laser: {sensor_frame: base_laser_front_link, data_type: LaserScan, topic: scan_front, marking: true, clearing: true, expected_update_rate: 0.2}
+front_laser: {
+    sensor_frame: base_laser_front_link, 
+    data_type: LaserScan, 
+    topic: scan_front, 
+    marking: true, 
+    clearing: true, 
+    expected_update_rate: 0.2}
 #front_laser: {sensor_frame: base_laser_front, data_type: LaserScan, topic: scan_front, marking: true, clearing: true, expected_update_rate: 0.2}
