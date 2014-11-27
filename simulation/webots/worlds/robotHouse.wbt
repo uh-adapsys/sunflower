@@ -1,4 +1,4 @@
-#VRML_SIM V7.4.3 utf8
+#VRML_SIM V8.0.1 utf8
 WorldInfo {
   info [
     "Description: WeBots Model of the UH Robot House"
@@ -9,8 +9,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation 0 0.928477 0.371391 3.14159
-  position 1.5 12 -11.5
+  orientation -2.65341e-08 0.920864 0.389885 3.14159
+  position 1.34001 12.4886 -10.9929
 }
 Background {
   skyColor [
@@ -67,7 +67,7 @@ DEF Person Solid {
     }
   }
 }
-DEF Sunflower Pioneer3DX {
+DEF Sunflower Pioneer3dx {
   rotation 0 1 0 -1.5707
   name "sunflower1_1"
   controller "rosController"
@@ -76,7 +76,7 @@ DEF Sunflower Pioneer3DX {
     }
     GPS {
     }
-    Hokuyo_URG04LXUG01 {
+    HokuyoUrg04lxug01 {
       translation 0 0.197 -0.15
       name "front_laser"
     }

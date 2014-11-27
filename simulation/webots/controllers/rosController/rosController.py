@@ -5,7 +5,19 @@ Created on 12 Mar 2013
 
 @author: nathan
 '''
-import roslib
+try:
+    import roslib
+except:
+    import logging
+    logger = logging.getLogger()
+    if logger.handlers:
+        logging.getLogger().error("Unable to load roslib, fatal error", exc_info=True)
+    else:
+        import sys, traceback
+        print >> sys.stderr, "Unable to load roslib, fatal error"
+        print >> sys.stderr, traceback.format_exc()
+    exit(1)
+    
 from collections import namedtuple
 roslib.load_manifest('rosController')
 
@@ -401,7 +413,9 @@ class Sunflower(Robot):
         while not rospy.is_shutdown():
             if self._as.is_preempt_requested():
                 rospy.loginfo('%s: Preempted' % self._action_name)
-                self._as.set_preempted()
+                self._rightWheel.setVelocity(0)
+                self._leftWheel.setVelocity(0)
+                #self._as.set_preempted()
                 return _states['PREEMPTED']
 
             self._rightWheel.setVelocity(rightRate)
