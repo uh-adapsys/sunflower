@@ -85,12 +85,12 @@ class Sunflower(Robot):
         rawLocation = self._gps.getValues()
         rawHeading = self._compass.getValues() 
         
-        # http://www.cyberbotics.com/reference/section3.12
+        # http://www.cyberbotics.com/reference/section3.13.php
         rotation = math.atan2(rawHeading[0], rawHeading[2])
         x = round(rawLocation[0], 3)
         y = round(rawLocation[2], 3)
         self._lastLocation = self._location
-        self._location = Sunflower.Location(x, y, rotation, self.getTime())
+        self._location = Sunflower.Location(x, y, math.radians(rotation), self.getTime())
         
     def _updateSonar(self):
         self._sensorValues = map(lambda x:x.getValue(), self._sensors)
