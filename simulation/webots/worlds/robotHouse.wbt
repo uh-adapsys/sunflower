@@ -7,6 +7,7 @@ WorldInfo {
   ]
   title "robot house"
   basicTimeStep 16
+  northDirection -1 0 0
 }
 Viewpoint {
   orientation -2.65341e-08 0.920864 0.389885 3.14159
@@ -66,6 +67,9 @@ DEF Person Solid {
     damping Damping {
     }
   }
+  locked TRUE
+  translationStep 0
+  rotationStep 0
 }
 DEF Sunflower Pioneer3dx {
   rotation 0 1 0 -1.5707

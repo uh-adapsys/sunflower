@@ -90,7 +90,7 @@ class Sunflower(Robot):
         x = round(rawLocation[0], 3)
         y = round(rawLocation[2], 3)
         self._lastLocation = self._location
-        self._location = Sunflower.Location(x, y, math.radians(rotation), self.getTime())
+        self._location = Sunflower.Location(x, y, rotation, self.getTime())
         
     def _updateSonar(self):
         self._sensorValues = map(lambda x:x.getValue(), self._sensors)
