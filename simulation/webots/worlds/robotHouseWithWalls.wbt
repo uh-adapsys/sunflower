@@ -7,11 +7,10 @@ WorldInfo {
   ]
   title "robot house"
   basicTimeStep 16
-  northDirection -1 0 0
 }
 Viewpoint {
-  orientation -2.65341e-08 0.920864 0.389885 3.14159
-  position 1.34001 12.4886 -10.9929
+  orientation 0 0.920691 0.390293 3.14159
+  position 1.34 12.5 -11
 }
 Background {
   skyColor [
@@ -24,57 +23,21 @@ DirectionalLight {
   castShadows TRUE
 }
 Floor {
-  translation 1.5 0 2.2
-  size 11 11
-  tileSize 11 11
+  translation 1.5 0 1.936
+  size 10.8719 10.8719
+  tileSize 10.8719 10.8719
   texture [
     "textures/RobotHouseMap.png"
   ]
 }
 Door {
-  translation -1.8 0 0.1
+  translation -1.68 0 -0.12
   rotation 0 1 0 -1.5708
-  size 1 2.1 0.2
+  size 1 2.1 0.07
   jointAtLeft FALSE
 }
-Wall {
-  translation 2.7 0 -2.75
-  size 8.5 0.6 0.2
-}
-Wall {
-  translation 1.2 0 3.7
-  size 5.4 0.6 0.2
-}
-Wall {
-  translation 5.33 0 0.9
-  size 3.3 0.6 0.2
-}
-Wall {
-  translation -1.7 0 0.65
-  size 0.5 0.6 0.2
-}
-Wall {
-  translation 6.9 0 -1
-  rotation 0 1 0 1.5708
-  size 3.7 0.6 0.2
-}
-Wall {
-  translation 3.79 0 2.3
-  rotation 0 1 0 1.5708
-  size 2.8 0.6 0.2
-}
-Wall {
-  translation -1.43 0 2.2
-  rotation 0 1 0 1.5708
-  size 3 0.6 0.2
-}
-Wall {
-  translation -1.6 0 -1.6
-  rotation 0 1 0 1.5708
-  size 2.5 0.6 0.2
-}
 DEF Stairs Solid {
-  translation 1.85 0.3 1.88
+  translation 1.85 0.3 1.65
   children [
     Shape {
       appearance Appearance {
@@ -85,7 +48,7 @@ DEF Stairs Solid {
         }
       }
       geometry Box {
-        size 1.9 0.6 1.8
+        size 1.8 0.6 1.8
       }
     }
   ]
@@ -93,24 +56,47 @@ DEF Stairs Solid {
   model "stairs"
   description "Simulation Placeholder for stairs"
   boundingObject Box {
-    size 1.9 0.6 1.8
-  }
-  physics Physics {
-    density -1
-    mass 40
-    centerOfMass [
-      0 0 0
-    ]
-    inertiaMatrix [
-      148.864 22.9022 148.864
-      0 0 0
-    ]
-    damping Damping {
-    }
+    size 1.8 0.6 1.8
   }
   locked TRUE
   translationStep 0
   rotationStep 0
+}
+Wall {
+  translation 2.71 0 -2.865
+  size 8.3 0.6 0.2
+}
+Wall {
+  translation 1.2 0 3.45
+  size 5.3 0.6 0.2
+}
+Wall {
+  translation 5.33 0 0.73
+  size 3.1 0.6 0.2
+}
+Wall {
+  translation -1.745 0 0.48
+  size 0.3 0.6 0.2
+}
+Wall {
+  translation 6.8 0 -1.03
+  rotation 0 1 0 1.5708
+  size 3.7 0.6 0.2
+}
+Wall {
+  translation 3.773 0 2.03
+  rotation 0 1 0 1.5708
+  size 2.8 0.6 0.2
+}
+Wall {
+  translation -1.45 0 2
+  rotation 0 1 0 1.5708
+  size 3.05 0.6 0.3
+}
+Wall {
+  translation -1.54 0 -1.77
+  rotation 0 1 0 1.5708
+  size 2.4 0.6 0.2
 }
 DEF Person Solid {
   translation 3 0.9 -1
@@ -156,13 +142,148 @@ DEF Sunflower Pioneer3dx {
   name "sunflower1_1"
   controller "rosController"
   extensionSlot [
-    Compass {
+    DEF Nav_Sensors Group {
+      children [
+        GPS {
+        }
+        Compass {
+        }
+      ]
     }
-    GPS {
-    }
-    HokuyoUrg04lxug01 {
-      translation 0 0.197 -0.15
-      name "front_laser"
+    DEF Sunflower_Parts Transform {
+      translation 0 -0.0975 0
+      children [
+        DEF TRAY Transform {
+          translation 0 0.645 -0.01
+          children [
+            Shape {
+              appearance Appearance {
+                material Material {
+                  diffuseColor 0.96 0.86 0.57
+                }
+              }
+              geometry Box {
+                size 0.325 0.18 0.23
+              }
+            }
+          ]
+        }
+        DEF LASER Transform {
+          translation 0 0.245 -0.15
+          children [
+            HokuyoUrg04lxug01 {
+              translation 0 0.0525 0
+              name "front_laser"
+              noise 0.001
+            }
+          ]
+        }
+        DEF BODY Transform {
+          translation 0 0.245 0.04
+          children [
+            DEF SHELL Transform {
+              translation 0 0.2525 0
+              children [
+                Shape {
+                  appearance Appearance {
+                    material Material {
+                      diffuseColor 0.98 0.98 0.9
+                    }
+                  }
+                  geometry Box {
+                    size 0.33 0.505 0.3
+                  }
+                }
+              ]
+            }
+          ]
+        }
+        DEF HEAD Transform {
+          translation 0 1.045 0
+          children [
+            DEF CAMERA Transform {
+              translation 0 -0.02 -0.11
+              children [
+                Camera {
+                  translation 0 0 0.02
+                  children [
+                    Transform {
+                      rotation 1 0 0 -1.5707
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.07 0.07 0.07
+                            }
+                          }
+                          geometry Cylinder {
+                            height 0.04
+                            radius 0.015
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                  name "head_camera"
+                  width 320
+                  height 320
+                  pixelSize 0.5
+                }
+              ]
+            }
+            DEF EYE_L Transform {
+              translation -0.06 0 -0.12
+              rotation 0.989439 0.14495 0 1.5707
+              children [
+                Shape {
+                  appearance Appearance {
+                    material Material {
+                      diffuseColor 0.98 0.98 0.9
+                    }
+                  }
+                  geometry Cylinder {
+                    height 0.015
+                    radius 0.03
+                  }
+                }
+              ]
+            }
+            DEF SHELL Transform {
+              children [
+                Shape {
+                  appearance Appearance {
+                    material Material {
+                      diffuseColor 0.5 0.5 0.5
+                    }
+                  }
+                  geometry Cylinder {
+                    bottom FALSE
+                    height 0.1
+                    radius 0.11
+                  }
+                }
+              ]
+            }
+            DEF EYE_R Transform {
+              translation 0.06 0 -0.12
+              rotation 0.989439 -0.14495 0 1.5707
+              children [
+                Shape {
+                  appearance Appearance {
+                    material Material {
+                      diffuseColor 0.98 0.98 0.9
+                    }
+                  }
+                  geometry Cylinder {
+                    height 0.015
+                    radius 0.03
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }
