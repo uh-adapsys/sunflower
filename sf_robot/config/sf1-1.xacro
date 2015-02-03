@@ -36,6 +36,18 @@
 		</visual>
 	</link>
 
+    <!-- Override the 'continuous' joint from p3dx.xacro -->
+    <joint name="base_swivel_joint_fixed" type="fixed">
+        <origin xyz="-0.185 0 0.055" rpy="0 0 0"/>
+        <parent link="base_link"/>
+        <child link="swivel"/>
+    </joint>
+    <joint name="swivel_hubcap_joint_fixed" type="fixed">
+        <origin xyz="-0.026 0 -0.016" rpy="0 0 0"/>
+        <parent link="swivel"/>
+        <child link="center_wheel"/>
+    </joint>
+
 	<!-- Tray -->
 	<xacro:macro name="tray" params="name parent *origin">
 		<joint name="${name}_joint" type="fixed">
