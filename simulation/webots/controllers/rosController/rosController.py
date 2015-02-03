@@ -22,10 +22,6 @@ except:
     exit(1)
 
 from collections import namedtuple
-from threading import Thread
-import math
-
-from controller import Robot
 from geometry_msgs.msg import PoseStamped
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from nav_msgs.msg import Odometry
@@ -34,8 +30,13 @@ from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import LaserScan
 from tf import TransformBroadcaster
 from tf.transformations import quaternion_from_euler
+from threading import Thread
 import actionlib
+import math
 import rospy
+import time
+
+from controller import Robot
 import sf_controller_msgs.msg
 
 
@@ -102,8 +103,12 @@ class Sunflower(Robot):
 
         # http://www.cyberbotics.com/reference/section3.13.php
         rotation = math.atan2(rawHeading[0], rawHeading[2])
+        # WeBots and ROS have
         x = round(rawLocation[0], 3)
         y = round(rawLocation[2], 3)
+        # Adjust for differences between WeBots and ROS world models
+        rotation = -1 * rotation
+        x = -1 * x
         self._lastLocation = self._location
         self._location = Sunflower.Location(x, y, rotation, self.getTime())
 
@@ -113,6 +118,7 @@ class Sunflower(Robot):
     def _updateLaser(self):
         fov = self._frontLaser.getFov()
         ranges = self._frontLaser.getRangeImage()
+        ranges.reverse()
         maxRange = self._frontLaser.getMaxRange()
         sampleRate = self._frontLaser.getSamplingPeriod() / 1000
 
@@ -140,17 +146,23 @@ class Sunflower(Robot):
                 (self._location.x, self._location.y, 0),
                 quaternion_from_euler(0, 0, self._location.theta),
                 self._rosTime,
-                'map',
-                'base_link',)
+                'odom',
+                'map',)
 
     def _publishLaserTransform(self, laserPublisher):
         if self._location:
+            #             laserPublisher.sendTransform(
+            #                 (0.15, 0.0, 0.245),
+            #                 quaternion_from_euler(0, 0, 0),
+            #                 self._rosTime,
+            #                 'base_laser_front_link',
+            #                 'base_link')
             laserPublisher.sendTransform(
-                (0.15, 0.0, 0.245),
+                (0.0, 0.0, 0.0),
                 quaternion_from_euler(0, 0, 0),
                 self._rosTime,
-                'base_laser_front_link',
-                'base_link')
+                'scan_front',
+                'base_laser_front_link')
 
     def _publishOdom(self, odomPublisher):
         if self._location and self._lastLocation:
@@ -165,7 +177,8 @@ class Sunflower(Robot):
             msg.pose.pose.position.y = self._location.y
             msg.pose.pose.position.z = 0
 
-            orientation = quaternion_from_euler(0, 0, self._location.theta)
+            orientation = quaternion_from_euler(
+                0, 0, self._location.theta)
             msg.pose.pose.orientation.x = orientation[0]
             msg.pose.pose.orientation.y = orientation[1]
             msg.pose.pose.orientation.z = orientation[2]
@@ -178,6 +191,7 @@ class Sunflower(Robot):
                 self._location.y - self._lastLocation.y) / dt
             msg.twist.twist.angular.x = (
                 self._location.theta - self._lastLocation.theta) / dt
+
             odomPublisher.publish(msg)
 
     def _publishPose(self, posePublisher):
@@ -214,6 +228,7 @@ class Sunflower(Robot):
 
     def _publishLaser(self, laserPublisher):
         if self._laserValues:
+            laser_frequency = 40
             msg = LaserScan()
             msg.header.stamp = self._rosTime
             msg.header.frame_id = 'scan_front'
@@ -225,8 +240,9 @@ class Sunflower(Robot):
                 msg.angle_max - msg.angle_min) / len(msg.ranges)
             msg.range_min = self._laserValues.min_range
             msg.range_max = self._laserValues.max_range
-            msg.scan_time = 0
-            msg.time_increment = self._laserValues.scan_time
+            msg.scan_time = self._time_step
+            msg.time_increment = (msg.scan_time / laser_frequency /
+                                  len(self._laserValues.ranges))
             laserPublisher.publish(msg)
 
     def run(self):
@@ -249,11 +265,15 @@ class Sunflower(Robot):
         locationTransform = TransformBroadcaster()
         laserTransform = TransformBroadcaster()
 
+        # Probably something wrong elsewhere, but we seem to need to publish
+        # map->odom transform once to get sf_navigation to load
+        self._publishLocationTransform(locationTransform)
         while not rospy.is_shutdown():
             if self.step(self._time_step) == -1:
                 break
 
             self._rosTime = rospy.Time(self.getTime())
+
             self._updateLocation()
             self._updateSonar()
             self._updateLaser()
@@ -261,13 +281,15 @@ class Sunflower(Robot):
             self._publishPose(posePublisher)
             self._publishOdom(odomPublisher)
             self._publishOdomTransform(odomTransform)
+            # published by robot_joint_publisher
             self._publishLaserTransform(laserTransform)
-            self._publishLocationTransform(locationTransform)
+            # Published by sf_navigation
+            # self._publishLocationTransform(locationTransform)
             self._publishSonar(sonarPublisher)
             self._publishLaser(laserPublisher)
 
             # It appears that we have to call sleep for ROS to process messages
-            rospy.sleep(0.0001)
+            time.sleep(0)
 
     def initialise(self):
         numLeds = 3
@@ -292,6 +314,9 @@ class Sunflower(Robot):
         self._compass = self.getCompass("compass")
         self._compass.enable(self._time_step)
 
+        self._camera = self.getCamera("head_camera")
+        self._camera.enable(self._time_step)
+
         self._leds = []
         for i in range(0, numLeds):
             led = self.getLED("red_led%s" % (i + 1))
@@ -309,7 +334,7 @@ class Sunflower(Robot):
         pass
 
     def execute_cb(self, goal):
-        rospy.logdebug("Got goal: %s" % goal)
+        rospy.loginfo("Got goal: %s" % goal)
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
         elif goal.action == 'move':
