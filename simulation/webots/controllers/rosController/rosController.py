@@ -268,6 +268,7 @@ class Sunflower(Robot):
         # Probably something wrong elsewhere, but we seem to need to publish
         # map->odom transform once to get sf_navigation to load
         self._publishLocationTransform(locationTransform)
+
         while not rospy.is_shutdown():
             if self.step(self._time_step) == -1:
                 break
@@ -305,6 +306,9 @@ class Sunflower(Robot):
         self._rightWheel.setPosition(float('+inf'))
         self._rightWheel.setVelocity(0.0)
 
+        self._tray = self.getMotor("tray")
+        self._tray.setPosition(0.1)
+
         self._frontLaser = self.getCamera("front_laser")
         self._frontLaser.enable(self._time_step)
 
@@ -317,11 +321,14 @@ class Sunflower(Robot):
         self._camera = self.getCamera("head_camera")
         self._camera.enable(self._time_step)
 
-        self._leds = []
+        self._bodyLED = self.getLED("light")
+        self.setlight([0, 1, 0])
+
+        self._baseLEDs = []
         for i in range(0, numLeds):
             led = self.getLED("red_led%s" % (i + 1))
             led.set(0)
-            self._leds.append(led)
+            self._baseLEDs.append(led)
 
         self._sensors = []
         self._sensorValues = []
@@ -375,7 +382,20 @@ class Sunflower(Robot):
             pass
 
     def setlight(self, color):
-        return True
+        # Sunflower hardware only supports on/off states for RGB array
+        # Webots selects the color as an array index of available colors
+        # 3-bit color array is arranged in ascending binary order
+        try:
+            r = 0x4 if color[0] else 0
+            g = 0x2 if color[1] else 0
+            b = 0x1 if color[2] else 0
+            # Webots color array is 1-indexed
+            colorIndex = r + g + b + 1
+            self._bodyLED.set(colorIndex)
+            return True
+        except Exception:
+            rospy.logerr("Error setting color to: %s" % (color), exc_info=True)
+            return False
 
     def move(self, goal):
         joints = goal.jointPositions
