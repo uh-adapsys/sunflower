@@ -307,7 +307,6 @@ class Sunflower(Robot):
         self._rightWheel.setVelocity(0.0)
 
         self._tray = self.getMotor("tray")
-        self._tray.setPosition(0.1)
 
         self._frontLaser = self.getCamera("front_laser")
         self._frontLaser.enable(self._time_step)
@@ -319,10 +318,10 @@ class Sunflower(Robot):
         self._compass.enable(self._time_step)
 
         self._camera = self.getCamera("head_camera")
-        self._camera.enable(self._time_step)
+        if self._camera:
+            self._camera.enable(self._time_step)
 
         self._bodyLED = self.getLED("light")
-        self.setlight([0, 1, 0])
 
         self._baseLEDs = []
         for i in range(0, numLeds):
@@ -532,6 +531,9 @@ class Sunflower(Robot):
         return handle.result
 
     def moveJoints(self, goal, positions):
+        if goal.component == 'tray':
+            return self.moveTray(positions)
+
         return _states['SUCCEEDED']
 
 

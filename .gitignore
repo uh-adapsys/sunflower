@@ -1,3 +1,6 @@
+# ------ Webots Section ------
+*.cache
+
 # ------ Python Section ------
 
 *.py[cod]
