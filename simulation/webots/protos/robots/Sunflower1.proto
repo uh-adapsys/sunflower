@@ -8,11 +8,14 @@ PROTO Sunflower1 [
   field SFString controller "void"
   field SFString controllerArgs ""
   field SFBool synchronization TRUE 
-  field MFNode endPoint [
+  field SFBool useCamera FALSE
+  field MFNode extensions [
+  ]
+  field MFNode extensionSensors [
   ]
 ]
 {
-  DEF Sunflower Pioneer3dx {
+  Pioneer3dx {
     translation IS translation
     rotation IS rotation
     name IS name
@@ -20,92 +23,34 @@ PROTO Sunflower1 [
     controllerArgs IS controllerArgs
     synchronization IS synchronization
     extensionSlot [
-      DEF Nav_Sensors Group {
+      Group {
         children [
           GPS {
           }
           Compass {
           }
 		  DEF EXTENSION_SLOT Group {
-            children IS extensions
+            children IS extensionSensors
           }
         ]
       }
-      DEF Sunflower_Parts Transform {
+      Transform {
         translation 0 -0.0975 0
         children [
-          DEF TRAY Transform {
+          Transform {
             translation 0 0.645 -0.01
             children [
-              SliderJoint {
-                jointParameters JointParameters {
-                  axis 0 0 -1
-                  maxStop 0.1
-                }
-                device [
-                  LinearMotor {
-                    name "tray"
-                    acceleration 3
-                    maxVelocity 2
-                    maxForce 2
-                  }
-                ]
-                endPoint Solid {
-                  children [
-                    Shape {
-                      appearance Appearance {
-                        material Material {
-                          diffuseColor 0.96 0.86 0.57
-                        }
-                      }
-                      geometry Box {
-                        size 0.325 0.18 0.23
-                      }
-                    }
-                  ]
-                  boundingObject Box {
-                    size 0.325 0.18 0.23
-                  }
-                  physics Physics {
-                    density 100
-                  }
-                }
+              sunflower_tray {
               }
             ]
           }
-          DEF LED_PANEL Transform {
+          Transform {
             translation 0 0.7525 0.04
             children [
-              LED {
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                        ambientIntensity 0
-                        shininess 0.5
-                        transparency 0.5
-                      }
-                    }
-                    geometry Box {
-                      size 0.325 0.005 0.295
-                    }
-                  }
-                ]
-                name "light"
-                color [
-                  0 0 0
-                  0 0 1
-                  0 1 0
-                  0 1 1
-                  1 0 0
-                  1 0 1
-                  1 1 0
-                  1 1 1
-                ]
-              }
+              sunflower_lightpanel { }
             ]
           }
-          DEF LASER Transform {
+          Transform {
             translation 0 0.245 -0.15
             children [
               HokuyoUrg04lxug01 {
@@ -115,110 +60,27 @@ PROTO Sunflower1 [
               }
             ]
           }
-          DEF BODY Transform {
+          Transform {
             translation 0 0.245 0.04
             children [
-              DEF SHELL Transform {
-                translation 0 0.2525 0
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                        diffuseColor 0.98 0.98 0.9
-                      }
-                    }
-                    geometry Box {
-                      size 0.33 0.5 0.3
-                    }
+              sunflower_shell {
+              }
+            ]
+          }
+          Transform {
+            translation 0 0.755 0.04
+            children [
+              sunflower_neck {
+                endPoint [
+                  sunflower_head {
+                    useCamera IS useCamera
                   }
                 ]
               }
             ]
           }
-          DEF HEAD Transform {
-            translation 0 1.045 0
-            children [
-              DEF CAMERA Transform {
-                translation 0 -0.02 -0.11
-                children [
-                  Camera {
-                    translation 0 0 0.02
-                    children [
-                      Transform {
-                        rotation 1 0 0 -1.5707
-                        children [
-                          Shape {
-                            appearance Appearance {
-                              material Material {
-                                diffuseColor 0.07 0.07 0.07
-                              }
-                            }
-                            geometry Cylinder {
-                              height 0.04
-                              radius 0.015
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                    name "head_camera"
-                    width 320
-                    height 320
-                    pixelSize 0.5
-                  }
-                ]
-              }
-              DEF EYE_L Transform {
-                translation -0.06 0 -0.12
-                rotation 0.989439 0.14495 0 1.5707
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                        diffuseColor 0.98 0.98 0.9
-                      }
-                    }
-                    geometry Cylinder {
-                      height 0.015
-                      radius 0.03
-                    }
-                  }
-                ]
-              }
-              DEF SHELL Transform {
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                        diffuseColor 0.5 0.5 0.5
-                      }
-                    }
-                    geometry Cylinder {
-                      bottom FALSE
-                      height 0.1
-                      radius 0.11
-                    }
-                  }
-                ]
-              }
-              DEF EYE_R Transform {
-                translation 0.06 0 -0.12
-                rotation 0.989439 -0.14495 0 1.5707
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                        diffuseColor 0.98 0.98 0.9
-                      }
-                    }
-                    geometry Cylinder {
-                      height 0.015
-                      radius 0.03
-                    }
-                  }
-                ]
-              }
-            ]
+          Group {
+            children IS extensions
           }
         ]
       }

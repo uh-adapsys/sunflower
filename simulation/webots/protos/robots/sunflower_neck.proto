@@ -1,0 +1,29 @@
+#VRML_OBJ V8.0.5 utf8
+# Default neck for the Sunflower robot
+
+PROTO sunflower_neck [
+  field MFNode endPoint NULL
+]
+{
+  ax12 {
+    name "neck_lower"
+    endPoint fp04_02 {
+      endPoint [
+        ax12 {
+          name "neck_upper"
+          endPoint fp04_02 {
+            endPoint [
+              ax12 {
+                rotation 0 1 0 1.5707
+                name "head_tilt"
+                endPoint fp04_02 {
+                  endPoint IS endPoint
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
