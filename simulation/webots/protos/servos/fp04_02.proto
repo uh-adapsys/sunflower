@@ -1,0 +1,34 @@
+#VRML_OBJ V8.0.5 utf8
+# FP04-02 Hinge
+
+PROTO fp04_02 [
+  field SFVec3f translation 0 0 0 
+  field SFRotation rotation 0 1 0 0 
+  field MFNode endPoint []
+]
+{
+  Solid {
+    translation IS translation
+	rotation IS rotation
+	children [
+  Solid {  
+    translation 0 -0.0175 0
+    children [
+      Transform {
+		translation 0 0 -0.027
+		rotation 1 0 0 -1.5707
+		children IS endPoint
+	  }
+	  Transform {
+		translation 0 0 -0.008
+		rotation 0.707107 0.707107 0 3.14159
+		children [
+		  fp04_02mesh {
+		  }
+		]
+	  }
+    ]
+  }
+  ]
+  }
+}

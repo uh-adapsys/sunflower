@@ -1,0 +1,76 @@
+#VRML_OBJ V8.0.5 utf8
+# AX-12 Servo with endpoint slot
+
+PROTO ax12 [
+  field SFString name "AX_12"
+  field SFVec3f translation 0 0 0
+  field SFRotation rotation 0 1 0 0
+  field SFFloat servoPosition 0
+  field SFFloat acceleration -1
+  field SFFloat maxVelocity 10
+  field SFFloat minPosition 0
+  field SFFloat maxPosition 0
+  field SFFloat maxTorque 10
+  field SFNode endPoint NULL
+]
+{
+  Solid {
+    translation IS translation
+	rotation IS rotation
+	children [
+  Solid {
+    translation 0 0.025 0
+    children [
+      ax12mesh {
+  	  }
+      Transform {
+        translation 0 0.0135 0.019
+        rotation 1 0 0 1.5707
+        children [
+          Shape {
+            appearance Appearance {
+              material Material {
+                diffuseColor 0.9 0.9 0.9
+              }
+            }
+            geometry Cylinder {
+              height 0.005
+              radius 0.011
+            }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 1 0
+              position IS servoPosition
+            }
+            device [
+              RotationalMotor {
+                name IS name
+                acceleration IS acceleration
+                maxVelocity IS maxVelocity
+                minPosition IS minPosition
+                maxPosition IS maxPosition
+                maxTorque IS maxTorque
+              }
+            ]
+  			endPoint IS endPoint
+          }
+        ]
+      }
+    ]
+    boundingObject Transform {
+      translation 0 0 0.001
+      children [
+        Box {
+          size 0.027 0.05 0.04
+        }
+      ]
+    }
+    physics Physics {
+      density -1
+      mass 0.054
+    }
+  }
+  ]
+  }
+}
