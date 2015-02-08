@@ -2,98 +2,102 @@
 # Default tray module for the Sunflower robot
 
 PROTO sunflower_tray [
-  field SFFloat minPosition 0
-  field SFFloat maxPosition 0.1
   field SFFloat servoPosition 0
   field SFString name "tray"
-  hiddenField SFVec3f boxSize 0.325 0.18 0.23
+  field SFVec3f traySize 0.325 0.18 0.23
+  field SFFloat trayThickness 0.01
 ]
 {
-  SliderJoint {
-    jointParameters JointParameters {
-      axis 0 0 -1
-      position IS servoPosition
+  Solid {
+    translation 0 %{=0 - fields.traySize.y}% %{=0 - (fields.traySize.z - fields.trayThickness) / 4 + fields.trayThickness}%
+    boundingObject Box {
+      size 0.05 0.0025 0.05
     }
-    device [
-      LinearMotor {
-        name IS name
-        acceleration 3
-        maxVelocity 2
-        maxForce 2
-        minPosition IS minPosition
-        maxPosition IS maxPosition
+    physics Physics {
+    }
+    children [
+      SliderJoint {   
+        jointParameters JointParameters {
+          axis 0 0 -1
+          position IS servoPosition
+          minStop -0.001
+          maxStop %{=(fields.traySize.z / 2) - 0.03}%
+        }
+        device [
+          LinearMotor {
+            name IS name
+            acceleration -1
+            maxVelocity 0.3
+            maxForce 2
+            minPosition -0.001
+            maxPosition %{=(fields.traySize.z / 2) - 0.03}%
+          }
+        ]
+        endPoint Solid {
+          children [
+            DEF FRONT Transform {
+              translation 0 0 %{=0 - (fields.traySize.z - fields.trayThickness) / 2}%
+              children [
+                Shape {
+                  appearance wood_appearance {
+                  }
+                  geometry Box {
+                    size %{=fields.traySize.x}% %{=fields.traySize.y}% %{=fields.trayThickness}%
+                  }
+                }
+              ]
+            }
+            DEF BOTTOM Transform {
+              translation 0 %{=(fields.traySize.y - fields.trayThickness) / -2 + fields.trayThickness * 2}% %{=fields.trayThickness / 2}%
+              children [
+                Shape {
+                  appearance wood_appearance {
+                  }
+                  geometry Box {
+                    size %{=fields.traySize.x - fields.trayThickness * 6}% %{=fields.trayThickness}% %{=fields.traySize.z - fields.trayThickness}%
+                  }
+                }
+              ]
+            }
+            DEF LEFT Transform {
+              translation %{=(fields.traySize.x - fields.trayThickness) / 2 - fields.trayThickness * 2}% %{=fields.traySize.y / -4 + fields.trayThickness * 2}% %{=fields.trayThickness / 2}%
+              children [
+                Shape {
+                  appearance wood_appearance {
+                  }
+                  geometry Box {
+                    size %{=fields.trayThickness}% %{=fields.traySize.y / 2}% %{=fields.traySize.z - fields.trayThickness}%
+                  }
+                }
+              ]
+            }
+            DEF RIGHT Transform {
+              translation %{=(fields.traySize.x - fields.trayThickness) / -2 + fields.trayThickness * 2}% %{=fields.traySize.y / -4 + fields.trayThickness * 2}% %{=fields.trayThickness / 2}%
+              children [
+                Shape {
+                  appearance wood_appearance {
+                  }
+                  geometry Box {
+                    size %{=fields.trayThickness}% %{=fields.traySize.y / 2}% %{=fields.traySize.z - fields.trayThickness}%
+                  }
+                }
+              ]
+            }
+          ]
+          boundingObject Group {
+            children [
+              USE FRONT
+              USE BOTTOM
+              USE RIGHT
+              USE LEFT
+            ]
+          }
+          physics Physics {
+            density -1
+            mass 0.150
+          }
+        }
       }
     ]
-    endPoint Solid {
-      children [
-        DEF FRONT Transform {
-          translation 0 0 -0.11
-          children [
-            Shape {
-              appearance Appearance {
-                material Material {
-                  diffuseColor 0.96 0.86 0.57
-                }
-              }
-              geometry Box {
-                size 0.325 0.18 0.01
-              }
-            }
-          ]
-        }
-        DEF BOTTOM Transform {
-          translation 0 -0.085 0.005
-          children [
-            Shape {
-              appearance Appearance {
-                material Material {
-                  diffuseColor 0.96 0.86 0.57
-                }
-              }
-              geometry Box {
-                size 0.325 0.01 0.22
-              }
-            }
-          ]
-        }
-        DEF LEFT Transform {
-          translation 0.1575 -0.04 0.005
-          children [
-            Shape {
-              appearance Appearance {
-                material Material {
-                  diffuseColor 0.96 0.86 0.57
-                }
-              }
-              geometry Box {
-                size 0.01 0.08 0.22
-              }
-            }
-          ]
-        }
-        DEF RIGHT Transform {
-          translation -0.1575 -0.04 0.005
-          children [
-            Shape {
-              appearance Appearance {
-                material Material {
-                  diffuseColor 0.96 0.86 0.57
-                }
-              }
-              geometry Box {
-                size 0.01 0.08 0.22
-              }
-            }
-          ]
-        }
-      ]
-      boundingObject Box {
-        size IS boxSize
-      }
-      physics Physics {
-        density -1
-        mass 0.5
-      }
-    }
   }
 }

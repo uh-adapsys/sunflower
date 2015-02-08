@@ -2,16 +2,20 @@
 # Sunflower 1 Robot on a Pioneer3dx base
 
 PROTO Sunflower1 [
-  field SFVec3f translation 0 0.0975 0 
-  field SFRotation rotation 0 1 0 0 
+  field SFVec3f translation 0 0.0975 0
+  field SFRotation rotation 0 1 0 0
   field SFString name "Sunflower1_1"
   field SFString controller "void"
   field SFString controllerArgs ""
-  field SFBool synchronization TRUE 
+  field SFBool synchronization TRUE
+  
+  field SFFloat tray_position 0
+  field SFFloat neck_lower_position 0
+  field SFFloat neck_upper_position 0
+  field SFFloat head_tilt_position 0
+  field SFFloat head_pan_position 0
   field SFBool useCamera FALSE
   field MFNode extensions [
-  ]
-  field MFNode extensionSensors [
   ]
 ]
 {
@@ -29,60 +33,41 @@ PROTO Sunflower1 [
           }
           Compass {
           }
-		  DEF EXTENSION_SLOT Group {
-            children IS extensionSensors
+          HokuyoUrg04lxug01 {
+            translation 0 0.2 -0.15
+            name "front_laser"
+            noise 0.001
           }
         ]
       }
-      Transform {
-        translation 0 -0.0975 0
-        children [
-          Transform {
-            translation 0 0.645 -0.01
-            children [
-              sunflower_tray {
-              }
-            ]
-          }
-          Transform {
-            translation 0 0.7525 0.04
-            children [
-              sunflower_lightpanel { }
-            ]
-          }
-          Transform {
-            translation 0 0.245 -0.15
-            children [
-              HokuyoUrg04lxug01 {
-                translation 0 0.0525 0
-                name "front_laser"
-                noise 0.001
-              }
-            ]
-          }
-          Transform {
-            translation 0 0.245 0.04
-            children [
-              sunflower_shell {
-              }
-            ]
-          }
-          Transform {
-            translation 0 0.755 0.04
-            children [
-              sunflower_neck {
-                endPoint [
-                  sunflower_head {
-                    useCamera IS useCamera
-                  }
-                ]
-              }
-            ]
-          }
-          Group {
-            children IS extensions
+      sunflower_shell {
+        translation 0 0.146 0.04
+        traySlot [
+          sunflower_tray {
+            servoPosition IS tray_position
           }
         ]
+        lightSlot [
+          sunflower_lightpanel {
+          }
+        ]
+        headSlot [
+          sunflower_neck2 {
+            rotation 0 1 0 1.5707
+            neck_lower_position IS neck_lower_position
+            neck_upper_position IS neck_upper_position
+            head_tilt_position IS head_tilt_position
+            head_pan_position IS head_pan_position
+            headSlot [
+              sunflower_head {
+                useCamera IS useCamera
+              }
+            ]
+          }
+        ]
+      }
+      Group {
+        children IS extensions
       }
     ]
   }

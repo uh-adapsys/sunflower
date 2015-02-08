@@ -1,4 +1,4 @@
-#VRML_SIM V8.0.4 utf8
+#VRML_SIM V8.0.5 utf8
 WorldInfo {
   info [
     "Description: WeBots Model of the UH Robot House"
@@ -9,8 +9,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation 0.0656694 -0.996376 0.0540668 1.61409
-  position -0.53991 0.744246 0.0306178
+  orientation 0 0.92 0.4 3.14159
+  position 1.34 12.5 -11
 }
 Background {
   skyColor [
@@ -64,5 +64,5 @@ DEF Person Solid {
   translationStep 0
   rotationStep 0
 }
-DEF PIONEER_3DX Sunflower1 {
+DEF Sunflower1-1 Sunflower1 {
 }

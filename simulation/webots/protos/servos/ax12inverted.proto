@@ -1,7 +1,7 @@
 #VRML_OBJ V8.0.5 utf8
 # AX-12 Servo with endpoint slot
 
-PROTO ax12 [
+PROTO ax12inverted [
   field SFString name "AX_12"
   field SFRotation rotation 0 1 0 0
   field SFVec3f translation 0 0 0
@@ -11,27 +11,18 @@ PROTO ax12 [
   field SFFloat minPosition 0
   field SFFloat maxPosition 0
   field SFFloat maxTorque 10
-  field SFNode endPoint NULL
-  hiddenField SFVec3f boxOffset 0 0.025 0 # Move 0,0,0 to the bottom of the servo
+  field MFNode endPoint NULL
+  hiddenField SFVec3f boxOffset 0 0.019 -0.0135 # Move 0,0,0 to the bottom of the servo
   hiddenField SFVec3f boxSize 0.032 0.050 0.038 # Overall size of a servo
   hiddenField SFVec3f hingeOffset 0 0.0385 0.019
   hiddenField SFRotation hingeRotation 1 0 0 1.5707
 ]
 {
   Solid {
-    translation IS translation
+    translation %{=fields.translation.x}% %{=fields.translation.y+(0.005/2)}% %{=fields.translation.z}%
     rotation IS rotation
     children [
-      Transform {
-        translation IS boxOffset
-        children [
-          ax12mesh {
-          }
-        ]
-      }
       DEF HINGE Transform {
-        translation IS hingeOffset
-        rotation IS hingeRotation
         children [
           Shape {
             appearance Appearance {
@@ -47,8 +38,6 @@ PROTO ax12 [
         ]
       }
       Transform {
-        translation IS hingeOffset
-        rotation IS hingeRotation
         children [
           HingeJoint {
             jointParameters HingeJointParameters {
@@ -66,27 +55,48 @@ PROTO ax12 [
                 maxTorque IS maxTorque
               }
             ]
-            endPoint IS endPoint
+            endPoint Solid {
+              children [
+                Transform {
+                  translation IS boxOffset
+                  rotation IS hingeRotation
+                  children [
+                    ax12mesh {
+                    }
+                  ]
+                }
+                Transform {
+                  translation 0 %{=fields.boxSize.y / 2}% %{=fields.boxOffset.z}%
+                  rotation IS hingeRotation
+                  children IS endPoint
+                }
+              ]
+              boundingObject Group {
+                children [
+                  Transform {
+                    translation IS boxOffset
+                    rotation IS hingeRotation
+                    children [
+                      Box {
+                        size IS boxSize
+                      }
+                    ]
+                  }
+                ]
+              }
+              physics Physics {
+                density -1
+                mass 0.054
+              }
+            }
           }
         ]
       }
     ]
-    boundingObject Group {
-      children [
-        Transform {
-          translation IS boxOffset
-          children [
-            Box {
-              size IS boxSize
-            }
-          ]
-        }
-        USE HINGE
-      ]
-    }
+    boundingObject USE HINGE
     physics Physics {
       density -1
-      mass 0.054
+      mass 0.001
     }
   }
 }

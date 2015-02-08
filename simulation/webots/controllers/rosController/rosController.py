@@ -306,7 +306,13 @@ class Sunflower(Robot):
         self._rightWheel.setPosition(float('+inf'))
         self._rightWheel.setVelocity(0.0)
 
-        self._tray = self.getMotor("tray")
+        self._servos = {
+                ("tray", self.getMotor("tray")),
+                ("neck_lower", self.getMotor("neck_lower")),
+                ("neck_upper", self.getMotor("neck_upper")),
+                ("head_tilt", self.getMotor("head_tilt")),
+                ("head_pan", self.getMotor("head_pan")),
+        }
 
         self._frontLaser = self.getCamera("front_laser")
         self._frontLaser.enable(self._time_step)
@@ -531,11 +537,21 @@ class Sunflower(Robot):
         return handle.result
 
     def moveJoints(self, goal, positions):
-        if goal.component == 'tray':
-            return self.moveTray(positions)
+        try:
+            joint_names = rospy.get_param(
+                                          '/sf_controller/%s/joint_names' %
+                                          goal.component)
+        except KeyError:
+            # assume component is a named joint
+            joint_names = [goal.component, ]
+        for i in range(0, len(joint_names)):
+            servoName = joint_names[i]
+            if servoName not in self._servos:
+                rospy.logerr('Undefined joint %s', servoName)
+                return _states['ABORTED']
+            self._servos[servoName].set(positions[i])
 
         return _states['SUCCEEDED']
-
 
 # ------------------- action_handle section ------------------- #
 # Action handle class.

@@ -2,28 +2,43 @@
 # Default neck for the Sunflower robot
 
 PROTO sunflower_neck [
-  field MFNode endPoint NULL
+  field SFFloat neck_lower_position 0
+  field SFFloat neck_upper_position 0
+  field SFFloat head_tilt_position 0
+  field SFFloat head_pan_position 0
 ]
 {
-  ax12 {
-    name "neck_lower"
-    endPoint fp04_02 {
-      endPoint [
-        ax12 {
-          name "neck_upper"
-          endPoint fp04_02 {
-            endPoint [
-              ax12 {
-                rotation 0 1 0 1.5707
-                name "head_tilt"
-                endPoint fp04_02 {
-                  endPoint IS endPoint
-                }
+  Solid {
+    rotation 0 1 0 1.5707
+    children [
+      ax12 {
+        name "neck_lower"
+        servoPosition IS neck_lower_position
+        endPoint fp04_02 {
+          endPoint [
+            ax12 {
+              name "neck_upper"
+              servoPosition IS neck_upper_position
+              endPoint fp04_02 {
+                endPoint [
+                  ax12 {
+                    name "head_tilt"
+                    servoPosition IS head_tilt_position
+                    rotation 0 1 0 1.5707
+                    endPoint fp04_02 {
+                      endPoint [
+                        ax12inverted {
+                          servoPosition IS head_pan_position
+                        }
+                      ]
+                    }
+                  }
+                ]
               }
-            ]
-          }
+            }
+          ]
         }
-      ]
-    }
+      }
+    ]
   }
 }
