@@ -30,8 +30,10 @@ PROTO Sunflower1 [
       Group {
         children [
           GPS {
+            resolution 0.001
           }
           Compass {
+            resolution 0.001
           }
           HokuyoUrg04lxug01 {
             translation 0 0.2 -0.15

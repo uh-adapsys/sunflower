@@ -19,6 +19,13 @@ PROTO sunflower_shell [
   Solid {
     translation %{=fields.translation.x }% %{=fields.translation.y + (fields.boxSize.y / 2)}% %{=fields.translation.z}%
     rotation IS rotation
+    physics Physics {
+      density -1
+      mass 5.0
+      centerOfMass [
+        0 %{=-fields.boxSize.y / 2}% %{=fields.boxSize.z / 2}%
+      ]
+    }
     children [
       DEF BODY Group {
         children [
@@ -146,9 +153,5 @@ PROTO sunflower_shell [
       }
     ]
     boundingObject USE BODY
-    physics Physics {
-      density -1
-      mass 5.0
-    }
   }
 }

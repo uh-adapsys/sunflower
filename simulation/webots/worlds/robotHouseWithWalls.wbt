@@ -1,4 +1,4 @@
-#VRML_SIM V8.0.5 utf8
+#VRML_SIM V8.0.4 utf8
 WorldInfo {
   info [
     "Description: WeBots Model of the UH Robot House"
@@ -9,7 +9,7 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation 0 0.92 0.4 3.14159
+  orientation 0 0.91707 0.398726 3.14159
   position 1.34 12.5 -11
 }
 Background {
@@ -24,6 +24,8 @@ DirectionalLight {
 }
 RobotHouse {
   wallHeight 0.6
+}
+RobotHouseFurniture {
 }
 DEF Person Solid {
   translation 3 0.9 -1
@@ -65,4 +67,6 @@ DEF Person Solid {
   rotationStep 0
 }
 DEF Sunflower1-1 Sunflower1 {
+  name "Sunflower1-1"
+  controller "rosController"
 }
