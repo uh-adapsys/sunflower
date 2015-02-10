@@ -20,7 +20,7 @@ PROTO RobotHouse [
       translation -1.68 0 -0.12
       rotation 0 1 0 -1.5708
       size 1 %{=fields.wallHeight}% 0.07
-  	frameHeight %{=fields.wallHeight - 0.1 }%
+      frameHeight %{=fields.wallHeight - 0.1 }%
       jointAtLeft FALSE
     }
     Solid {
@@ -50,8 +50,8 @@ PROTO RobotHouse [
       rotationStep 0
     }
     Wall {
-      translation 2.71 0 -2.865
-      size 8.3 %{=fields.wallHeight}% 0.2
+      translation 2.65 0 -2.865
+      size 8.5 %{=fields.wallHeight}% 0.2
     }
     Wall {
       translation 1.2 0 3.45
@@ -76,15 +76,15 @@ PROTO RobotHouse [
       size 2.8 %{=fields.wallHeight}% 0.2
     }
     Wall {
-      translation -1.45 0 2
+      translation -1.45 0 2.01
       rotation 0 1 0 1.5708
-      size 3.05 %{=fields.wallHeight}% 0.3
+      size 3.1 %{=fields.wallHeight}% 0.3
     }
     Wall {
       translation -1.54 0 -1.77
       rotation 0 1 0 1.5708
       size 2.4 %{=fields.wallHeight}% 0.2
     }
-	]
+  ]
   }
-}	
+}  

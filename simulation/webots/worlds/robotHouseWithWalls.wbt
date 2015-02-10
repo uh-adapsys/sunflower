@@ -1,4 +1,5 @@
 #VRML_SIM V7.4.3 utf8
+
 WorldInfo {
   info [
     "Description: WeBots Model of the UH Robot House"
@@ -22,7 +23,7 @@ DirectionalLight {
   direction -0.33 -1 -0.5
   castShadows TRUE
 }
-Solid {
+DEF WALLS Solid {
   children [
     Floor {
       translation 1.5 0 1.936
@@ -106,25 +107,25 @@ Solid {
   ]
 }
 DEF Furniture Solid {
-    children [
-      ResizeableTable {
-        translation 3 0 1
-        size 1.3 0.74 0.8
-      }
-      ResizeableTable {
-        translation 0.82 0 -2.3
-        size 1.3 0.74 0.8
-      }
-      Sofa {
-        translation 5.34 0 -2.23
-        rotation 0 1 0 -1.5707
-      }
-      Armchair {
-        translation 6.5 0 -1
-        rotation 0 1 0 3.14159
-      }
-    ]
-  }
+  children [
+    ResizeableTable {
+      translation 3 0 1
+      size 1.3 0.74 0.8
+    }
+    ResizeableTable {
+      translation 0.82 0 -2.3
+      size 1.3 0.74 0.8
+    }
+    Sofa {
+      translation 5.34 0 -2.23
+      rotation 0 1 0 -1.5707
+    }
+    Armchair {
+      translation 6.5 0 -1
+      rotation 0 1 0 3.14159
+    }
+  ]
+}
 DEF Person Solid {
   translation 3 0.9 -1
   children [

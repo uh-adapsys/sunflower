@@ -8,7 +8,6 @@ Created on 12 Mar 2013
 from collections import namedtuple
 import logging
 import math
-import time
 
 from controller import Robot
 
@@ -115,11 +114,11 @@ class Sunflower(Robot):
         self._rightWheel.setVelocity(0.0)
 
         self._servos = {
-                ("tray", self.getMotor("tray")),
-                ("neck_lower", self.getMotor("neck_lower")),
-                ("neck_upper", self.getMotor("neck_upper")),
-                ("head_tilt", self.getMotor("head_tilt")),
-                ("head_pan", self.getMotor("head_pan")),
+            ("tray", self.getMotor("tray")),
+            ("neck_lower", self.getMotor("neck_lower")),
+            ("neck_upper", self.getMotor("neck_upper")),
+            ("head_tilt", self.getMotor("head_tilt")),
+            ("head_pan", self.getMotor("head_pan")),
         }
 
         self._frontLaser = self.getCamera("front_laser")
@@ -162,7 +161,7 @@ class Sunflower(Robot):
     def setlight(self, color):
         # Sunflower hardware only supports on/off states for RGB array
         # Webots selects the color as an array index of available colors
-        # 3-bit color array is arranged in ascending binary order
+        # 3-bit rgb color array is arranged in ascending binary order
         try:
             r = 0x4 if color[0] else 0
             g = 0x2 if color[1] else 0
@@ -172,7 +171,8 @@ class Sunflower(Robot):
             self._bodyLED.set(colorIndex)
             return True
         except Exception:
-            logging.getLogger().error("Error setting color to: %s" % (color), exc_info=True)
+            logging.getLogger().error(
+                "Error setting color to: %s" % (color), exc_info=True)
             return False
 
     def moveBase(self, rotation, linear):
@@ -188,10 +188,12 @@ class Sunflower(Robot):
         WHEEL_ROTATION = BASE_SIZE / WHEEL_SIZE
 
         if not isinstance(rotation, (int, float)):
-            logging.getLogger().error("Non-numeric rotation in list, aborting moveBase")
+            logging.getLogger().error(
+                "Non-numeric rotation in list, aborting moveBase")
             return _states['ABORTED']
         elif not isinstance(linear, (int, float)):
-            logging.getLogger().error("Non-numeric translation in list, aborting moveBase")
+            logging.getLogger().error(
+                "Non-numeric translation in list, aborting moveBase")
             return _states['ABORTED']
         if abs(linear) > maxTrans:
             logging.getLogger().error(

@@ -1,0 +1,40 @@
+#VRML_SIM V8.0.4 utf8
+WorldInfo {
+  info [
+    "Description: WeBots Model of the UH Robot House"
+    "Author: Nathan Burke <n.burke@natbur.com>"
+    "Date: 18 Oct 2014"
+  ]
+  title "robot house"
+  basicTimeStep 16
+}
+Viewpoint {
+  orientation -9.27998e-08 0.886936 0.461892 3.14159
+  position 1.33492 13.7798 -9.2695
+}
+Background {
+  skyColor [
+    0.4 0.7 1
+  ]
+}
+DirectionalLight {
+  ambientIntensity 1
+  direction -0.33 -1 -0.5
+  castShadows TRUE
+}
+Table {
+  translation 3.00977 3.55271e-15 1.03031
+  size 1.3 0.74 0.8
+}
+Table {
+  translation 0.822718 1.77636e-15 -2.3022
+  size 1.3 0.74 0.8
+}
+Sofa {
+  translation 5.33818 -5.68434e-14 -2.22926
+  rotation 0 1 0 -1.5707
+}
+Armchair {
+  translation 6.47737 2.0961e-13 -1.02405
+  rotation 0 1 0 3.14159
+}

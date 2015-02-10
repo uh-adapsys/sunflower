@@ -5,9 +5,26 @@ Created on 12 Mar 2013
 
 @author: nathan
 '''
+from collections import namedtuple
+from geometry_msgs.msg import PoseStamped, Twist
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from nav_msgs.msg import Odometry
+from p2os_msgs.msg import SonarArray
+from rosgraph_msgs.msg import Clock
+from sensor_msgs.msg import LaserScan
+from tf import TransformBroadcaster
+from tf.transformations import quaternion_from_euler
+from threading import Thread, currentThread
+import actionlib
+import math
+import rospy
+import time
+
+from controller import Robot
 try:
     import roslib
     roslib.load_manifest('rosController')
+    import sf_controller_msgs.msg
 except:
     import logging
     logger = logging.getLogger()
@@ -20,24 +37,6 @@ except:
         print >> sys.stderr, "Unable to load roslib, fatal error"
         print >> sys.stderr, traceback.format_exc()
     exit(1)
-
-from collections import namedtuple
-from geometry_msgs.msg import PoseStamped
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from nav_msgs.msg import Odometry
-from p2os_msgs.msg import SonarArray
-from rosgraph_msgs.msg import Clock
-from sensor_msgs.msg import LaserScan
-from tf import TransformBroadcaster
-from tf.transformations import quaternion_from_euler
-from threading import Thread
-import actionlib
-import math
-import rospy
-import time
-
-from controller import Robot
-import sf_controller_msgs.msg
 
 
 _states = {
@@ -86,6 +85,18 @@ class Sunflower(Robot):
             execute_cb=self.execute_cb,
             auto_start=False)
         self._as.start()
+        try:
+            # ROS Version >= Hydro
+            self._cmdVel = rospy.Subscriber(
+                'cmd_vel',
+                Twist,
+                callback=self.cmdvel_cb,
+                queue_size=2)
+        except:
+            self._cmdVel = rospy.Subscriber(
+                'cmd_vel',
+                Twist,
+                callback=self.cmdvel_cb)
 
         rospy.loginfo(
             "Started Sunflower Controller ActionServer on topic %s",
@@ -98,17 +109,13 @@ class Sunflower(Robot):
         self._rosTime = None
 
     def _updateLocation(self):
-        rawLocation = self._gps.getValues()
-        rawHeading = self._compass.getValues()
+        lX, lY, lZ = self._gps.getValues()
+        wX, _, wZ = self._compass.getValues()
 
         # http://www.cyberbotics.com/reference/section3.13.php
-        rotation = math.atan2(rawHeading[0], rawHeading[2])
-        # WeBots and ROS have
-        x = round(rawLocation[0], 3)
-        y = round(rawLocation[2], 3)
-        # Adjust for differences between WeBots and ROS world models
-        rotation = -1 * rotation
-        x = -1 * x
+        bearing = math.atan2(wX, wZ) - (math.pi / 2)
+        x, y, _, rotation = self.webotsToRos(lX, lY, lZ, bearing)
+
         self._lastLocation = self._location
         self._location = Sunflower.Location(x, y, rotation, self.getTime())
 
@@ -151,12 +158,6 @@ class Sunflower(Robot):
 
     def _publishLaserTransform(self, laserPublisher):
         if self._location:
-            #             laserPublisher.sendTransform(
-            #                 (0.15, 0.0, 0.245),
-            #                 quaternion_from_euler(0, 0, 0),
-            #                 self._rosTime,
-            #                 'base_laser_front_link',
-            #                 'base_link')
             laserPublisher.sendTransform(
                 (0.0, 0.0, 0.0),
                 quaternion_from_euler(0, 0, 0),
@@ -165,13 +166,12 @@ class Sunflower(Robot):
                 'base_laser_front_link')
 
     def _publishOdom(self, odomPublisher):
-        if self._location and self._lastLocation:
-            dt = (
-                self._location.timestamp - self._lastLocation.timestamp) / 1000
+        if self._location:
 
             msg = Odometry()
             msg.header.stamp = self._rosTime
             msg.header.frame_id = 'odom'
+            msg.child_frame_id = "base_link"
 
             msg.pose.pose.position.x = self._location.x
             msg.pose.pose.position.y = self._location.y
@@ -184,31 +184,39 @@ class Sunflower(Robot):
             msg.pose.pose.orientation.z = orientation[2]
             msg.pose.pose.orientation.w = orientation[3]
 
-            msg.child_frame_id = "base_link"
-            msg.twist.twist.linear.x = (
-                self._location.x - self._lastLocation.x) / dt
-            msg.twist.twist.linear.y = (
-                self._location.y - self._lastLocation.y) / dt
-            msg.twist.twist.angular.x = (
-                self._location.theta - self._lastLocation.theta) / dt
-
             odomPublisher.publish(msg)
+        else:
+            rospy.logerr("Skipped updating odom! Last: %s, Cur: %s" %
+                         (self._location, self._lastLocation))
 
     def _publishPose(self, posePublisher):
         if self._location:
-            msg = PoseStamped()
+
+            msg = Odometry()
             msg.header.stamp = self._rosTime
-            msg.header.frame_id = 'map'
+            msg.header.frame_id = 'odom'
+            msg.child_frame_id = 'base_link'
 
-            msg.pose.position.x = self._location.x
-            msg.pose.position.y = self._location.y
-            msg.pose.position.z = 0
+            msg.pose.pose.position.x = self._location.x
+            msg.pose.pose.position.y = self._location.y
+            msg.pose.pose.position.z = 0
 
-            orientation = quaternion_from_euler(0, 0, self._location.theta)
-            msg.pose.orientation.x = orientation[0]
-            msg.pose.orientation.y = orientation[1]
-            msg.pose.orientation.z = orientation[2]
-            msg.pose.orientation.w = orientation[3]
+            orientation = quaternion_from_euler(
+                0, 0, self._location.theta)
+            msg.pose.pose.orientation.x = orientation[0]
+            msg.pose.pose.orientation.y = orientation[1]
+            msg.pose.pose.orientation.z = orientation[2]
+            msg.pose.pose.orientation.w = orientation[3]
+
+            if self._lastLocation:
+                dt = (
+                    self._location.timestamp - self._lastLocation.timestamp) / 1000
+                msg.twist.twist.linear.x = (
+                    self._location.x - self._lastLocation.x) / dt
+                msg.twist.twist.linear.y = (
+                    self._location.y - self._lastLocation.y) / dt
+                msg.twist.twist.angular.x = (
+                    self._location.theta - self._lastLocation.theta) / dt
 
             posePublisher.publish(msg)
 
@@ -251,19 +259,20 @@ class Sunflower(Robot):
             sonarPublisher = rospy.Publisher(
                 "/sonar", SonarArray, queue_size=2)
             odomPublisher = rospy.Publisher("/odom", Odometry, queue_size=2)
-            posePublisher = rospy.Publisher("/pose", PoseStamped, queue_size=2)
+            posePublisher = rospy.Publisher("/pose", Odometry, queue_size=2)
             laserPublisher = rospy.Publisher(
                 "/scan_front", LaserScan, queue_size=2)
             clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
         except:
             sonarPublisher = rospy.Publisher("/sonar", SonarArray)
             odomPublisher = rospy.Publisher("/odom", Odometry)
-            posePublisher = rospy.Publisher("/pose", PoseStamped)
+            posePublisher = rospy.Publisher("/pose", Odometry)
             laserPublisher = rospy.Publisher("/scan_front", LaserScan)
             clockPublisher = rospy.Publisher("/clock", Clock)
         odomTransform = TransformBroadcaster()
         locationTransform = TransformBroadcaster()
         laserTransform = TransformBroadcaster()
+        print "Run: ThreadID=%s" % (currentThread().ident)
 
         # Probably something wrong elsewhere, but we seem to need to publish
         # map->odom transform once to get sf_navigation to load
@@ -292,6 +301,13 @@ class Sunflower(Robot):
             # It appears that we have to call sleep for ROS to process messages
             time.sleep(0)
 
+    def webotsToRos(self, x, y, z, theta):
+        rX = -z
+        rY = -x
+        rZ = y
+        theta = -1 * theta
+        return (rX, rY, rZ, theta)
+
     def initialise(self):
         numLeds = 3
         numSonarSensors = 16
@@ -300,18 +316,18 @@ class Sunflower(Robot):
 
         self._leftWheel = self.getMotor("left_wheel")
         self._leftWheel.setPosition(float('+inf'))
-        self._leftWheel.setVelocity(0.0)
+        self._leftWheel.setVelocity(0)
 
         self._rightWheel = self.getMotor("right_wheel")
         self._rightWheel.setPosition(float('+inf'))
-        self._rightWheel.setVelocity(0.0)
+        self._rightWheel.setVelocity(0)
 
         self._servos = {
-                ("tray", self.getMotor("tray")),
-                ("neck_lower", self.getMotor("neck_lower")),
-                ("neck_upper", self.getMotor("neck_upper")),
-                ("head_tilt", self.getMotor("head_tilt")),
-                ("head_pan", self.getMotor("head_pan")),
+            ("tray", self.getMotor("tray")),
+            ("neck_lower", self.getMotor("neck_lower")),
+            ("neck_upper", self.getMotor("neck_upper")),
+            ("head_tilt", self.getMotor("head_tilt")),
+            ("head_pan", self.getMotor("head_pan")),
         }
 
         self._frontLaser = self.getCamera("front_laser")
@@ -487,6 +503,7 @@ class Sunflower(Robot):
             else:
                 rightRate = rightRate * (rightDuration / leftDuration)
 
+        rospy.loginfo("Setting rates: L=%s, R=%s" % (leftRate, rightRate))
         duration = max(leftDuration, rightDuration)
         start_time = self.getTime()
         end_time = start_time + duration
@@ -509,7 +526,79 @@ class Sunflower(Robot):
 
         return _states['SUCCEEDED']
 
+    # adapted from p2os
+    def cmdvel_cb(self, msg):
+        self._rightWheel.setVelocity(msg.linear.x + msg.angular.z)
+        self._leftWheel.setVelocity(msg.linear.x - msg.angular.z)
+#
+#     def check_and_set_vel(self):
+#         if not self.vel_dirty:
+#             return
+#
+#         motor_max_speed = 0.5
+#         motor_max_turnspeed = math.radians(100)
+#
+#         rospy.logdebug(
+#             "setting vel: [%0.2f,%0.2f]", self.cmdvel_.linear.x, self.cmdvel_.angular.z)
+#         self.vel_dirty = False
+#
+#         vx = (self.cmdvel_.linear.x * 1e3)
+#         va = round(math.degrees((self.cmdvel_.angular.z)))
+#
+#         motorcommand = [0, 0, 0, 0]
+#
+# non-direct wheel control
+# motorcommand[0] = VEL
+# set velocity command
+#         if vx >= 0:
+# motorcommand[1] = ARGINT
+# positive velocity
+#             pass
+#         else:
+# motorcommand[1] = ARGNINT
+# negative velocity
+#             pass
+#
+#         absSpeedDemand = abs(vx)
+#         if absSpeedDemand <= motor_max_speed:
+#             motorcommand[2] = absSpeedDemand & 0x00FF
+#             motorcommand[3] = (absSpeedDemand & 0xFF00) >> 8
+#         else:
+#             rospy.logwarn(
+#                 "speed demand thresholded! (true: %u, max: %u)",
+#                 absSpeedDemand,
+#                 motor_max_speed)
+#             motorcommand[2] = motor_max_speed & 0x00FF
+#             motorcommand[3] = (motor_max_speed & 0xFF00) >> 8
+#
+#         motorpacket.Build(motorcommand, 4)
+#         SendReceive(motorpacket)
+#
+# motorcommand[0] = RVEL
+#         #
+#         if va >= 0:
+# motorcommand[1] = ARGINT
+# positive velocity
+#             pass
+#         else:
+# motorcommand[1] = ARGNINT
+# negative velocity
+#             pass
+#
+#         absturnRateDemand = abs(va)
+#         if absturnRateDemand <= motor_max_turnspeed:
+#             motorcommand[2] = absturnRateDemand & 0x00FF
+#             motorcommand[3] = (absturnRateDemand & 0xFF00) >> 8
+#         else:
+#             rospy.logwarn("Turn rate demand threshholded!")
+#             motorcommand[2] = motor_max_turnspeed & 0x00FF
+#             motorcommand[3] = (motor_max_turnspeed & 0xFF00) >> 8
+#
+#         motorpacket.Build(motorcommand, 4)
+#         SendReceive(motorpacket)
+
     def navigate(self, goal, positions):
+        print "Navigate: ThreadID=%s" % (currentThread().ident)
         pose = PoseStamped()
         pose.header.stamp = self._rosTime
         pose.header.frame_id = "/map"
@@ -527,9 +616,11 @@ class Sunflower(Robot):
         client_goal.target_pose = pose
 
         client.wait_for_server()
-        rospy.loginfo("%s: Navigating to %s",
+        rospy.loginfo("%s: Navigating to (%s, %s, %s)",
                       self._action_name,
-                      pose)
+                      positions[0],
+                      positions[1],
+                      positions[2])
 
         handle = _ActionHandle(client)
         client.send_goal(client_goal)
@@ -539,8 +630,8 @@ class Sunflower(Robot):
     def moveJoints(self, goal, positions):
         try:
             joint_names = rospy.get_param(
-                                          '/sf_controller/%s/joint_names' %
-                                          goal.component)
+                '/sf_controller/%s/joint_names' %
+                goal.component)
         except KeyError:
             # assume component is a named joint
             joint_names = [goal.component, ]
@@ -558,6 +649,8 @@ class Sunflower(Robot):
 #
 # The action handle is used to implement asynchronous behaviour within the
 # script.
+
+
 class _ActionHandle(object):
         # Initialises the action handle.
 
