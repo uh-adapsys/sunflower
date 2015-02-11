@@ -14,7 +14,7 @@ from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import LaserScan
 from tf import TransformBroadcaster
 from tf.transformations import quaternion_from_euler
-from threading import Thread, currentThread
+from threading import Thread
 import actionlib
 import math
 import rospy
@@ -63,6 +63,32 @@ _states = {
 }
 
 
+class ClockSync(Thread):
+
+    def __init__(self, robot):
+        super(ClockSync, self).__init__()
+        self.getTime = robot.getTime
+
+    def _publishClock(self, clockPublisher):
+        if clockPublisher:
+            clock = Clock(clock=self._rosTime)
+            clockPublisher.publish(clock)
+
+    def run(self):
+        try:
+            # ROS Version >= Hydro
+            clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
+        except:
+            clockPublisher = rospy.Publisher("/clock", Clock)
+
+        while not rospy.is_shutdown():
+            rospy.loginfo(self.getTime())
+            rosTime = rospy.Time(self.getTime())
+            clock = Clock(clock=rosTime)
+            clockPublisher.publish(clock)
+            time.sleep(0)
+
+
 class Sunflower(Robot):
 
     _actionHandles = {}
@@ -77,7 +103,7 @@ class Sunflower(Robot):
 
     def __init__(self, name):
         super(Sunflower, self).__init__()
-        self.initialise()
+        self._time_step = int(self.getBasicTimeStep())
         self._action_name = name
         self._as = actionlib.SimpleActionServer(
             self._action_name,
@@ -105,38 +131,46 @@ class Sunflower(Robot):
         self._result = sf_controller_msgs.msg.SunflowerResult()
         self._location = None
         self._lastLocation = None
-        self._sensorValues = None
         self._rosTime = None
+        self._servos = {}
+        self._sensors = {}
+        self._sensorValues = {}
+        self._leds = {}
+        self.initialise()
 
     def _updateLocation(self):
-        lX, lY, lZ = self._gps.getValues()
-        wX, _, wZ = self._compass.getValues()
+        if self._sensors.get('gps', None) and self._sensors.get('compass', None):
+            lX, lY, lZ = self._sensors['gps'].getValues()
+            wX, _, wZ = self._sensors['compass'].getValues()
 
-        # http://www.cyberbotics.com/reference/section3.13.php
-        bearing = math.atan2(wX, wZ) - (math.pi / 2)
-        x, y, _, rotation = self.webotsToRos(lX, lY, lZ, bearing)
+            # http://www.cyberbotics.com/reference/section3.13.php
+            bearing = math.atan2(wX, wZ) - (math.pi / 2)
+            x, y, _, rotation = self.webotsToRos(lX, lY, lZ, bearing)
 
-        self._lastLocation = self._location
-        self._location = Sunflower.Location(x, y, rotation, self.getTime())
+            self._lastLocation = self._location
+            self._location = Sunflower.Location(x, y, rotation, self.getTime())
 
     def _updateSonar(self):
-        self._sensorValues = map(lambda x: x.getValue(), self._sensors)
+        if self._sensors.get('sonar', None):
+            self._sensorValues['sonar'] = map(
+                lambda x: x.getValue(), self._sensors['sonar'])
 
     def _updateLaser(self):
-        fov = self._frontLaser.getFov()
-        ranges = self._frontLaser.getRangeImage()
-        ranges.reverse()
-        maxRange = self._frontLaser.getMaxRange()
-        sampleRate = self._frontLaser.getSamplingPeriod() / 1000
+        if self._sensors.get('frontLaser', None):
+            fov = self._sensors['frontLaser'].getFov()
+            ranges = self._sensors['frontLaser'].getRangeImage()
+            ranges.reverse()
+            maxRange = self._sensors['frontLaser'].getMaxRange()
+            sampleRate = self._sensors['frontLaser'].getSamplingPeriod() / 1000
 
-        self._laserValues = Sunflower.DistanceScan(
-            fov / -2,
-            fov / 2,
-            0,
-            maxRange,
-            sampleRate,
-            ranges
-        )
+            self._sensorValues['frontLaser'] = Sunflower.DistanceScan(
+                fov / -2,
+                fov / 2,
+                0,
+                maxRange,
+                sampleRate,
+                ranges
+            )
 
     def _publishOdomTransform(self, odomPublisher):
         if self._location:
@@ -167,7 +201,6 @@ class Sunflower(Robot):
 
     def _publishOdom(self, odomPublisher):
         if self._location:
-
             msg = Odometry()
             msg.header.stamp = self._rosTime
             msg.header.frame_id = 'odom'
@@ -191,7 +224,6 @@ class Sunflower(Robot):
 
     def _publishPose(self, posePublisher):
         if self._location:
-
             msg = Odometry()
             msg.header.stamp = self._rosTime
             msg.header.frame_id = 'odom'
@@ -221,36 +253,31 @@ class Sunflower(Robot):
             posePublisher.publish(msg)
 
     def _publishSonar(self, sonarPublisher):
-        if self._sensorValues:
+        if self._sensorValues.get('sonar', None):
             msg = SonarArray()
             msg.header.stamp = self._rosTime
 
-            msg.ranges = self._sensorValues
-            msg.ranges_count = len(self._sensorValues)
+            msg.ranges = self._sensorValues['sonar']
+            msg.ranges_count = len(self._sensorValues['sonar'])
             sonarPublisher.publish(msg)
 
-    def _publishClock(self, clockPublisher):
-        if clockPublisher:
-            clock = Clock(clock=self._rosTime)
-            clockPublisher.publish(clock)
-
     def _publishLaser(self, laserPublisher):
-        if self._laserValues:
+        if self._sensorValues.get('frontLaser', None):
             laser_frequency = 40
             msg = LaserScan()
             msg.header.stamp = self._rosTime
             msg.header.frame_id = 'scan_front'
 
-            msg.ranges = self._laserValues.ranges
-            msg.angle_min = self._laserValues.min_angle
-            msg.angle_max = self._laserValues.max_angle
+            msg.ranges = self._sensorValues['frontLaser'].ranges
+            msg.angle_min = self._sensorValues['frontLaser'].min_angle
+            msg.angle_max = self._sensorValues['frontLaser'].max_angle
             msg.angle_increment = abs(
                 msg.angle_max - msg.angle_min) / len(msg.ranges)
-            msg.range_min = self._laserValues.min_range
-            msg.range_max = self._laserValues.max_range
+            msg.range_min = self._sensorValues['frontLaser'].min_range
+            msg.range_max = self._sensorValues['frontLaser'].max_range
             msg.scan_time = self._time_step
             msg.time_increment = (msg.scan_time / laser_frequency /
-                                  len(self._laserValues.ranges))
+                                  len(self._sensorValues['frontLaser'].ranges))
             laserPublisher.publish(msg)
 
     def run(self):
@@ -262,17 +289,16 @@ class Sunflower(Robot):
             posePublisher = rospy.Publisher("/pose", Odometry, queue_size=2)
             laserPublisher = rospy.Publisher(
                 "/scan_front", LaserScan, queue_size=2)
-            clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
+            #clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
         except:
             sonarPublisher = rospy.Publisher("/sonar", SonarArray)
             odomPublisher = rospy.Publisher("/odom", Odometry)
             posePublisher = rospy.Publisher("/pose", Odometry)
             laserPublisher = rospy.Publisher("/scan_front", LaserScan)
-            clockPublisher = rospy.Publisher("/clock", Clock)
+            #clockPublisher = rospy.Publisher("/clock", Clock)
         odomTransform = TransformBroadcaster()
         locationTransform = TransformBroadcaster()
         laserTransform = TransformBroadcaster()
-        print "Run: ThreadID=%s" % (currentThread().ident)
 
         # Probably something wrong elsewhere, but we seem to need to publish
         # map->odom transform once to get sf_navigation to load
@@ -282,16 +308,18 @@ class Sunflower(Robot):
             if self.step(self._time_step) == -1:
                 break
 
-            self._rosTime = rospy.Time(self.getTime())
+            #self._rosTime = rospy.Time(self.getTime())
+            self._rosTime = rospy.Time.now()
 
             self._updateLocation()
             self._updateSonar()
             self._updateLaser()
-            self._publishClock(clockPublisher)
+            # Published by ClockSync
+            # self._publishClock(clockPublisher)
             self._publishPose(posePublisher)
             self._publishOdom(odomPublisher)
             self._publishOdomTransform(odomTransform)
-            # published by robot_joint_publisher
+            # Published by robot_joint_publisher
             self._publishLaserTransform(laserTransform)
             # Published by sf_navigation
             # self._publishLocationTransform(locationTransform)
@@ -300,6 +328,7 @@ class Sunflower(Robot):
 
             # It appears that we have to call sleep for ROS to process messages
             time.sleep(0)
+            rospy.sleep(0)
 
     def webotsToRos(self, x, y, z, theta):
         rX = -z
@@ -311,8 +340,6 @@ class Sunflower(Robot):
     def initialise(self):
         numLeds = 3
         numSonarSensors = 16
-
-        self._time_step = int(self.getBasicTimeStep())
 
         self._leftWheel = self.getMotor("left_wheel")
         self._leftWheel.setPosition(float('+inf'))
@@ -330,33 +357,32 @@ class Sunflower(Robot):
             ("head_pan", self.getMotor("head_pan")),
         }
 
-        self._frontLaser = self.getCamera("front_laser")
-        self._frontLaser.enable(self._time_step)
+        self._sensors['frontLaser'] = self.getCamera("front_laser")
+        self._sensors['frontLaser'].enable(self._time_step)
 
-        self._gps = self.getGPS("gps")
-        self._gps.enable(self._time_step)
+        self._sensors['gps'] = self.getGPS("gps")
+        self._sensors['gps'].enable(self._time_step)
 
-        self._compass = self.getCompass("compass")
-        self._compass.enable(self._time_step)
-
-        self._camera = self.getCamera("head_camera")
-        if self._camera:
-            self._camera.enable(self._time_step)
-
-        self._bodyLED = self.getLED("light")
-
-        self._baseLEDs = []
-        for i in range(0, numLeds):
-            led = self.getLED("red_led%s" % (i + 1))
-            led.set(0)
-            self._baseLEDs.append(led)
-
-        self._sensors = []
-        self._sensorValues = []
-        for i in range(0, numSonarSensors):
-            sensor = self.getDistanceSensor("so%s" % i)
-            sensor.enable(self._time_step)
-            self._sensors.append(sensor)
+        self._sensors['compass'] = self.getCompass("compass")
+        self._sensors['compass'].enable(self._time_step)
+#
+#         self._sensors['camera'] = self.getCamera("head_camera")
+#         if self._sensors['camera']:
+#             self._sensors['camera'].enable(self._time_step)
+#
+#         self._leds['body'] = self.getLED("light")
+#
+#         self._leds['base'] = []
+#         for i in range(0, numLeds):
+#             led = self.getLED("red_led%s" % (i + 1))
+#             led.set(0)
+#             self._leds['base'].append(led)
+#
+#         self._sensors['sonar'] = []
+#         for i in range(0, numSonarSensors):
+#             sensor = self.getDistanceSensor("so%s" % i)
+#             sensor.enable(self._time_step)
+#             self._sensors['sonar'].append(sensor)
 
     def park(self):
         pass
@@ -388,9 +414,6 @@ class Sunflower(Robot):
             self._as.set_aborted(self._result)
 
     def init(self, name):
-        if name == 'base' or name == 'base_direct':
-            pass
-
         return True
 
     def stop(self, name):
@@ -412,8 +435,12 @@ class Sunflower(Robot):
             b = 0x1 if color[2] else 0
             # Webots color array is 1-indexed
             colorIndex = r + g + b + 1
-            self._bodyLED.set(colorIndex)
-            return True
+            if self._leds['body']:
+                self._leds['body'].set(colorIndex)
+                return True
+            else:
+                rospy.logerr("Unable to set color.  Body LED not found.")
+                return False
         except Exception:
             rospy.logerr("Error setting color to: %s" % (color), exc_info=True)
             return False
@@ -526,79 +553,11 @@ class Sunflower(Robot):
 
         return _states['SUCCEEDED']
 
-    # adapted from p2os
     def cmdvel_cb(self, msg):
         self._rightWheel.setVelocity(msg.linear.x + msg.angular.z)
         self._leftWheel.setVelocity(msg.linear.x - msg.angular.z)
-#
-#     def check_and_set_vel(self):
-#         if not self.vel_dirty:
-#             return
-#
-#         motor_max_speed = 0.5
-#         motor_max_turnspeed = math.radians(100)
-#
-#         rospy.logdebug(
-#             "setting vel: [%0.2f,%0.2f]", self.cmdvel_.linear.x, self.cmdvel_.angular.z)
-#         self.vel_dirty = False
-#
-#         vx = (self.cmdvel_.linear.x * 1e3)
-#         va = round(math.degrees((self.cmdvel_.angular.z)))
-#
-#         motorcommand = [0, 0, 0, 0]
-#
-# non-direct wheel control
-# motorcommand[0] = VEL
-# set velocity command
-#         if vx >= 0:
-# motorcommand[1] = ARGINT
-# positive velocity
-#             pass
-#         else:
-# motorcommand[1] = ARGNINT
-# negative velocity
-#             pass
-#
-#         absSpeedDemand = abs(vx)
-#         if absSpeedDemand <= motor_max_speed:
-#             motorcommand[2] = absSpeedDemand & 0x00FF
-#             motorcommand[3] = (absSpeedDemand & 0xFF00) >> 8
-#         else:
-#             rospy.logwarn(
-#                 "speed demand thresholded! (true: %u, max: %u)",
-#                 absSpeedDemand,
-#                 motor_max_speed)
-#             motorcommand[2] = motor_max_speed & 0x00FF
-#             motorcommand[3] = (motor_max_speed & 0xFF00) >> 8
-#
-#         motorpacket.Build(motorcommand, 4)
-#         SendReceive(motorpacket)
-#
-# motorcommand[0] = RVEL
-#         #
-#         if va >= 0:
-# motorcommand[1] = ARGINT
-# positive velocity
-#             pass
-#         else:
-# motorcommand[1] = ARGNINT
-# negative velocity
-#             pass
-#
-#         absturnRateDemand = abs(va)
-#         if absturnRateDemand <= motor_max_turnspeed:
-#             motorcommand[2] = absturnRateDemand & 0x00FF
-#             motorcommand[3] = (absturnRateDemand & 0xFF00) >> 8
-#         else:
-#             rospy.logwarn("Turn rate demand threshholded!")
-#             motorcommand[2] = motor_max_turnspeed & 0x00FF
-#             motorcommand[3] = (motor_max_turnspeed & 0xFF00) >> 8
-#
-#         motorpacket.Build(motorcommand, 4)
-#         SendReceive(motorpacket)
 
     def navigate(self, goal, positions):
-        print "Navigate: ThreadID=%s" % (currentThread().ident)
         pose = PoseStamped()
         pose.header.stamp = self._rosTime
         pose.header.frame_id = "/map"
@@ -644,17 +603,16 @@ class Sunflower(Robot):
 
         return _states['SUCCEEDED']
 
-# ------------------- action_handle section ------------------- #
-# Action handle class.
-#
-# The action handle is used to implement asynchronous behaviour within the
-# script.
-
 
 class _ActionHandle(object):
-        # Initialises the action handle.
+    # ------------------- action_handle section ------------------- #
+    # Action handle class.
+    #
+    # The action handle is used to implement asynchronous behaviour within the
+    # script.
 
     def __init__(self, simpleActionClient):
+        # Initialises the action handle.
         self._client = simpleActionClient
         self._waiting = False
         self._result = None
@@ -693,4 +651,7 @@ class _ActionHandle(object):
 if __name__ == '__main__':
     rospy.init_node('sf_controller')
     sf = Sunflower(rospy.get_name())
+    cs = ClockSync(sf)
+    cs.daemon = True
+     cs.start()
     sf.run()

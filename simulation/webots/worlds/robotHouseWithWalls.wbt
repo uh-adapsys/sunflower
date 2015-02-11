@@ -1,5 +1,4 @@
 #VRML_SIM V7.4.3 utf8
-
 WorldInfo {
   info [
     "Description: WeBots Model of the UH Robot House"
@@ -7,7 +6,7 @@ WorldInfo {
     "Date: 18 Oct 2014"
   ]
   title "robot house"
-  basicTimeStep 16
+  basicTimeStep 64
 }
 Viewpoint {
   orientation 0 0.91707 0.398726 3.14159
@@ -34,8 +33,6 @@ DEF WALLS Solid {
       ]
     }
     ResizeableDoor {
-      hidden translation_5 0.390954 0 0.559992
-      hidden rotation_5 0 1 0 1.5707
       translation -1.68 0 -0.12
       rotation 0 1 0 -1.5708
       size 1 0.6 0.07
@@ -167,6 +164,7 @@ DEF Person Solid {
 }
 DEF Sunflower Pioneer3DX {
   name "sunflower1-1"
+  controller "rosController"
   extensionSlot [
     DEF SENSORS Group {
       children [
