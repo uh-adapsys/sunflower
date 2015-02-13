@@ -55,6 +55,7 @@
 			<parent link="${parent}_link" />
 			<child link="${name}_link" />
 			<limit lower="0.0" upper="0.1" velocity="0.5"/>
+			<axis xyz="1 0 0"/>
 		</joint>
 		<link name="${name}_link">
 			<inertial>
