@@ -84,6 +84,59 @@
 		<origin rpy="0 0 0" xyz="0.01 0 0.645" />
 	</xacro:tray>
 
+    <!-- Neck -->
+    <include filename="$(find sf_dynamixel)/defs/dynamixel_ax12.xacro" />
+    <include filename="$(find sf_dynamixel)/defs/fp04_02.xacro" />
+    <xacro:macro name="neck" params="name parent *origin">
+        <xacro:ax12 
+                name="neck_lower" 
+                parent="${parent}" 
+                minPosition="-1.5705" 
+                maxPosition="1.5707" 
+                maxVelocity="1">
+            <insert_block name="origin"/>
+        </xacro:ax12>
+        <xacro:fp04_02 
+                name="neck_lower_hinge" 
+                parent="neck_lower">
+        </xacro:fp04_02>
+        <xacro:ax12 
+                name="neck_upper" 
+                parent="neck_lower_hinge" 
+                minPosition="-1.5705" 
+                maxPosition="1.5707" 
+                maxVelocity="1">
+            <origin rpy="1.5707 0 1.5707" xyz="0 -0.0635 0"/>
+        </xacro:ax12>
+        <xacro:fp04_02 
+                name="neck_upper_hinge" 
+                parent="neck_upper">
+        </xacro:fp04_02>
+        <xacro:ax12 
+                name="head_tilt" 
+                parent="neck_upper_hinge" 
+                minPosition="-1.5705" 
+                maxPosition="1.5707" 
+                maxVelocity="1">
+            <origin rpy="0 0 1.5707" xyz="0 -0.0635 0"/>
+        </xacro:ax12>
+        <xacro:fp04_02 
+                name="head_tilt_hinge" 
+                parent="head_tilt">
+        </xacro:fp04_02>
+        <xacro:ax12inverted 
+                name="head_pan" 
+                parent="head_tilt_hinge" 
+                minPosition="-1.5705" 
+                maxPosition="1.5707" 
+                maxVelocity="1">
+            <origin rpy="0 0 1.5707" xyz="0 -0.0635 0"/>
+        </xacro:ax12inverted>
+    </xacro:macro>
+    <xacro:neck name="neck" parent="base">
+        <origin rpy="0 1.5707 0" xyz="0 0 0.79" />
+    </xacro:neck>
+
 	<!-- Head -->
 	<xacro:macro name="camera" params="name parent *origin">
 		<joint name="${name}_joint" type="fixed">
@@ -190,8 +243,8 @@
 		</xacro:camera>
 	</xacro:macro>
 
-	<xacro:head name="head" parent="base">
-		<origin rpy="0 0 0" xyz="0 0 1.045" />
+	<xacro:head name="head" parent="head_pan">
+		<origin rpy="0 1.5707 3.14159" xyz="-0.05 0 0" />
 	</xacro:head>
 
 	<!--Body -->

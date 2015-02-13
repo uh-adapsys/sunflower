@@ -6,25 +6,18 @@ Created on 12 Mar 2013
 @author: nathan
 '''
 from collections import namedtuple
-from geometry_msgs.msg import PoseStamped, Twist
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from nav_msgs.msg import Odometry
-from p2os_msgs.msg import SonarArray
-from rosgraph_msgs.msg import Clock
-from sensor_msgs.msg import LaserScan
-from tf import TransformBroadcaster
-from tf.transformations import quaternion_from_euler
+
 from threading import Thread
-import actionlib
 import math
 import rospy
 import time
 
 from controller import Robot
 try:
-    import roslib
+    import roslib    
+    import os
+    path = os.path.dirname(os.path.realpath(__file__))
     roslib.load_manifest('rosController')
-    import sf_controller_msgs.msg
 except:
     import logging
     logger = logging.getLogger()
@@ -37,6 +30,17 @@ except:
         print >> sys.stderr, "Unable to load roslib, fatal error"
         print >> sys.stderr, traceback.format_exc()
     exit(1)
+else:
+    import sf_controller_msgs.msg
+    import actionlib
+    from geometry_msgs.msg import PoseStamped, Twist
+    from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+    from nav_msgs.msg import Odometry
+    #from p2os_msgs.msg import SonarArray
+    from rosgraph_msgs.msg import Clock
+    from sensor_msgs.msg import LaserScan, JointState
+    from tf import TransformBroadcaster
+    from tf.transformations import quaternion_from_euler
 
 
 _states = {
@@ -68,11 +72,7 @@ class ClockSync(Thread):
     def __init__(self, robot):
         super(ClockSync, self).__init__()
         self.getTime = robot.getTime
-
-    def _publishClock(self, clockPublisher):
-        if clockPublisher:
-            clock = Clock(clock=self._rosTime)
-            clockPublisher.publish(clock)
+        self._stop = False
 
     def run(self):
         try:
@@ -81,13 +81,15 @@ class ClockSync(Thread):
         except:
             clockPublisher = rospy.Publisher("/clock", Clock)
 
-        while not rospy.is_shutdown():
-            rospy.loginfo(self.getTime())
+        self._stop = False
+        while not rospy.is_shutdown() and not self._stop:
             rosTime = rospy.Time(self.getTime())
             clock = Clock(clock=rosTime)
             clockPublisher.publish(clock)
             time.sleep(0)
 
+    def stop(self):
+        self._stop = True
 
 class Sunflower(Robot):
 
@@ -254,12 +256,13 @@ class Sunflower(Robot):
 
     def _publishSonar(self, sonarPublisher):
         if self._sensorValues.get('sonar', None):
-            msg = SonarArray()
-            msg.header.stamp = self._rosTime
-
-            msg.ranges = self._sensorValues['sonar']
-            msg.ranges_count = len(self._sensorValues['sonar'])
-            sonarPublisher.publish(msg)
+            #msg = SonarArray()
+            #msg.header.stamp = self._rosTime
+ 
+            #msg.ranges = self._sensorValues['sonar']
+            #msg.ranges_count = len(self._sensorValues['sonar'])
+            #sonarPublisher.publish(msg)
+            pass
 
     def _publishLaser(self, laserPublisher):
         if self._sensorValues.get('frontLaser', None):
@@ -280,22 +283,49 @@ class Sunflower(Robot):
                                   len(self._sensorValues['frontLaser'].ranges))
             laserPublisher.publish(msg)
 
+    def _publishJoints(self, jointPublisher):  
+#         header: 
+#           seq: 375
+#           stamp: 
+#             secs: 1423791124
+#             nsecs: 372004985
+#           frame_id: ''
+#         name: ['head_pan_joint', 'neck_lower_joint', 'swivel_hubcap_joint', 'base_swivel_joint', 'head_tilt_joint', 'neck_upper_joint']
+#         position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+#         velocity: []
+#         effort: []
+        if self._servos and jointPublisher:
+            msg = JointState()
+            msg.header.stamp = self._rosTime
+            names = []
+            positions = []
+            for (name, servo) in self._servos.iteritems():
+                names.append("%s_joint" % name)
+                # 'or 0.0' to prevent null from being published
+                positions.append(servo.getPosition() or 0.0)
+            
+            msg.name = names
+            msg.position = positions
+            jointPublisher.publish(msg)
+
     def run(self):
         try:
             # ROS Version >= Hydro
-            sonarPublisher = rospy.Publisher(
-                "/sonar", SonarArray, queue_size=2)
+#             sonarPublisher = rospy.Publisher(
+#                 "/sonar", SonarArray, queue_size=2)
             odomPublisher = rospy.Publisher("/odom", Odometry, queue_size=2)
             posePublisher = rospy.Publisher("/pose", Odometry, queue_size=2)
             laserPublisher = rospy.Publisher(
                 "/scan_front", LaserScan, queue_size=2)
             #clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
+            jointPublisher = rospy.Publisher("/joint_states", JointState, queue_size=2)
         except:
-            sonarPublisher = rospy.Publisher("/sonar", SonarArray)
+#             sonarPublisher = rospy.Publisher("/sonar", SonarArray)
             odomPublisher = rospy.Publisher("/odom", Odometry)
             posePublisher = rospy.Publisher("/pose", Odometry)
             laserPublisher = rospy.Publisher("/scan_front", LaserScan)
             #clockPublisher = rospy.Publisher("/clock", Clock)
+            jointPublisher = rospy.Publisher("/joint_states", JointState)
         odomTransform = TransformBroadcaster()
         locationTransform = TransformBroadcaster()
         laserTransform = TransformBroadcaster()
@@ -303,11 +333,10 @@ class Sunflower(Robot):
         # Probably something wrong elsewhere, but we seem to need to publish
         # map->odom transform once to get sf_navigation to load
         self._publishLocationTransform(locationTransform)
+        cs = ClockSync(sf)
+        cs.start()
 
-        while not rospy.is_shutdown():
-            if self.step(self._time_step) == -1:
-                break
-
+        while not rospy.is_shutdown() and self.step(self._time_step) != -1:
             #self._rosTime = rospy.Time(self.getTime())
             self._rosTime = rospy.Time.now()
 
@@ -322,13 +351,16 @@ class Sunflower(Robot):
             # Published by robot_joint_publisher
             self._publishLaserTransform(laserTransform)
             # Published by sf_navigation
-            # self._publishLocationTransform(locationTransform)
-            self._publishSonar(sonarPublisher)
+            #self._publishLocationTransform(locationTransform)
+            #self._publishSonar(sonarPublisher)
             self._publishLaser(laserPublisher)
+            self._publishJoints(jointPublisher)
 
             # It appears that we have to call sleep for ROS to process messages
-            time.sleep(0)
-            rospy.sleep(0)
+            time.sleep(0.0001)
+        
+        cs.stop()
+        cs.join()
 
     def webotsToRos(self, x, y, z, theta):
         rX = -z
@@ -339,7 +371,7 @@ class Sunflower(Robot):
 
     def initialise(self):
         numLeds = 3
-        numSonarSensors = 16
+        # numSonarSensors = 16
 
         self._leftWheel = self.getMotor("left_wheel")
         self._leftWheel.setPosition(float('+inf'))
@@ -350,12 +382,15 @@ class Sunflower(Robot):
         self._rightWheel.setVelocity(0)
 
         self._servos = {
-            ("tray", self.getMotor("tray")),
-            ("neck_lower", self.getMotor("neck_lower")),
-            ("neck_upper", self.getMotor("neck_upper")),
-            ("head_tilt", self.getMotor("head_tilt")),
-            ("head_pan", self.getMotor("head_pan")),
+            "tray": self.getMotor("tray"),
+            "neck_lower": self.getMotor("neck_lower"),
+            "neck_upper": self.getMotor("neck_upper"),
+            "head_tilt": self.getMotor("head_tilt"),
+            "head_pan": self.getMotor("head_pan"),
         }
+        
+        for servo in self._servos.values():
+            servo.enablePosition(self._time_step)
 
         self._sensors['frontLaser'] = self.getCamera("front_laser")
         self._sensors['frontLaser'].enable(self._time_step)
@@ -365,24 +400,24 @@ class Sunflower(Robot):
 
         self._sensors['compass'] = self.getCompass("compass")
         self._sensors['compass'].enable(self._time_step)
-#
-#         self._sensors['camera'] = self.getCamera("head_camera")
-#         if self._sensors['camera']:
-#             self._sensors['camera'].enable(self._time_step)
-#
-#         self._leds['body'] = self.getLED("light")
-#
-#         self._leds['base'] = []
-#         for i in range(0, numLeds):
-#             led = self.getLED("red_led%s" % (i + 1))
-#             led.set(0)
-#             self._leds['base'].append(led)
-#
-#         self._sensors['sonar'] = []
-#         for i in range(0, numSonarSensors):
-#             sensor = self.getDistanceSensor("so%s" % i)
-#             sensor.enable(self._time_step)
-#             self._sensors['sonar'].append(sensor)
+
+        self._sensors['camera'] = self.getCamera("head_camera")
+        if self._sensors['camera']:
+            self._sensors['camera'].enable(self._time_step)
+
+        self._leds['body'] = self.getLED("light")
+
+        self._leds['base'] = []
+        for i in range(0, numLeds):
+            led = self.getLED("red_led%s" % (i + 1))
+            led.set(0)
+            self._leds['base'].append(led)
+
+        # self._sensors['sonar'] = []
+        # for i in range(0, numSonarSensors):
+        #    sensor = self.getDistanceSensor("so%s" % i)
+        #    sensor.enable(self._time_step)
+        #    self._sensors['sonar'].append(sensor)
 
     def park(self):
         pass
@@ -554,8 +589,10 @@ class Sunflower(Robot):
         return _states['SUCCEEDED']
 
     def cmdvel_cb(self, msg):
-        self._rightWheel.setVelocity(msg.linear.x + msg.angular.z)
-        self._leftWheel.setVelocity(msg.linear.x - msg.angular.z)
+        WHEEL_SIZE = 0.1918986
+        linearRads = (msg.linear.x) / (WHEEL_SIZE)
+        self._rightWheel.setVelocity(linearRads + msg.angular.z)
+        self._leftWheel.setVelocity(linearRads - msg.angular.z)
 
     def navigate(self, goal, positions):
         pose = PoseStamped()
@@ -651,7 +688,4 @@ class _ActionHandle(object):
 if __name__ == '__main__':
     rospy.init_node('sf_controller')
     sf = Sunflower(rospy.get_name())
-    cs = ClockSync(sf)
-    cs.daemon = True
-     cs.start()
     sf.run()

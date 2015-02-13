@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot
+    xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+    xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+    xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:macro name="fp04_02" params="name parent">
+        <joint name="${name}_joint" type="fixed">
+            <parent link="${parent}_link"/>
+            <child link="${name}_link"/>
+            <origin rpy="-1.5707 -1.5707 0" xyz="0.0014 0 0"/>
+        </joint>
+        <link name="${name}_link">
+            <visual>
+                <geometry name="fp04_02mesh">
+                    <mesh
+                        filename="package://sf_dynamixel/defs/F2.stl" 
+                        scale="0.001 0.001 0.001"/>
+                </geometry>
+                <!-- xyz 0.025 0.0485 0.0375 -->
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+                <material name="green_plastic">
+                    <color rgba="0.1 0.8 0.3 1"/>
+                </material>
+            </visual>
+        </link>
+    </xacro:macro>
+</robot>
