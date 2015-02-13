@@ -20,15 +20,15 @@ PROTO sunflower_tray [
           axis 0 0 -1
           #position IS servoPosition
           minStop -0.001
-          maxStop 0.085
+          maxStop 0.15
         }
         device LinearMotor {
           name "tray"
           acceleration -1
-          maxVelocity 0.3
+          maxVelocity 0.5
           maxForce 2
           minPosition -0.001
-          maxPosition 0.085
+          maxPosition 0.15
         }
         endPoint Solid {
           children [

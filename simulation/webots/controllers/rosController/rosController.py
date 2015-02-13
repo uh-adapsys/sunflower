@@ -14,7 +14,7 @@ import time
 
 from controller import Robot
 try:
-    import roslib    
+    import roslib
     import os
     path = os.path.dirname(os.path.realpath(__file__))
     roslib.load_manifest('rosController')
@@ -36,7 +36,7 @@ else:
     from geometry_msgs.msg import PoseStamped, Twist
     from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
     from nav_msgs.msg import Odometry
-    #from p2os_msgs.msg import SonarArray
+    # from p2os_msgs.msg import SonarArray
     from rosgraph_msgs.msg import Clock
     from sensor_msgs.msg import LaserScan, JointState
     from tf import TransformBroadcaster
@@ -90,6 +90,7 @@ class ClockSync(Thread):
 
     def stop(self):
         self._stop = True
+
 
 class Sunflower(Robot):
 
@@ -256,12 +257,12 @@ class Sunflower(Robot):
 
     def _publishSonar(self, sonarPublisher):
         if self._sensorValues.get('sonar', None):
-            #msg = SonarArray()
-            #msg.header.stamp = self._rosTime
- 
-            #msg.ranges = self._sensorValues['sonar']
-            #msg.ranges_count = len(self._sensorValues['sonar'])
-            #sonarPublisher.publish(msg)
+            # msg = SonarArray()
+            # msg.header.stamp = self._rosTime
+
+            # msg.ranges = self._sensorValues['sonar']
+            # msg.ranges_count = len(self._sensorValues['sonar'])
+            # sonarPublisher.publish(msg)
             pass
 
     def _publishLaser(self, laserPublisher):
@@ -283,17 +284,17 @@ class Sunflower(Robot):
                                   len(self._sensorValues['frontLaser'].ranges))
             laserPublisher.publish(msg)
 
-    def _publishJoints(self, jointPublisher):  
-#         header: 
-#           seq: 375
-#           stamp: 
-#             secs: 1423791124
-#             nsecs: 372004985
-#           frame_id: ''
-#         name: ['head_pan_joint', 'neck_lower_joint', 'swivel_hubcap_joint', 'base_swivel_joint', 'head_tilt_joint', 'neck_upper_joint']
-#         position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-#         velocity: []
-#         effort: []
+    def _publishJoints(self, jointPublisher):
+        #         header:
+        #           seq: 375
+        #           stamp:
+        #             secs: 1423791124
+        #             nsecs: 372004985
+        #           frame_id: ''
+        #         name: ['head_pan_joint', 'neck_lower_joint', 'swivel_hubcap_joint', 'base_swivel_joint', 'head_tilt_joint', 'neck_upper_joint']
+        #         position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        #         velocity: []
+        #         effort: []
         if self._servos and jointPublisher:
             msg = JointState()
             msg.header.stamp = self._rosTime
@@ -303,7 +304,7 @@ class Sunflower(Robot):
                 names.append("%s_joint" % name)
                 # 'or 0.0' to prevent null from being published
                 positions.append(servo.getPosition() or 0.0)
-            
+
             msg.name = names
             msg.position = positions
             jointPublisher.publish(msg)
@@ -311,20 +312,21 @@ class Sunflower(Robot):
     def run(self):
         try:
             # ROS Version >= Hydro
-#             sonarPublisher = rospy.Publisher(
-#                 "/sonar", SonarArray, queue_size=2)
+            #             sonarPublisher = rospy.Publisher(
+            #                 "/sonar", SonarArray, queue_size=2)
             odomPublisher = rospy.Publisher("/odom", Odometry, queue_size=2)
             posePublisher = rospy.Publisher("/pose", Odometry, queue_size=2)
             laserPublisher = rospy.Publisher(
                 "/scan_front", LaserScan, queue_size=2)
-            #clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
-            jointPublisher = rospy.Publisher("/joint_states", JointState, queue_size=2)
+            # clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
+            jointPublisher = rospy.Publisher(
+                "/joint_states", JointState, queue_size=2)
         except:
-#             sonarPublisher = rospy.Publisher("/sonar", SonarArray)
+            #             sonarPublisher = rospy.Publisher("/sonar", SonarArray)
             odomPublisher = rospy.Publisher("/odom", Odometry)
             posePublisher = rospy.Publisher("/pose", Odometry)
             laserPublisher = rospy.Publisher("/scan_front", LaserScan)
-            #clockPublisher = rospy.Publisher("/clock", Clock)
+            # clockPublisher = rospy.Publisher("/clock", Clock)
             jointPublisher = rospy.Publisher("/joint_states", JointState)
         odomTransform = TransformBroadcaster()
         locationTransform = TransformBroadcaster()
@@ -337,7 +339,7 @@ class Sunflower(Robot):
         cs.start()
 
         while not rospy.is_shutdown() and self.step(self._time_step) != -1:
-            #self._rosTime = rospy.Time(self.getTime())
+            # self._rosTime = rospy.Time(self.getTime())
             self._rosTime = rospy.Time.now()
 
             self._updateLocation()
@@ -351,14 +353,14 @@ class Sunflower(Robot):
             # Published by robot_joint_publisher
             self._publishLaserTransform(laserTransform)
             # Published by sf_navigation
-            #self._publishLocationTransform(locationTransform)
-            #self._publishSonar(sonarPublisher)
+            # self._publishLocationTransform(locationTransform)
+            # self._publishSonar(sonarPublisher)
             self._publishLaser(laserPublisher)
             self._publishJoints(jointPublisher)
 
             # It appears that we have to call sleep for ROS to process messages
             time.sleep(0.0001)
-        
+
         cs.stop()
         cs.join()
 
@@ -388,7 +390,7 @@ class Sunflower(Robot):
             "head_tilt": self.getMotor("head_tilt"),
             "head_pan": self.getMotor("head_pan"),
         }
-        
+
         for servo in self._servos.values():
             servo.enablePosition(self._time_step)
 
