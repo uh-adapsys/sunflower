@@ -12,6 +12,7 @@ import math
 import rospy
 import time
 
+
 from controller import Robot
 try:
     import roslib
@@ -103,6 +104,11 @@ class Sunflower(Robot):
                               'max_range',
                               'scan_time',
                               'ranges'])
+
+    # TODO: These should be in a config file
+    # Speed limits from navigation files
+    _translationSpeed = [-0.2, 0.4]
+    _rotationSpeed = [-0.8, 0.8]
 
     def __init__(self, name):
         super(Sunflower, self).__init__()
@@ -222,7 +228,7 @@ class Sunflower(Robot):
 
             odomPublisher.publish(msg)
         else:
-            rospy.logerr("Skipped updating odom! Last: %s, Cur: %s" %
+            rospy.logerr("Skipped updating odom! Last: %s, Cur: %s" % 
                          (self._location, self._lastLocation))
 
     def _publishPose(self, posePublisher):
@@ -280,21 +286,21 @@ class Sunflower(Robot):
             msg.range_min = self._sensorValues['frontLaser'].min_range
             msg.range_max = self._sensorValues['frontLaser'].max_range
             msg.scan_time = self._time_step
-            msg.time_increment = (msg.scan_time / laser_frequency /
+            msg.time_increment = (msg.scan_time / laser_frequency / 
                                   len(self._sensorValues['frontLaser'].ranges))
             laserPublisher.publish(msg)
 
     def _publishJoints(self, jointPublisher):
-        #         header:
-        #           seq: 375
-        #           stamp:
-        #             secs: 1423791124
-        #             nsecs: 372004985
-        #           frame_id: ''
-        #         name: ['head_pan_joint', 'neck_lower_joint', 'swivel_hubcap_joint', 'base_swivel_joint', 'head_tilt_joint', 'neck_upper_joint']
-        #         position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        #         velocity: []
-        #         effort: []
+        # header:
+        #   seq: 375
+        #   stamp:
+        #     secs: 1423791124
+        #     nsecs: 372004985
+        #   frame_id: ''
+        # name: ['head_pan_joint', 'neck_lower_joint', 'swivel_hubcap_joint', 'base_swivel_joint', 'head_tilt_joint', 'neck_upper_joint']
+        # position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        # velocity: []
+        # effort: []
         if self._servos and jointPublisher:
             msg = JointState()
             msg.header.stamp = self._rosTime
@@ -312,8 +318,7 @@ class Sunflower(Robot):
     def run(self):
         try:
             # ROS Version >= Hydro
-            #             sonarPublisher = rospy.Publisher(
-            #                 "/sonar", SonarArray, queue_size=2)
+            # sonarPublisher = rospy.Publisher("/sonar", SonarArray, queue_size=2)
             odomPublisher = rospy.Publisher("/odom", Odometry, queue_size=2)
             posePublisher = rospy.Publisher("/pose", Odometry, queue_size=2)
             laserPublisher = rospy.Publisher(
@@ -322,7 +327,7 @@ class Sunflower(Robot):
             jointPublisher = rospy.Publisher(
                 "/joint_states", JointState, queue_size=2)
         except:
-            #             sonarPublisher = rospy.Publisher("/sonar", SonarArray)
+            # sonarPublisher = rospy.Publisher("/sonar", SonarArray)
             odomPublisher = rospy.Publisher("/odom", Odometry)
             posePublisher = rospy.Publisher("/pose", Odometry)
             laserPublisher = rospy.Publisher("/scan_front", LaserScan)
@@ -516,19 +521,18 @@ class Sunflower(Robot):
         return result == _states['SUCCEEDED']
 
     def moveBase(self, goal, positions):
-        # TODO: These should be in a config file
-        maxTrans = 1.5
-        maxRot = 2 * math.pi
+        maxTransNeg, maxTransPos = self._translationSpeed
+        maxRotNeg, maxRotPos = self._rotationSpeed
 
         LINEAR_RATE = math.pi / 2  # [rad/s]
-        # WHEEL_SIZE = 0.195  # [m] From the manual
-        WHEEL_SIZE = 0.1918986  # [m] From Webots Definition
+        # WHEEL_DIAMETER = 0.195  # [m] From the manual
+        WHEEL_RADIUS = 0.0975
         # BASE_SIZE = 0.3810  # [m] From the manual
-        BASE_SIZE = 0.33  # [m] From WeBots Definition
-        WHEEL_ROTATION = BASE_SIZE / WHEEL_SIZE
+        AXEL_LENGTH = 0.33  # [m] From WeBots Definition
+        WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
 
-        rotation = positions[0]
-        linear = positions[1]
+        rotation = round(positions[0], 4)
+        linear = round(positions[1], 4)
 
         if not isinstance(rotation, (int, float)):
             rospy.logerr("Non-numeric rotation in list, aborting moveBase")
@@ -536,19 +540,29 @@ class Sunflower(Robot):
         elif not isinstance(linear, (int, float)):
             rospy.logerr("Non-numeric translation in list, aborting moveBase")
             return _states['ABORTED']
-        if abs(linear) > maxTrans:
+        if linear > maxTransPos:
             rospy.logerr(
-                "Maximal relative translation step exceeded(max: %sm), "
-                "aborting moveBase" % maxTrans)
+                "Maximal relative translation step exceeded(max: %sm, requested: %sm), "
+                "aborting moveBase" % (maxTransPos, linear))
             return _states['ABORTED']
-        if abs(rotation) > maxRot:
+        if linear < maxTransNeg:
             rospy.logerr(
-                "Maximal relative rotation step exceeded(max: %srad), "
-                "aborting moveBase" % maxRot)
+                "Minimal relative translation step exceeded(min: %sm, requested: %sm), "
+                "aborting moveBase" % (maxTransNeg, linear))
+            return _states['ABORTED']
+        if rotation > maxRotPos:
+            rospy.logerr(
+                "Maximal relative rotation step exceeded(max: %srad, requested: %sm), "
+                "aborting moveBase" % (maxRotPos, rotation))
+            return _states['ABORTED']
+        if rotation < maxRotNeg:
+            rospy.logerr(
+                "Maximal relative rotation step exceeded(max: %srad, requested: %sm), "
+                "aborting moveBase" % (maxRotNeg, rotation))
             return _states['ABORTED']
 
         rotRads = rotation * WHEEL_ROTATION
-        linearRads = (2 * linear) / (WHEEL_SIZE)
+        linearRads = linear / WHEEL_RADIUS
 
         leftDuration = (rotRads + linearRads) / LINEAR_RATE
         rightDuration = ((-1 * rotRads) + linearRads) / LINEAR_RATE
@@ -591,10 +605,20 @@ class Sunflower(Robot):
         return _states['SUCCEEDED']
 
     def cmdvel_cb(self, msg):
-        WHEEL_SIZE = 0.1918986
-        linearRads = (msg.linear.x) / (WHEEL_SIZE)
-        self._rightWheel.setVelocity(linearRads + msg.angular.z)
-        self._leftWheel.setVelocity(linearRads - msg.angular.z)
+        WHEEL_RADIUS = 0.0975
+        
+        #Get in-range linear and angular values
+        linear = min(max(msg.linear.x, self._translationSpeed[0]), self._translationSpeed[1])
+        angular = min(max(msg.angular.z, self._rotationSpeed[0]), self._rotationSpeed[1])
+        
+        linearRads = linear / WHEEL_RADIUS
+        
+        #Get in-range p3DX hard limits
+        right = max(min(linearRads + angular, 5.24), -5.24)
+        left = max(min(linearRads - angular, 5.24), -5.24)
+        
+        self._rightWheel.setVelocity(right)
+        self._leftWheel.setVelocity(left)
 
     def navigate(self, goal, positions):
         pose = PoseStamped()
@@ -628,7 +652,7 @@ class Sunflower(Robot):
     def moveJoints(self, goal, positions):
         try:
             joint_names = rospy.get_param(
-                '/sf_controller/%s/joint_names' %
+                '/sf_controller/%s/joint_names' % 
                 goal.component)
         except KeyError:
             # assume component is a named joint
