@@ -16,6 +16,17 @@
 				</material>
 				<origin rpy="-1.57075 1.57075 0" xyz="0 0 0.025" />
 			</visual>
+			<inertial>
+				<mass value="0.01" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
+			</inertial>
+			<collision>
+				<geometry name="ax12mesh">
+					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+						scale="0.001 0.001 0.001" />
+				</geometry>
+			</collision>
 		</link>
 		<link name="${name}_link">
 			<visual>
@@ -27,6 +38,16 @@
 				</material>
 				<origin rpy="0 1.57075 0" xyz="0.0025 0 0" />
 			</visual>
+			<inertial>
+				<mass value="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
+			</inertial>
+			<collision>
+				<geometry>
+					<cylinder length="0.005" radius="0.011" />
+				</geometry>
+			</collision>
 		</link>
 		<joint name="${name}_joint" type="revolute">
 			<parent link="${name}_box_link" />
@@ -40,6 +61,12 @@
 			<child link="${name}_box_link" />
 			<insert_block name="origin" />
 		</joint>
+		<gazebo reference="${name}_box_link">
+			<material>Gazebo/FlatBlack</material>
+		</gazebo>
+		<gazebo reference="${name}_link">
+			<material>Gazebo/White</material>
+		</gazebo>
 	</xacro:macro>
 	<xacro:macro name="ax12inverted"
 		params="name parent minPosition maxPosition maxVelocity *origin">
@@ -49,22 +76,43 @@
 					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
 						scale="0.001 0.001 0.001" />
 				</geometry>
-				<material name="plastic_black">
-					<color rgba="0.33 0.33 0.33 1" />
-				</material>
+				<material name="plastic_black" />
 				<origin rpy="1.57075 0 3.14159" xyz="-0.012 0 0.019" />
 			</visual>
+			<inertial>
+				<mass value="0.01" />
+				<origin rpy="0 0 0" xyz="-0.012 0 0.019" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
+			</inertial>
+			<collision>
+				<origin rpy="1.57075 0 3.14159" xyz="-0.012 0 0.019" />
+				<geometry name="ax12mesh">
+					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+						scale="0.001 0.001 0.001" />
+				</geometry>
+			</collision>
 		</link>
 		<link name="${name}_cyl_link">
 			<visual>
 				<geometry>
 					<cylinder length="0.005" radius="0.011" />
 				</geometry>
-				<material name="plastic_white">
-					<color rgba="0.9 0.9 0.9 1" />
-				</material>
+				<material name="plastic_white" />
 				<origin rpy="0 0 0" xyz="0 0 0.0025" />
 			</visual>
+			<inertial>
+				<mass value="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
+				<origin rpy="0 0 0" xyz="0 0 0.0025" />
+			</inertial>
+			<collision>
+				<geometry>
+					<cylinder length="0.005" radius="0.011" />
+					<origin rpy="0 0 0" xyz="0 0 0.0025" />
+				</geometry>
+			</collision>
 		</link>
 		<link name="${name}_link"></link>
 		<joint name="${name}_joint" type="revolute">
@@ -79,10 +127,16 @@
 			<child link="${name}_cyl_link" />
 			<insert_block name="origin" />
 		</joint>
-		<joint name="{name}_box_joint" type="fixed">
+		<joint name="${name}_box_joint" type="fixed">
 			<parent link="${name}_box_link" />
 			<child link="${name}_link" />
 			<origin xyz="0 0 0.038" />
 		</joint>
+		<gazebo reference="${name}_box_link">
+			<material>Gazebo/FlatBlack</material>
+		</gazebo>
+		<gazebo reference="${name}_cyl_link">
+			<material>Gazebo/White</material>
+		</gazebo>
 	</xacro:macro>
 </robot>
