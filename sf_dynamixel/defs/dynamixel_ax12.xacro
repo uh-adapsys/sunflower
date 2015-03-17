@@ -1,93 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot
-    xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
-    xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-    xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:macro name="ax12" params="name parent minPosition maxPosition maxVelocity">
-        <joint name="${name}_joint" type="revolute">
-            <parent link="${parent}_link"/>
-            <child link="${name}_link"/>
-            <origin xyz="0.0385 0 0" rpy="1.5707 0 0"/>
-            <axis xyz="0 0 1"/>
-            <limit effort="0" lower="${minPosition}"
-                upper="${maxPosition}" velocity="${maxVelocity}"/>
-        </joint>
-        <link name="${name}_link">
-            <collision>
-                <geometry>
-                    <box size="0.050 0.038 0.032"/>
-                </geometry>
-                <origin rpy="-1.5707 0 0" xyz="-0.0385 0 0"/>
-            </collision>
-            <visual>
-                <geometry name="ax12mesh">
-                    <mesh
-                        filename="package://sf_dynamixel/meshes/ax12_box_plain.stl" scale="0.001 0.001 0.001"/>
-                </geometry>
-                <!-- xyz 0.050 0.038 0.032 -->
-                <origin rpy="0 0 0" xyz="0.0135 0 0"/>
-                <material name="black_plastic">
-                    <color rgba="0.3 0.3 0.3 1"/>
-                </material>
-            </visual>
-        </link>
-    </xacro:macro>
-    <xacro:macro name="ax12old" params="name parent minPosition maxPosition maxVelocity *origin">
-        <joint name="${name}_joint" type="revolute">
-            <parent link="${parent}_link"/>
-            <child link="${name}_link"/>
-            <insert_block name="origin"/>
-            <axis xyz="0 -1 0"/>
-            <limit effort="0" lower="${minPosition}"
-                upper="${maxPosition}" velocity="${maxVelocity}"/>
-        </joint>
-        <link name="${name}_link">
-            <collision>
-                <geometry>
-                    <box size="0.050 0.038 0.032"/>
-                </geometry>
-                <origin rpy="0 0 0" xyz="0.0385 0 0"/>
-            </collision>
-            <visual>
-                <geometry name="ax12mesh">
-                    <mesh
-                        filename="package://sf_dynamixel/meshes/ax12_box_plain.stl" scale="0.001 0.001 0.001"/>
-                </geometry>
-                <!-- xyz 0.050 0.038 0.032 -->
-                <origin rpy="0 0 0" xyz="0.0135 0 0"/>
-                <material name="black_plastic">
-                    <color rgba="0.3 0.3 0.3 1"/>
-                </material>
-            </visual>
-        </link>
-    </xacro:macro>
-    <xacro:macro name="ax12inverted" params="name parent minPosition maxPosition maxVelocity *origin">
-        <joint name="${name}_joint" type="revolute">
-            <parent link="${parent}_link"/>
-            <child link="${name}_link"/>
-            <insert_block name="origin"/>
-            <axis xyz="-1 0 0"/>
-            <limit effort="0" lower="${minPosition}"
-                upper="${maxPosition}" velocity="${maxVelocity}"/>
-        </joint>
-        <link name="${name}_link">
-            <collision>
-                <geometry>
-                    <box size="0.050 0.038 0.032"/>
-                </geometry>
-                <origin rpy="0 0 1.5707" xyz="0.0385 0 0"/>
-            </collision>
-            <visual>
-                <geometry name="ax12mesh">
-                    <mesh
-                        filename="package://sf_dynamixel/meshes/ax12_box_plain.stl" scale="0.001 0.001 0.001"/>
-                </geometry>
-                <!-- xyz 0.050 0.038 0.032 -->
-                <origin rpy="0 0 0" xyz="0.0135 0 0"/>
-                <material name="black_plastic">
-                    <color rgba="0.3 0.3 0.3 1"/>
-                </material>
-            </visual>
-        </link>
-    </xacro:macro>
+<robot xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:xacro="http://ros.org/wiki/xacro">
+	<xacro:macro name="ax12"
+		params="name parent minPosition maxPosition maxVelocity *origin">
+		<link name="${name}_box_link">
+			<visual>
+				<geometry name="ax12mesh">
+					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+						scale="0.001 0.001 0.001" />
+				</geometry>
+				<material name="plastic_black">
+					<color rgba="0.33 0.33 0.33 1" />
+				</material>
+				<origin rpy="-1.57075 1.57075 0" xyz="0 0 0.025" />
+			</visual>
+		</link>
+		<link name="${name}_link">
+			<visual>
+				<geometry>
+					<cylinder length="0.005" radius="0.011" />
+				</geometry>
+				<material name="plastic_white">
+					<color rgba="0.9 0.9 0.9 1" />
+				</material>
+				<origin rpy="0 1.57075 0" xyz="0.0025 0 0" />
+			</visual>
+		</link>
+		<joint name="${name}_joint" type="revolute">
+			<parent link="${name}_box_link" />
+			<child link="${name}_link" />
+			<origin xyz="0.0165 0 0.037" />
+			<axis xyz="1 0 0" />
+			<limit effort="0" lower="-1.5707" upper="1.5707" velocity="1" />
+		</joint>
+		<joint name="${name}_box_joint" type="fixed">
+			<parent link="${parent}_link" />
+			<child link="${name}_box_link" />
+			<insert_block name="origin" />
+		</joint>
+	</xacro:macro>
+	<xacro:macro name="ax12inverted"
+		params="name parent minPosition maxPosition maxVelocity *origin">
+		<link name="${name}_box_link">
+			<visual>
+				<geometry name="ax12mesh">
+					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+						scale="0.001 0.001 0.001" />
+				</geometry>
+				<material name="plastic_black">
+					<color rgba="0.33 0.33 0.33 1" />
+				</material>
+				<origin rpy="1.57075 0 3.14159" xyz="-0.012 0 0.019" />
+			</visual>
+		</link>
+		<link name="${name}_cyl_link">
+			<visual>
+				<geometry>
+					<cylinder length="0.005" radius="0.011" />
+				</geometry>
+				<material name="plastic_white">
+					<color rgba="0.9 0.9 0.9 1" />
+				</material>
+				<origin rpy="0 0 0" xyz="0 0 0.0025" />
+			</visual>
+		</link>
+		<link name="${name}_link"></link>
+		<joint name="${name}_box_joint" type="revolute">
+			<parent link="${name}_cyl_link" />
+			<child link="${name}_box_link" />
+			<origin xyz="0 0 0" />
+			<axis xyz="0 0 1" />
+			<limit effort="0" lower="-1.5707" upper="1.5707" velocity="1" />
+		</joint>
+		<joint name="${name}_cyl_joint" type="fixed">
+			<parent link="${parent}_link" />
+			<child link="${name}_cyl_link" />
+			<insert_block name="origin" />
+		</joint>
+		<joint name="{name}_joint" type="fixed">
+			<parent link="${name}_box_link" />
+			<child link="${name}_link" />
+			<origin xyz="0 0 0.038" />
+		</joint>
+	</xacro:macro>
 </robot>

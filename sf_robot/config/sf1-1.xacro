@@ -36,7 +36,7 @@
 		</visual>
 	</link>
 
-    <!-- Override the 'continuous' joint from p3dx.xacro -->
+    <!-- Override the 'continuous' joint from p3dx.xacro which rviz doesn't support -->
     <joint name="base_swivel_joint_fixed" type="fixed">
         <origin xyz="-0.185 0 0.055" rpy="0 0 0"/>
         <parent link="base_link"/>
@@ -93,7 +93,7 @@
         <xacro:ax12 
                 name="neck_lower" 
                 parent="${parent}" 
-                minPosition="-1.5705" 
+                minPosition="-1.5707" 
                 maxPosition="1.5707" 
                 maxVelocity="1">
             <insert_block name="origin"/>
@@ -105,38 +105,38 @@
         <xacro:ax12 
                 name="neck_upper" 
                 parent="neck_lower_hinge" 
-                minPosition="-1.5705" 
+                minPosition="-1.5707" 
                 maxPosition="1.5707" 
                 maxVelocity="1">
-            <origin rpy="1.5707 0 1.5707" xyz="0 -0.0635 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
         </xacro:ax12>
         <xacro:fp04_02 
                 name="neck_upper_hinge" 
                 parent="neck_upper">
         </xacro:fp04_02>
-        <xacro:ax12 
-                name="head_tilt" 
+        <xacro:ax12inverted 
+                name="head_pan" 
                 parent="neck_upper_hinge" 
                 minPosition="-1.5705" 
                 maxPosition="1.5707" 
                 maxVelocity="1">
-            <origin rpy="0 0 1.5707" xyz="0 -0.0635 0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+        </xacro:ax12inverted>
+        <xacro:ax12 
+                name="head_tilt" 
+                parent="head_pan" 
+                minPosition="-1.5705" 
+                maxPosition="1.5707" 
+                maxVelocity="1">
+            <origin rpy="0 0 0" xyz="0 0 0"/>
         </xacro:ax12>
         <xacro:fp04_02 
                 name="head_tilt_hinge" 
                 parent="head_tilt">
         </xacro:fp04_02>
-        <xacro:ax12inverted 
-                name="head_pan" 
-                parent="head_tilt_hinge" 
-                minPosition="-1.5705" 
-                maxPosition="1.5707" 
-                maxVelocity="1">
-            <origin rpy="0 0 1.5707" xyz="0 -0.0635 0"/>
-        </xacro:ax12inverted>
     </xacro:macro>
     <xacro:neck name="neck" parent="base">
-        <origin rpy="0 1.5707 0" xyz="0 0 0.79" />
+        <origin rpy="0 0 1.5707" xyz="0 0 0.75" />
     </xacro:neck>
 
 	<!-- Head -->
@@ -203,20 +203,24 @@
 	</xacro:macro>
 
 	<xacro:macro name="head" params="name parent *origin">
-		<joint name="${name}_joint" type="fixed">
+		<joint name="${name}_mount_joint" type="fixed">
 			<insert_block name="origin" />
 			<parent link="${parent}_link" />
+			<child link="${name}_mount_link" />
+		</joint>
+		<link name="${name}_mount_link"></link>
+		<joint name="${name}_joint" type="fixed">
+			<parent link="${name}_mount_link" />
 			<child link="${name}_link" />
+			<origin rpy="0 0 0 " xyz="0 0 -0.0475" />
 		</joint>
 		<link name="${name}_link">
 			<inertial>
 				<mass value="0.1" />
-				<origin xyz="0 0 -0.05" rpy="0 0 0" />
 				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
 					izz="0.001" />
 			</inertial>
 			<visual>
-				<origin xyz="0 0 -0.05" rpy="0 0 0" />
 				<geometry>
 					<cylinder length="0.10" radius="0.11" />
 				</geometry>
@@ -225,7 +229,6 @@
 				</material>
 			</visual>
 			<collision>
-				<origin xyz="0 0 -0.05" rpy="0 0 0" />
 				<geometry>
 					<cylinder length="0.10" radius="0.11" />
 				</geometry>
@@ -233,20 +236,20 @@
 		</link>
 
 		<xacro:eye name="eye_r" parent="${name}">
-			<origin rpy="0.23 1.57 0" xyz="0.12 -0.06 -0.05" />
+			<origin rpy="0.23 1.57 0" xyz="0.12 -0.06 0" />
 		</xacro:eye>
 
 		<xacro:eye name="eye_l" parent="${name}">
-			<origin rpy="-0.23 1.57 0" xyz="0.12 0.06 -0.05" />
+			<origin rpy="-0.23 1.57 0" xyz="0.12 0.06 0" />
 		</xacro:eye>
 		
 		<xacro:camera name="camera" parent="${name}">
-			<origin rpy="0 1.57 0" xyz="0.11 0.00 -0.07" />
+			<origin rpy="0 1.57 0" xyz="0.11 0.00 -0.02" />
 		</xacro:camera>
 	</xacro:macro>
 
-	<xacro:head name="head" parent="head_pan">
-		<origin rpy="0 1.5707 3.14159" xyz="-0.05 0 0" />
+	<xacro:head name="head" parent="head_tilt_hinge">
+		<origin rpy="0 0 -1.5707" xyz="0 0 0" />
 	</xacro:head>
 
 	<!--Body -->
