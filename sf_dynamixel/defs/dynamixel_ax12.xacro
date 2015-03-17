@@ -67,7 +67,7 @@
 			</visual>
 		</link>
 		<link name="${name}_link"></link>
-		<joint name="${name}_box_joint" type="revolute">
+		<joint name="${name}_joint" type="revolute">
 			<parent link="${name}_cyl_link" />
 			<child link="${name}_box_link" />
 			<origin xyz="0 0 0" />
@@ -79,7 +79,7 @@
 			<child link="${name}_cyl_link" />
 			<insert_block name="origin" />
 		</joint>
-		<joint name="{name}_joint" type="fixed">
+		<joint name="{name}_box_joint" type="fixed">
 			<parent link="${name}_box_link" />
 			<child link="${name}_link" />
 			<origin xyz="0 0 0.038" />
