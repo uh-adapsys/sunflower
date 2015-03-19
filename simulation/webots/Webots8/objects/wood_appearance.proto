@@ -1,0 +1,12 @@
+#VRML_OBJ V8.0.5 utf8
+# wood appearance
+
+PROTO wood_appearance [
+]
+{
+  Appearance {
+    material Material {
+      diffuseColor 0.96 0.86 0.57
+    }
+  }
+}

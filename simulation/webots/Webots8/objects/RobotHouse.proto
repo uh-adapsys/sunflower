@@ -1,0 +1,90 @@
+#VRML_OBJ V8.0.5 utf8
+# Structural Components of the Robot House
+
+PROTO RobotHouse [
+  field SFFloat wallHeight 1
+  field SFBool openDoor FALSE
+]
+{
+  Solid {
+    children [
+    Floor {
+      translation 1.5 0 1.936
+      size 10.8719 10.8719
+      tileSize 10.8719 10.8719
+      texture [
+        "textures/RobotHouseMap.png"
+      ]
+    }
+    Door {
+      translation -1.68 0 -0.12
+      rotation 0 1 0 -1.5708
+      size 1 %{=fields.wallHeight}% 0.07
+      frameHeight %{=fields.wallHeight - 0.1 }%
+      jointAtLeft FALSE
+    }
+    Solid {
+      translation 1.85 %{=fields.wallHeight / 2}% 1.65
+      children [
+        Shape {
+          appearance Appearance {
+            texture ImageTexture {
+              url [
+                "textures/interlaced_parquetry.png"
+              ]
+            }
+          }
+          geometry Box {
+            size 1.8 %{=fields.wallHeight}% 1.8
+          }
+        }
+      ]
+      name ""
+      model "stairs"
+      description "Simulation Placeholder for stairs"
+      boundingObject Box {
+        size 1.8 %{=fields.wallHeight}% 1.8
+      }
+      locked TRUE
+      translationStep 0
+      rotationStep 0
+    }
+    Wall {
+      translation 2.65 0 -2.865
+      size 8.5 %{=fields.wallHeight}% 0.2
+    }
+    Wall {
+      translation 1.2 0 3.45
+      size 5.3 %{=fields.wallHeight}% 0.2
+    }
+    Wall {
+      translation 5.33 0 0.73
+      size 3.1 %{=fields.wallHeight}% 0.2
+    }
+    Wall {
+      translation -1.745 0 0.48
+      size 0.3 %{=fields.wallHeight}% 0.2
+    }
+    Wall {
+      translation 6.8 0 -1.03
+      rotation 0 1 0 1.5708
+      size 3.7 %{=fields.wallHeight}% 0.2
+    }
+    Wall {
+      translation 3.773 0 2.03
+      rotation 0 1 0 1.5708
+      size 2.8 %{=fields.wallHeight}% 0.2
+    }
+    Wall {
+      translation -1.45 0 2.01
+      rotation 0 1 0 1.5708
+      size 3.1 %{=fields.wallHeight}% 0.3
+    }
+    Wall {
+      translation -1.54 0 -1.77
+      rotation 0 1 0 1.5708
+      size 2.4 %{=fields.wallHeight}% 0.2
+    }
+  ]
+  }
+}  

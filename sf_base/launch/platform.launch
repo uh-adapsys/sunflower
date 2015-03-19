@@ -3,7 +3,7 @@
 <launch>
    <node name="p2os" pkg="p2os_driver" type="p2os" output="screen" >
       <param name="port" value="/dev/p3dxBase" />
-      <param name="use_sonar" value="false" />
+      <param name="use_sonar" value="true" />
       <param name="bumpstall" value="3" />
       <remap from="pose" to="odom" />
    </node>

@@ -1,0 +1,124 @@
+#VRML_OBJ V8.0.5 utf8
+# Sunflower head with optional camera
+
+PROTO sunflower_head [
+  field MFNode extensionSlot []
+  field SFBool useCamera TRUE
+]
+{
+  Solid {
+    translation 0 -0.012 0
+    children [
+      Group {
+        children IS extensionSlot
+      }
+      DEF SHELL Shape {
+        appearance Appearance {
+          material Material {
+            diffuseColor 0.2 0.2 0.2
+          }
+        }
+        geometry Box {
+          size 0.20 0.0025 0.03
+        }
+      }
+      DEF MOUNT Shape {
+        appearance Appearance {
+          material Material {
+            diffuseColor 0.5 0.5 0.5
+          }
+        }
+        geometry Cylinder {
+          height 0.1
+          radius 0.11
+          bottom FALSE
+        }
+      }
+      DEF EYE_R Transform {
+        translation 0.06 0 -0.12
+        rotation 0.989439 -0.14495 0 1.5707
+        children [
+          DEF EYE Group {
+            children [
+              Shape {
+                appearance Appearance {
+                  material Material {
+                    diffuseColor 0.98 0.98 0.9
+                  }
+                }
+                geometry Cylinder {
+                  height 0.015
+                  radius 0.03
+                }
+              }
+              Transform {
+                translation 0 0.02 0
+                children [
+                  Shape {
+                    appearance Appearance {
+                      material Material {
+                        diffuseColor 0.98 0.98 0.9
+                      }
+                    }
+                    geometry Cylinder {
+                      height 0.03
+                      radius 0.005
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+      DEF EYE_L Transform {
+        translation -0.06 0 -0.12
+        rotation 0.989439 0.14495 0 1.5707
+        children [
+          USE EYE
+        ]
+      }
+      DEF CAMERA Transform {
+        translation 0 -0.02 -0.09
+        rotation 1 0 0 -1.5707
+        children [
+          Shape {
+            appearance Appearance {
+              material Material {
+                diffuseColor 0.07 0.07 0.07
+              }
+            }
+            geometry Cylinder {
+              height 0.04
+              radius 0.015
+            }
+          }
+        ]
+      }
+      %{ if fields.useCamera then }%
+      DEF CAMERA_LENSE Transform {
+        translation 0 -0.02 -0.09
+        rotation 1 0 0 -1.5707
+        children [
+          Camera {
+            name "head_camera"
+            width 320
+            height 320
+            pixelSize 0.5
+          }
+        ]
+      }
+      %{ end }%
+    ]
+    boundingObject Group {
+      children [
+        USE SHELL
+        USE MOUNT
+      ]
+    }
+    physics Physics {
+      density -1
+      mass 0.5
+    }
+  }
+}

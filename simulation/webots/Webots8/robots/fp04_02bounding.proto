@@ -1,0 +1,35 @@
+#VRML_OBJ V8.0.5 utf8
+# Default neck for the Sunflower robot
+PROTO fp04_02bounding[
+  #hiddenField SFVec3f size 0.025 0.048 0.037
+]
+{
+  Group {
+    children [
+      Transform {
+        translation 0 -0.0175 -0.0225
+        children [
+          Box {
+            size 0.025 0.047 0.007
+          }
+        ]
+      }
+      Transform {
+        translation 0 0.00505 -0.003225
+        children [
+          Box {
+            size 0.025 0.002 0.03
+          }
+        ]
+      }
+      Transform {
+        translation 0 -0.04005 -0.003225
+        children [
+          Box {
+            size 0.025 0.002 0.03
+          }
+        ]
+      }
+    ]
+  }
+}

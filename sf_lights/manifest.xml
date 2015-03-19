@@ -4,12 +4,12 @@
      sf_lights
 
   </description>
-  <author>Nathan Burkee114</author>
+  <author>Nathan Burke</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/sf_lights</url>
   <depend package="actionlib"/>
-  <depend package="actionlib_msgs"/>
+  <depend package="sf_lights_msgs"/>
 </package>
 
 

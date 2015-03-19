@@ -1,0 +1,92 @@
+#VRML_OBJ V8.0.5 utf8
+# AX-12 Servo with endpoint slot
+
+PROTO ax12 [
+  field SFString name "AX_12"
+  field SFRotation rotation 0 1 0 0
+  field SFVec3f translation 0 0 0
+  field SFFloat servoPosition 0
+  field SFFloat acceleration -1
+  field SFFloat maxVelocity 10
+  field SFFloat minPosition 0
+  field SFFloat maxPosition 0
+  field SFFloat maxTorque 10
+  field SFNode endPoint NULL
+  hiddenField SFVec3f boxOffset 0 0.025 0 # Move 0,0,0 to the bottom of the servo
+  hiddenField SFVec3f boxSize 0.032 0.050 0.038 # Overall size of a servo
+  hiddenField SFVec3f hingeOffset 0 0.0385 0.019
+  hiddenField SFRotation hingeRotation 1 0 0 1.5707
+]
+{
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    children [
+      Transform {
+        translation IS boxOffset
+        children [
+          ax12mesh {
+          }
+        ]
+      }
+      DEF HINGE Transform {
+        translation IS hingeOffset
+        rotation IS hingeRotation
+        children [
+          Shape {
+            appearance Appearance {
+              material Material {
+                diffuseColor 0.9 0.9 0.9
+              }
+            }
+            geometry Cylinder {
+              height 0.005
+              radius 0.011
+            }
+          }
+        ]
+      }
+      Transform {
+        translation IS hingeOffset
+        rotation IS hingeRotation
+        children [
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 1 0
+              anchor 0 0 0
+              position IS servoPosition
+            }
+            device [
+              RotationalMotor {
+                name IS name
+                acceleration IS acceleration
+                maxVelocity IS maxVelocity
+                minPosition IS minPosition
+                maxPosition IS maxPosition
+                maxTorque IS maxTorque
+              }
+            ]
+            endPoint IS endPoint
+          }
+        ]
+      }
+    ]
+    boundingObject Group {
+      children [
+        Transform {
+          translation IS boxOffset
+          children [
+            Box {
+              size IS boxSize
+            }
+          ]
+        }
+        USE HINGE
+      ]
+    }
+    physics Physics {
+      density -1
+      mass 0.054
+    }
+  }
+}
