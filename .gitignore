@@ -1,5 +1,6 @@
 # ------ Webots Section ------
-*.cache
+simulation/webots/**/*.cache
+simulation/webots/**/*.wbproj
 
 # ------ Python Section ------
 
