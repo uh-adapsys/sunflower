@@ -123,45 +123,6 @@ DEF Furniture Solid {
     }
   ]
 }
-DEF Person Solid {
-  translation 3 0.9 -1
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 0.72549 0
-        }
-      }
-      geometry Cylinder {
-        height 1.8
-        radius 0.3
-      }
-    }
-  ]
-  name "researcher"
-  model "person"
-  description "Simulation Placeholder for a person"
-  boundingObject Cylinder {
-    height 1.8
-    radius 0.3
-  }
-  physics Physics {
-    density -1
-    mass 40
-    centerOfMass [
-      0 0 0
-    ]
-    inertiaMatrix [
-      148.864 22.9022 148.864
-      0 0 0
-    ]
-    damping Damping {
-    }
-  }
-  locked TRUE
-  translationStep 0
-  rotationStep 0
-}
 DEF Sunflower Pioneer3DX {
   name "sunflower1-1"
   controller "rosController"
