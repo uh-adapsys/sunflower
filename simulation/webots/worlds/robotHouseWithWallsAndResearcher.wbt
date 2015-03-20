@@ -163,6 +163,7 @@ DEF Person Solid {
   rotationStep 0
 }
 DEF Sunflower Pioneer3DX {
+  rotation 0 1 0 -1.57079
   name "sunflower1-1"
   controller "rosController"
   extensionSlot [
