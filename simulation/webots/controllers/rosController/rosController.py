@@ -34,7 +34,7 @@ except:
 else:
     import sf_controller_msgs.msg
     import actionlib
-    from geometry_msgs.msg import PoseStamped, Twist
+    from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
     from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
     from nav_msgs.msg import Odometry
     # from p2os_msgs.msg import SonarArray
@@ -83,8 +83,9 @@ class ClockSync(Thread):
             clockPublisher = rospy.Publisher("/clock", Clock)
 
         self._stop = False
+        starttime = time.time()
         while not rospy.is_shutdown() and not self._stop:
-            rosTime = rospy.Time(self.getTime())
+            rosTime = rospy.Time(self.getTime() + starttime)
             clock = Clock(clock=rosTime)
             clockPublisher.publish(clock)
             time.sleep(0)
@@ -231,6 +232,27 @@ class Sunflower(Robot):
             rospy.logerr("Skipped updating odom! Last: %s, Cur: %s" % 
                          (self._location, self._lastLocation))
 
+    def _publishInitialPose(self, posePublisher):
+        if self._location:
+            msg = PoseWithCovarianceStamped()
+            msg.header.stamp = self._rosTime
+            msg.header.frame_id = 'map'
+            msg.pose.pose.position.x = self._location.x
+            msg.pose.pose.position.y = self._location.y
+            msg.pose.pose.position.z = 0
+
+            orientation = quaternion_from_euler(
+                0, 0, self._location.theta + 1.57079)
+            msg.pose.pose.orientation.x = orientation[0]
+            msg.pose.pose.orientation.y = orientation[1]
+            msg.pose.pose.orientation.z = orientation[2]
+            msg.pose.pose.orientation.w = orientation[3]
+            
+            print "Publishing pose"           
+            posePublisher.publish(msg)            
+            return True
+        return False
+
     def _publishPose(self, posePublisher):
         if self._location:
             msg = Odometry()
@@ -324,8 +346,8 @@ class Sunflower(Robot):
             laserPublisher = rospy.Publisher(
                 "/scan_front", LaserScan, queue_size=2)
             # clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
-            jointPublisher = rospy.Publisher(
-                "/joint_states", JointState, queue_size=2)
+            jointPublisher = rospy.Publisher("/joint_states", JointState, queue_size=2)
+            initialPosePublisher = rospy.Publisher("/initialpose", PoseWithCovarianceStamped, queue_size=2)
         except:
             # sonarPublisher = rospy.Publisher("/sonar", SonarArray)
             odomPublisher = rospy.Publisher("/odom", Odometry)
@@ -333,20 +355,27 @@ class Sunflower(Robot):
             laserPublisher = rospy.Publisher("/scan_front", LaserScan)
             # clockPublisher = rospy.Publisher("/clock", Clock)
             jointPublisher = rospy.Publisher("/joint_states", JointState)
+            initialPosePublisher = rospy.Publisher("/initialpose", PoseWithCovarianceStamped)
         odomTransform = TransformBroadcaster()
-        locationTransform = TransformBroadcaster()
+#         locationTransform = TransformBroadcaster()
         laserTransform = TransformBroadcaster()
 
         # Probably something wrong elsewhere, but we seem to need to publish
         # map->odom transform once to get sf_navigation to load
-        self._publishLocationTransform(locationTransform)
+#         self._publishLocationTransform(locationTransform)
+        # Start the ros clock 
         cs = ClockSync(sf)
         cs.start()
+        initialposepublished = False
 
         while not rospy.is_shutdown() and self.step(self._time_step) != -1:
             # self._rosTime = rospy.Time(self.getTime())
             self._rosTime = rospy.Time.now()
-
+            
+            # Give time for ros to initialise
+            if not initialposepublished and self._rosTime.secs >= 5:
+                initialposepublished = self._publishInitialPose(initialPosePublisher)
+            
             self._updateLocation()
             self._updateSonar()
             self._updateLaser()
@@ -655,16 +684,32 @@ class Sunflower(Robot):
                 '/sf_controller/%s/joint_names' % 
                 goal.component)
         except KeyError:
-            # assume component is a named joint
-            joint_names = [goal.component, ]
+            # TODO: we're not publishing the dynamixel yaml configs for webots
+            if goal.component == 'head':
+                joint_names = ["head_pan", "head_tilt", "neck_upper", "neck_lower"]
+            else:
+                # assume component is a named joint
+                joint_names = [goal.component, ]
         for i in range(0, len(joint_names)):
             servoName = joint_names[i]
             if servoName not in self._servos:
                 rospy.logerr('Undefined joint %s', servoName)
                 return _states['ABORTED']
-            self._servos[servoName].set(positions[i])
+            self._servos[servoName].setPosition(positions[i])
 
-        return _states['SUCCEEDED']
+        inpos_threshold = 0.1
+        waittime = 5
+        waitstart = rospy.Time.now()
+        while (rospy.Time.now() - waitstart).to_sec() <= waittime:
+            done = True
+            for i in range(0, len(joint_names)):
+                current = self._servos[joint_names[i]].getPosition()
+                target = positions[i]                    
+                done = done and abs(current - target) <= inpos_threshold
+            if done:
+                return _states['SUCCEEDED']
+
+        return _states['ABORTED']
 
 
 class _ActionHandle(object):

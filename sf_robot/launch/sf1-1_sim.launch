@@ -2,8 +2,8 @@
 
 <launch>
 	<param name="/use_sim_time" value="true" />
-	<include file="$(find sf_navigation)/launch/start.launch"/>
 	<include file="$(find sf_robot)/launch/tf.launch" >
 		<arg name="sf_version" value="sf1-1" />
 	</include>
+	<include file="$(find sf_navigation)/launch/start.launch"/>
 </launch>
