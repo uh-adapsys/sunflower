@@ -124,7 +124,7 @@
 		</xacro:fp04_02>
 		<xacro:ax12inverted name="head_pan" parent="neck_upper_hinge"
 			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
-			<origin rpy="0 0 0" xyz="0 0 0" />
+			<origin rpy="0 0 -1.57079" xyz="0 0 0" />
 		</xacro:ax12inverted>
 		<xacro:ax12 name="head_tilt" parent="head_pan" minPosition="-1.5707"
 			maxPosition="1.5707" maxVelocity="1">
@@ -288,7 +288,7 @@
 	</xacro:macro>
 
 	<xacro:head name="head" parent="head_tilt_hinge">
-		<origin rpy="0 0 -1.5707" xyz="0 0 0" />
+		<origin rpy="0 0 0" xyz="0 0 0" />
 	</xacro:head>
 
 	<!--Body -->

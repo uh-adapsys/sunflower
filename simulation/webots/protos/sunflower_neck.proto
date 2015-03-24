@@ -13,8 +13,6 @@ PROTO sunflower_neck [
 
   field SFRotation head_rotation 0 0 0 0
   field SFVec3f head_translation 0 0 0
-  field SFRotation head_m_rotation 0 0 0 0
-  field SFVec3f head_m_translation 0 0 0
 ]
 {
   Solid {
@@ -2350,7 +2348,7 @@ PROTO sunflower_neck [
                                         children [
                                           HingeJoint {
                                             jointParameters HingeJointParameters {
-                                              axis 0 0 1
+                                              axis 0 1 0
                                               anchor 0 0 0
                                               position IS head_pan_position
                                             }
