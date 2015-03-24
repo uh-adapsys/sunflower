@@ -2,22 +2,12 @@
 # Sunflower head with optional camera
 
 PROTO sunflower_head [
-  field SFBool useCamera TRUE
+  field SFBool useCamera FALSE
 ]
 {
   Solid {
     translation 0 -0.0475 0
     children [
-      DEF SHELL Shape {
-        appearance Appearance {
-          material Material {
-            diffuseColor 0.2 0.2 0.2
-          }
-        }
-        geometry Box {
-          size 0.20 0.0025 0.03
-        }
-      }
       DEF MOUNT Shape {
         appearance Appearance {
           material Material {
@@ -105,12 +95,7 @@ PROTO sunflower_head [
       }
       %{ end }%
     ]
-    boundingObject Group {
-      children [
-        USE SHELL
-        USE MOUNT
-      ]
-    }
+    boundingObject USE MOUNT
     physics Physics {
       density -1
       mass 0.5

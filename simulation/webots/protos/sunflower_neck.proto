@@ -2,7 +2,7 @@
 # Default neck for the Sunflower robot
 
 PROTO sunflower_neck [
-  #field MFNode headSlot []
+  field MFNode neck_endpoint []
   field SFFloat neck_lower_position 0
   field SFFloat neck_upper_position 0
   field SFFloat head_tilt_position 0
@@ -10,6 +10,11 @@ PROTO sunflower_neck [
 
   field SFRotation rotation 0 1 0 0
   field SFVec3f translation 0 0 0
+
+  field SFRotation head_rotation 0 0 0 0
+  field SFVec3f head_translation 0 0 0
+  field SFRotation head_m_rotation 0 0 0 0
+  field SFVec3f head_m_translation 0 0 0
 ]
 {
   Solid {
@@ -2341,11 +2346,11 @@ PROTO sunflower_neck [
                                       USE FP04_02MESH
                                       Transform {
                                         translation 0 -0.0175 -0.027
-                                        rotation 1 0 0 -1.5707
-                                        children [        
+                                        rotation 1 0 0 -1.57079
+                                        children [
                                           HingeJoint {
                                             jointParameters HingeJointParameters {
-                                              axis 0 1 0
+                                              axis 0 0 1
                                               anchor 0 0 0
                                               position IS head_pan_position
                                             }
@@ -2357,63 +2362,57 @@ PROTO sunflower_neck [
                                               maxTorque 10
                                             }
                                             endPoint Solid {
-                                              translation 0 0.0225 -0.0385
-                                              rotation 1 0 0 1.5707
+                                              translation 0.0385 0.019 0
+                                              rotation 1 -1 1 2.09437
                                               boundingObject USE AX12_BOUNDING
                                               physics USE AX12_PHYSICS
                                               children [
+                                                USE AX12_MESH
                                                 Transform {
-                                                  children [
-                                                    USE AX12_MESH
-                                                  ]
-                                                }
-                                                Solid {
-                                                  boundingObject USE AX12_BOUNDING
-                                                  physics USE AX12_PHYSICS
-                                                  rotation 1 0 0 -1.5707
-                                                  translation 0 0.0365 -0.01925
-                                                  children [
-                                                    USE AX12_MESH
-                                                    Transform {
-                                                      translation 0 0.0385 0.019
-                                                      rotation 1 0 0 1.5707
+                                                  rotation 1 0 0 -1.57079
+                                                  translation 0 0.0385 -0.019
+                                                  children [                                                  
+                                                    Solid {
+                                                      boundingObject USE AX12_BOUNDING
+                                                      physics USE AX12_PHYSICS
                                                       children [
-                                                        HingeJoint {
-                                                          jointParameters HingeJointParameters {
-                                                            axis 0 1 0
-                                                            anchor 0 0 0
-                                                            position IS head_tilt_position
-                                                          }
-                                                          device RotationalMotor {
-                                                            name "head_tilt"
-                                                            maxVelocity 1
-                                                            minPosition -0.6872228125
-                                                            maxPosition 0.53996078125
-                                                            maxTorque 10
-                                                          }
-                                                          endPoint Solid {
-                                                            boundingObject USE FP04_02BOUNDING
-                                                            physics USE FP04_02PHYSICS
-                                                            children [
-                                                              USE FP04_02MESH
-                                                              Transform {
-                                                                translation 0 -0.0175 -0.027
-                                                                rotation 1 0 0 -1.5707
+                                                        USE AX12_MESH
+                                                        Transform {
+                                                          translation 0 0.0385 0.019
+                                                          rotation 1 0 0 1.57079
+                                                          children [
+                                                            HingeJoint {
+                                                              jointParameters HingeJointParameters {
+                                                                axis 0 1 0
+                                                                anchor 0 0 0
+                                                                position IS head_tilt_position
+                                                              }
+                                                              device RotationalMotor {
+                                                                name "head_tilt"
+                                                                maxVelocity 1
+                                                                minPosition -0.6872228125
+                                                                maxPosition 0.53996078125
+                                                                maxTorque 10
+                                                              }
+                                                              endPoint Solid {
+                                                                boundingObject USE FP04_02BOUNDING
+                                                                physics USE FP04_02PHYSICS
                                                                 children [
+                                                                  USE FP04_02MESH
                                                                   Transform {
-                                                                    translation 0 0.0025 0
-                                                                    rotation 0 1 0 1.5707
-                                                                    #children IS headSlot
+                                                                    translation 0 -0.0175 -0.027
+                                                                    rotation 1 0 0 -1.57079
                                                                     children [
-                                                                      sunflower_head {
-                                                                        useCamera FALSE
+                                                                      Transform {
+                                                                        rotation 0 1 0 3.14159
+                                                                        children IS neck_endpoint
                                                                       }
                                                                     ]
                                                                   }
                                                                 ]
                                                               }
-                                                            ]
-                                                          }
+                                                            }
+                                                          ]
                                                         }
                                                       ]
                                                     }

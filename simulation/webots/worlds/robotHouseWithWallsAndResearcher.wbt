@@ -183,6 +183,10 @@ DEF Sunflower Pioneer3DX {
     sunflower_shell {
       headSlot [
         sunflower_neck {
+          neck_endpoint [
+            sunflower_head {
+            }
+          ]
           rotation 0 1 0 -1.5707
         }
       ]
