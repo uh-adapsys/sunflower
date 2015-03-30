@@ -65,7 +65,8 @@ PROTO sunflower_head [
         ]
       }
       DEF CAMERA Transform {
-        translation 0 -0.02 -0.09
+        #translation 0 -0.02 -0.09
+        translation 0 -0.02 -2
         rotation 1 0 0 -1.5707
         children [
           Shape {
@@ -75,7 +76,8 @@ PROTO sunflower_head [
               }
             }
             geometry Cylinder {
-              height 0.04
+              #height 0.04
+              height 4.0
               radius 0.015
             }
           }

@@ -40,6 +40,7 @@ else:
     # from p2os_msgs.msg import SonarArray
     from rosgraph_msgs.msg import Clock
     from sensor_msgs.msg import LaserScan, JointState
+    from dynamixel_msgs.msg import JointState as DynJointState
     from tf import TransformBroadcaster
     from tf.transformations import quaternion_from_euler
 
@@ -248,7 +249,6 @@ class Sunflower(Robot):
             msg.pose.pose.orientation.z = orientation[2]
             msg.pose.pose.orientation.w = orientation[3]
             
-            print "Publishing pose"           
             posePublisher.publish(msg)            
             return True
         return False
@@ -312,7 +312,7 @@ class Sunflower(Robot):
                                   len(self._sensorValues['frontLaser'].ranges))
             laserPublisher.publish(msg)
 
-    def _publishJoints(self, jointPublisher):
+    def _publishJoints(self, jointPublisher, dynamixelPublishers=None):
         # header:
         #   seq: 375
         #   stamp:
@@ -336,6 +336,17 @@ class Sunflower(Robot):
             msg.name = names
             msg.position = positions
             jointPublisher.publish(msg)
+        if self._servos and dynamixelPublishers:
+            # getComponentState of the sunflower class uses the dynamixel contoller status
+            for (name, servo) in self._servos.iteritems():
+                if name in dynamixelPublishers:
+                    msg = DynJointState()
+                    msg.header.stamp = self._rosTime
+                    msg.name = name
+                    msg.goal_pos = servo.getTargetposition()
+                    msg.current_pos = servo.getPosition()
+                    msg.load = servo.getTorqueFeedback()
+                    dynamixelPublishers[name].publish(msg)
 
     def run(self):
         try:
@@ -348,6 +359,7 @@ class Sunflower(Robot):
             # clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
             jointPublisher = rospy.Publisher("/joint_states", JointState, queue_size=2)
             initialPosePublisher = rospy.Publisher("/initialpose", PoseWithCovarianceStamped, queue_size=2)
+            dynamixelPublishers = {name: rospy.Publisher("%s_controller/state" % name, DynJointState, queue_size=2) for name in self._servos.iterkeys()}
         except:
             # sonarPublisher = rospy.Publisher("/sonar", SonarArray)
             odomPublisher = rospy.Publisher("/odom", Odometry)
@@ -356,6 +368,7 @@ class Sunflower(Robot):
             # clockPublisher = rospy.Publisher("/clock", Clock)
             jointPublisher = rospy.Publisher("/joint_states", JointState)
             initialPosePublisher = rospy.Publisher("/initialpose", PoseWithCovarianceStamped)
+            dynamixelPublishers = {name: rospy.Publisher("%s_controller/state" % name, DynJointState) for name in self._servos.iterkeys()}
         odomTransform = TransformBroadcaster()
 #         locationTransform = TransformBroadcaster()
         laserTransform = TransformBroadcaster()
@@ -390,7 +403,7 @@ class Sunflower(Robot):
             # self._publishLocationTransform(locationTransform)
             # self._publishSonar(sonarPublisher)
             self._publishLaser(laserPublisher)
-            self._publishJoints(jointPublisher)
+            self._publishJoints(jointPublisher, dynamixelPublishers)
 
             # It appears that we have to call sleep for ROS to process messages
             time.sleep(0.0001)
@@ -459,7 +472,7 @@ class Sunflower(Robot):
         pass
 
     def execute_cb(self, goal):
-        rospy.loginfo("Got goal: %s" % goal)
+        #rospy.loginfo("Got goal: %s" % goal)
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
         elif goal.action == 'move':

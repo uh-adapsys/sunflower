@@ -10,9 +10,6 @@ PROTO sunflower_neck [
 
   field SFRotation rotation 0 1 0 0
   field SFVec3f translation 0 0 0
-
-  field SFRotation head_rotation 0 0 0 0
-  field SFVec3f head_translation 0 0 0
 ]
 {
   Solid {
