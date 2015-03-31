@@ -89,7 +89,7 @@ class ClockSync(Thread):
             rosTime = rospy.Time(self.getTime() + starttime)
             clock = Clock(clock=rosTime)
             clockPublisher.publish(clock)
-            time.sleep(0)
+            time.sleep(0.001)
 
     def stop(self):
         self._stop = True
