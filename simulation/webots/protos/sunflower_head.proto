@@ -3,6 +3,7 @@
 
 PROTO sunflower_head [
   field SFBool useCamera FALSE
+  field SFBool showGaze FALSE
 ]
 {
   Solid {
@@ -65,8 +66,11 @@ PROTO sunflower_head [
         ]
       }
       DEF CAMERA Transform {
-        #translation 0 -0.02 -0.09
+        %{ if fields.showGaze then }%
         translation 0 -0.02 -2
+        %{ else }%
+        translation 0 -0.02 -0.09
+        %{ end }%
         rotation 1 0 0 -1.5707
         children [
           Shape {
@@ -76,8 +80,11 @@ PROTO sunflower_head [
               }
             }
             geometry Cylinder {
-              #height 0.04
+              %{ if fields.showGaze then }%
               height 4.0
+              %{ else }%
+              height 0.04
+              %{ end }%
               radius 0.015
             }
           }
