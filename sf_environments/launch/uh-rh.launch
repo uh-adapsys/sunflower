@@ -1,0 +1,9 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<!-- Run the map server -->
+	<node name="map_server" pkg="map_server" type="map_server"
+		args="$(find sf_environments)/uh-robot-house/map.yaml">
+		<param name="frame_id" value="/map" />
+	</node>
+</launch>

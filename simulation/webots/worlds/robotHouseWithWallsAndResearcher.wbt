@@ -17,6 +17,10 @@ Background {
     0.4 0.7 1
   ]
 }
+DEF PERSON Person {
+  translation 2 0.0975 -1
+  rotation 0 1 0 3.14159
+}
 DirectionalLight {
   ambientIntensity 1
   direction -0.33 -1 -0.5
@@ -122,45 +126,6 @@ DEF Furniture Solid {
       rotation 0 1 0 3.14159
     }
   ]
-}
-DEF Person Solid {
-  translation 2 0.9 -1
-  children [
-    Shape {
-      appearance Appearance {
-        material Material {
-          diffuseColor 1 0.72549 0
-        }
-      }
-      geometry Cylinder {
-        height 1.8
-        radius 0.3
-      }
-    }
-  ]
-  name "researcher"
-  model "person"
-  description "Simulation Placeholder for a person"
-  boundingObject Cylinder {
-    height 1.8
-    radius 0.3
-  }
-  physics Physics {
-    density -1
-    mass 40
-    centerOfMass [
-      0 0 0
-    ]
-    inertiaMatrix [
-      148.864 22.9022 148.864
-      0 0 0
-    ]
-    damping Damping {
-    }
-  }
-  locked TRUE
-  translationStep 0
-  rotationStep 0
 }
 DEF Sunflower Pioneer3DX {
   rotation 0 1 0 -1.57079

@@ -14,6 +14,7 @@ footprint: [ [0.254, -0.0508], [0.1778, -0.0508], [0.1778, -0.1778], [-0.1905, -
 
 transform_tolerance: 0.3
 map_type: costmap
+map_topic: map
 
 observation_sources: front_laser
 

@@ -1,6 +1,7 @@
 <!-- -*- mode: XML -*- -->
 
 <launch>
+	<include file="$(find sf_environments)/launch/uh-rh.launch"/>
 	<include file="$(find sf_lights)/launch/start.launch"/>
 	<include file="$(find sf_dynamixel)/launch/start.launch">
 		<arg name="sf_version" value="sf1-2" />

@@ -24,11 +24,11 @@ except:
     logger = logging.getLogger()
     if logger.handlers:
         logging.getLogger().error(
-            "Unable to load roslib, fatal error", exc_info=True)
+            'Unable to load roslib, fatal error', exc_info=True)
     else:
         import sys
         import traceback
-        print >> sys.stderr, "Unable to load roslib, fatal error"
+        print >> sys.stderr, 'Unable to load roslib, fatal error'
         print >> sys.stderr, traceback.format_exc()
     exit(1)
 else:
@@ -79,9 +79,9 @@ class ClockSync(Thread):
     def run(self):
         try:
             # ROS Version >= Hydro
-            clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
+            clockPublisher = rospy.Publisher('/clock', Clock, queue_size=2)
         except:
-            clockPublisher = rospy.Publisher("/clock", Clock)
+            clockPublisher = rospy.Publisher('/clock', Clock)
 
         self._stop = False
         starttime = time.time()
@@ -112,8 +112,9 @@ class Sunflower(Robot):
     _translationSpeed = [-0.2, 0.4]
     _rotationSpeed = [-0.8, 0.8]
 
-    def __init__(self, name):
+    def __init__(self, name, namespace='/'):
         super(Sunflower, self).__init__()
+        self._namespace = namespace.rstrip('/') + '/'
         self._time_step = int(self.getBasicTimeStep())
         self._action_name = name
         self._as = actionlib.SimpleActionServer(
@@ -125,18 +126,18 @@ class Sunflower(Robot):
         try:
             # ROS Version >= Hydro
             self._cmdVel = rospy.Subscriber(
-                'cmd_vel',
+                self._namespace + 'cmd_vel',
                 Twist,
                 callback=self.cmdvel_cb,
                 queue_size=2)
         except:
             self._cmdVel = rospy.Subscriber(
-                'cmd_vel',
+                self._namespace + 'cmd_vel',
                 Twist,
                 callback=self.cmdvel_cb)
 
         rospy.loginfo(
-            "Started Sunflower Controller ActionServer on topic %s",
+            'Started Sunflower Controller ActionServer on topic %s',
             self._action_name)
         self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
         self._result = sf_controller_msgs.msg.SunflowerResult()
@@ -189,17 +190,18 @@ class Sunflower(Robot):
                 (self._location.x, self._location.y, 0),
                 quaternion_from_euler(0, 0, self._location.theta),
                 self._rosTime,
-                'base_link',
-                'odom')
+                self._namespace + 'base_link',
+                self._namespace + 'odom')
 
     def _publishLocationTransform(self, locationPublisher):
         if self._location:
+            print self._location
             locationPublisher.sendTransform(
-                (self._location.x, self._location.y, 0),
-                quaternion_from_euler(0, 0, self._location.theta),
+                (0, 0, 0),
+                quaternion_from_euler(0, 0, 1.57079),
                 self._rosTime,
-                'odom',
-                'map',)
+                self._namespace + 'odom',
+                '/map',)
 
     def _publishLaserTransform(self, laserPublisher):
         if self._location:
@@ -207,15 +209,15 @@ class Sunflower(Robot):
                 (0.0, 0.0, 0.0),
                 quaternion_from_euler(0, 0, 0),
                 self._rosTime,
-                'scan_front',
-                'base_laser_front_link')
+                self._namespace + 'scan_front',
+                self._namespace + 'base_laser_front_link')
 
     def _publishOdom(self, odomPublisher):
         if self._location:
             msg = Odometry()
             msg.header.stamp = self._rosTime
-            msg.header.frame_id = 'odom'
-            msg.child_frame_id = "base_link"
+            msg.header.frame_id = self._namespace + 'odom'
+            msg.child_frame_id = self._namespace + 'base_link'
 
             msg.pose.pose.position.x = self._location.x
             msg.pose.pose.position.y = self._location.y
@@ -230,14 +232,14 @@ class Sunflower(Robot):
 
             odomPublisher.publish(msg)
         else:
-            rospy.logerr("Skipped updating odom! Last: %s, Cur: %s" % 
+            rospy.logerr('Skipped updating odom! Last: %s, Cur: %s' % 
                          (self._location, self._lastLocation))
 
     def _publishInitialPose(self, posePublisher):
         if self._location:
             msg = PoseWithCovarianceStamped()
             msg.header.stamp = self._rosTime
-            msg.header.frame_id = 'map'
+            msg.header.frame_id = '/map'
             msg.pose.pose.position.x = self._location.x
             msg.pose.pose.position.y = self._location.y
             msg.pose.pose.position.z = 0
@@ -257,8 +259,8 @@ class Sunflower(Robot):
         if self._location:
             msg = Odometry()
             msg.header.stamp = self._rosTime
-            msg.header.frame_id = 'odom'
-            msg.child_frame_id = 'base_link'
+            msg.header.frame_id = self._namespace + 'odom'
+            msg.child_frame_id = self._namespace + 'base_link'
 
             msg.pose.pose.position.x = self._location.x
             msg.pose.pose.position.y = self._location.y
@@ -298,7 +300,7 @@ class Sunflower(Robot):
             laser_frequency = 40
             msg = LaserScan()
             msg.header.stamp = self._rosTime
-            msg.header.frame_id = 'scan_front'
+            msg.header.frame_id = self._namespace + 'scan_front'
 
             msg.ranges = self._sensorValues['frontLaser'].ranges
             msg.angle_min = self._sensorValues['frontLaser'].min_angle
@@ -329,7 +331,7 @@ class Sunflower(Robot):
             names = []
             positions = []
             for (name, servo) in self._servos.iteritems():
-                names.append("%s_joint" % name)
+                names.append('%s_joint' % name)
                 # 'or 0.0' to prevent null from being published
                 positions.append(servo.getPosition() or 0.0)
 
@@ -351,26 +353,26 @@ class Sunflower(Robot):
     def run(self):
         try:
             # ROS Version >= Hydro
-            # sonarPublisher = rospy.Publisher("/sonar", SonarArray, queue_size=2)
-            odomPublisher = rospy.Publisher("/odom", Odometry, queue_size=2)
-            posePublisher = rospy.Publisher("/pose", Odometry, queue_size=2)
+            # sonarPublisher = rospy.Publisher(self._namespace + 'sonar', SonarArray, queue_size=2)
+            odomPublisher = rospy.Publisher(self._namespace + 'odom', Odometry, queue_size=2)
+            posePublisher = rospy.Publisher(self._namespace + 'pose', Odometry, queue_size=2)
             laserPublisher = rospy.Publisher(
-                "/scan_front", LaserScan, queue_size=2)
-            # clockPublisher = rospy.Publisher("/clock", Clock, queue_size=2)
-            jointPublisher = rospy.Publisher("/joint_states", JointState, queue_size=2)
-            initialPosePublisher = rospy.Publisher("/initialpose", PoseWithCovarianceStamped, queue_size=2)
-            dynamixelPublishers = {name: rospy.Publisher("%s_controller/state" % name, DynJointState, queue_size=2) for name in self._servos.iterkeys()}
+                self._namespace + 'scan_front', LaserScan, queue_size=2)
+            # clockPublisher = rospy.Publisher('/clock', Clock, queue_size=2)
+            jointPublisher = rospy.Publisher(self._namespace + 'joint_states', JointState, queue_size=2)
+            initialPosePublisher = rospy.Publisher(self._namespace + 'initialpose', PoseWithCovarianceStamped, queue_size=2)
+            dynamixelPublishers = {name: rospy.Publisher(self._namespace + '%s_controller/state' % name, DynJointState, queue_size=2) for name in self._servos.iterkeys()}
         except:
-            # sonarPublisher = rospy.Publisher("/sonar", SonarArray)
-            odomPublisher = rospy.Publisher("/odom", Odometry)
-            posePublisher = rospy.Publisher("/pose", Odometry)
-            laserPublisher = rospy.Publisher("/scan_front", LaserScan)
-            # clockPublisher = rospy.Publisher("/clock", Clock)
-            jointPublisher = rospy.Publisher("/joint_states", JointState)
-            initialPosePublisher = rospy.Publisher("/initialpose", PoseWithCovarianceStamped)
-            dynamixelPublishers = {name: rospy.Publisher("%s_controller/state" % name, DynJointState) for name in self._servos.iterkeys()}
+            # sonarPublisher = rospy.Publisher(self._namespace + 'sonar', SonarArray)
+            odomPublisher = rospy.Publisher(self._namespace + 'odom', Odometry)
+            posePublisher = rospy.Publisher(self._namespace + 'pose', Odometry)
+            laserPublisher = rospy.Publisher(self._namespace + 'scan_front', LaserScan)
+            # clockPublisher = rospy.Publisher('/clock', Clock)
+            jointPublisher = rospy.Publisher(self._namespace + 'joint_states', JointState)
+            initialPosePublisher = rospy.Publisher(self._namespace + 'initialpose', PoseWithCovarianceStamped)
+            dynamixelPublishers = {name: rospy.Publisher(self._namespace + '%s_controller/state' % name, DynJointState) for name in self._servos.iterkeys()}
         odomTransform = TransformBroadcaster()
-#         locationTransform = TransformBroadcaster()
+        locationTransform = TransformBroadcaster()
         laserTransform = TransformBroadcaster()
 
         # Probably something wrong elsewhere, but we seem to need to publish
@@ -400,7 +402,7 @@ class Sunflower(Robot):
             # Published by robot_joint_publisher
             self._publishLaserTransform(laserTransform)
             # Published by sf_navigation
-            # self._publishLocationTransform(locationTransform)
+#             self._publishLocationTransform(locationTransform)
             # self._publishSonar(sonarPublisher)
             self._publishLaser(laserPublisher)
             self._publishJoints(jointPublisher, dynamixelPublishers)
@@ -422,49 +424,49 @@ class Sunflower(Robot):
         numLeds = 3
         # numSonarSensors = 16
 
-        self._leftWheel = self.getMotor("left_wheel")
+        self._leftWheel = self.getMotor('left_wheel')
         self._leftWheel.setPosition(float('+inf'))
         self._leftWheel.setVelocity(0)
 
-        self._rightWheel = self.getMotor("right_wheel")
+        self._rightWheel = self.getMotor('right_wheel')
         self._rightWheel.setPosition(float('+inf'))
         self._rightWheel.setVelocity(0)
 
         self._servos = {
-            "tray": self.getMotor("tray"),
-            "neck_lower": self.getMotor("neck_lower"),
-            "neck_upper": self.getMotor("neck_upper"),
-            "head_tilt": self.getMotor("head_tilt"),
-            "head_pan": self.getMotor("head_pan"),
+            'tray': self.getMotor('tray'),
+            'neck_lower': self.getMotor('neck_lower'),
+            'neck_upper': self.getMotor('neck_upper'),
+            'head_tilt': self.getMotor('head_tilt'),
+            'head_pan': self.getMotor('head_pan'),
         }
 
         for servo in self._servos.values():
             servo.enablePosition(self._time_step)
 
-        self._sensors['frontLaser'] = self.getCamera("front_laser")
+        self._sensors['frontLaser'] = self.getCamera('front_laser')
         self._sensors['frontLaser'].enable(self._time_step)
 
-        self._sensors['gps'] = self.getGPS("gps")
+        self._sensors['gps'] = self.getGPS('gps')
         self._sensors['gps'].enable(self._time_step)
 
-        self._sensors['compass'] = self.getCompass("compass")
+        self._sensors['compass'] = self.getCompass('compass')
         self._sensors['compass'].enable(self._time_step)
 
-        self._sensors['camera'] = self.getCamera("head_camera")
+        self._sensors['camera'] = self.getCamera('head_camera')
         if self._sensors['camera']:
             self._sensors['camera'].enable(self._time_step)
 
-        self._leds['body'] = self.getLED("light")
+        self._leds['body'] = self.getLED('light')
 
         self._leds['base'] = []
         for i in range(0, numLeds):
-            led = self.getLED("red_led%s" % (i + 1))
+            led = self.getLED('red_led%s' % (i + 1))
             led.set(0)
             self._leds['base'].append(led)
 
         # self._sensors['sonar'] = []
         # for i in range(0, numSonarSensors):
-        #    sensor = self.getDistanceSensor("so%s" % i)
+        #    sensor = self.getDistanceSensor('so%s' % i)
         #    sensor.enable(self._time_step)
         #    self._sensors['sonar'].append(sensor)
 
@@ -472,7 +474,7 @@ class Sunflower(Robot):
         pass
 
     def execute_cb(self, goal):
-        #rospy.loginfo("Got goal: %s" % goal)
+        #rospy.loginfo('Got goal: %s' % goal)
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
         elif goal.action == 'move':
@@ -486,7 +488,7 @@ class Sunflower(Robot):
             self.park()
             result = True
         else:
-            rospy.logwarn("Unknown action %s", goal.action)
+            rospy.logwarn('Unknown action %s', goal.action)
             self._result.result = -1
             self._as.set_aborted(self._result)
 
@@ -501,9 +503,9 @@ class Sunflower(Robot):
         return True
 
     def stop(self, name):
-        rospy.loginfo("%s: Stopping %s", self._action_name, name)
+        rospy.loginfo('%s: Stopping %s', self._action_name, name)
         if name == 'base':
-            client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
+            client = actionlib.SimpleActionClient(self._namespace + 'move_base', MoveBaseAction)
             client.wait_for_server()
             client.cancel_all_goals()
         else:
@@ -523,22 +525,22 @@ class Sunflower(Robot):
                 self._leds['body'].set(colorIndex)
                 return True
             else:
-                rospy.logerr("Unable to set color.  Body LED not found.")
+                rospy.logerr('Unable to set color.  Body LED not found.')
                 return False
         except Exception:
-            rospy.logerr("Error setting color to: %s" % (color), exc_info=True)
+            rospy.logerr('Error setting color to: %s' % (color), exc_info=True)
             return False
 
     def move(self, goal):
         joints = goal.jointPositions
 
         if(goal.namedPosition != '' and goal.namedPosition is not None):
-            param = '/sf_controller/' + \
+            param = self._namespace + 'sf_controller/' + \
                 goal.component + '/' + goal.namedPosition
             if(rospy.has_param(param)):
                 joints = rospy.get_param(param)[0]
 
-        rospy.loginfo("%s: Setting %s to %s",
+        rospy.loginfo('%s: Setting %s to %s',
                       self._action_name,
                       goal.component,
                       goal.namedPosition or joints)
@@ -551,13 +553,13 @@ class Sunflower(Robot):
             else:
                 result = self.moveJoints(goal, joints)
 
-            rospy.logdebug("%s: '%s to %s' Result:%s",
+            rospy.logdebug('%s: "%s to %s" Result:%s',
                            self._action_name,
                            goal.component,
                            goal.namedPosition or joints,
                            result)
         except Exception as e:
-            rospy.logerr("Error occurred: %s" % e)
+            rospy.logerr('Error occurred: %s' % e)
             return False
 
         return result == _states['SUCCEEDED']
@@ -577,30 +579,30 @@ class Sunflower(Robot):
         linear = round(positions[1], 4)
 
         if not isinstance(rotation, (int, float)):
-            rospy.logerr("Non-numeric rotation in list, aborting moveBase")
+            rospy.logerr('Non-numeric rotation in list, aborting moveBase')
             return _states['ABORTED']
         elif not isinstance(linear, (int, float)):
-            rospy.logerr("Non-numeric translation in list, aborting moveBase")
+            rospy.logerr('Non-numeric translation in list, aborting moveBase')
             return _states['ABORTED']
         if linear > maxTransPos:
             rospy.logerr(
-                "Maximal relative translation step exceeded(max: %sm, requested: %sm), "
-                "aborting moveBase" % (maxTransPos, linear))
+                'Maximal relative translation step exceeded(max: %sm, requested: %sm), '
+                'aborting moveBase' % (maxTransPos, linear))
             return _states['ABORTED']
         if linear < maxTransNeg:
             rospy.logerr(
-                "Minimal relative translation step exceeded(min: %sm, requested: %sm), "
-                "aborting moveBase" % (maxTransNeg, linear))
+                'Minimal relative translation step exceeded(min: %sm, requested: %sm), '
+                'aborting moveBase' % (maxTransNeg, linear))
             return _states['ABORTED']
         if rotation > maxRotPos:
             rospy.logerr(
-                "Maximal relative rotation step exceeded(max: %srad, requested: %sm), "
-                "aborting moveBase" % (maxRotPos, rotation))
+                'Maximal relative rotation step exceeded(max: %srad, requested: %sm), '
+                'aborting moveBase' % (maxRotPos, rotation))
             return _states['ABORTED']
         if rotation < maxRotNeg:
             rospy.logerr(
-                "Maximal relative rotation step exceeded(max: %srad, requested: %sm), "
-                "aborting moveBase" % (maxRotNeg, rotation))
+                'Maximal relative rotation step exceeded(max: %srad, requested: %sm), '
+                'aborting moveBase' % (maxRotNeg, rotation))
             return _states['ABORTED']
 
         rotRads = rotation * WHEEL_ROTATION
@@ -623,7 +625,7 @@ class Sunflower(Robot):
             else:
                 rightRate = rightRate * (rightDuration / leftDuration)
 
-        rospy.loginfo("Setting rates: L=%s, R=%s" % (leftRate, rightRate))
+        rospy.loginfo('Setting rates: L=%s, R=%s' % (leftRate, rightRate))
         duration = max(leftDuration, rightDuration)
         start_time = self.getTime()
         end_time = start_time + duration
@@ -665,7 +667,7 @@ class Sunflower(Robot):
     def navigate(self, goal, positions):
         pose = PoseStamped()
         pose.header.stamp = self._rosTime
-        pose.header.frame_id = "/map"
+        pose.header.frame_id = '/map'
         pose.pose.position.x = positions[0]
         pose.pose.position.y = positions[1]
         pose.pose.position.z = 0.0
@@ -675,12 +677,12 @@ class Sunflower(Robot):
         pose.pose.orientation.z = q[2]
         pose.pose.orientation.w = q[3]
 
-        client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
+        client = actionlib.SimpleActionClient(self._namespace + 'move_base', MoveBaseAction)
         client_goal = MoveBaseGoal()
         client_goal.target_pose = pose
 
         client.wait_for_server()
-        rospy.loginfo("%s: Navigating to (%s, %s, %s)",
+        rospy.loginfo('%s: Navigating to (%s, %s, %s)',
                       self._action_name,
                       positions[0],
                       positions[1],
@@ -694,12 +696,12 @@ class Sunflower(Robot):
     def moveJoints(self, goal, positions):
         try:
             joint_names = rospy.get_param(
-                '/sf_controller/%s/joint_names' % 
+                self._namespace + 'sf_controller/%s/joint_names' % 
                 goal.component)
         except KeyError:
             # TODO: we're not publishing the dynamixel yaml configs for webots
             if goal.component == 'head':
-                joint_names = ["head_pan", "head_tilt", "neck_upper", "neck_lower"]
+                joint_names = ['head_pan', 'head_tilt', 'neck_upper', 'neck_lower']
             else:
                 # assume component is a named joint
                 joint_names = [goal.component, ]
@@ -771,5 +773,5 @@ class _ActionHandle(object):
 
 if __name__ == '__main__':
     rospy.init_node('sf_controller')
-    sf = Sunflower(rospy.get_name())
+    sf = Sunflower(rospy.get_name(), namespace="/sunflower1_1")
     sf.run()
