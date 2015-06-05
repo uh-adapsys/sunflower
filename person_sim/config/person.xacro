@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<robot name="sf11"
+	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:xacro="http://ros.org/wiki/xacro">
+
+	<link name="base_link">
+		<visual>
+			<geometry>
+				<cylinder length="2.0" radius="0.18" />
+			</geometry>
+		</visual>
+	</link>
+
+	<include filename="$(find person_sim)/config/hokuyo_laser.xacro" />
+	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front"
+		parent="base" ros_topic="scan_front" update_rate="10" min_angle="-2.094"
+		max_angle="2.094">
+		<origin rpy="0 0 0" xyz="0.15 0.0 0.245" />
+	</xacro:hokuyo_04lx_laser_ug01>
+	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_back"
+		parent="base" ros_topic="scan_front" update_rate="10" min_angle="-2.094"
+		max_angle="2.094">
+		<origin rpy="0 0 3.14159" xyz="-0.15 0.0 0.245" />
+	</xacro:hokuyo_04lx_laser_ug01>
+
+
+</robot>
