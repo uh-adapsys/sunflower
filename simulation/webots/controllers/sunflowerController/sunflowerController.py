@@ -18,7 +18,7 @@ try:
     import roslib
     import os
     path = os.path.dirname(os.path.realpath(__file__))
-    roslib.load_manifest('rosController')
+    roslib.load_manifest('sunflowerController')
 except:
     import logging
     logger = logging.getLogger()

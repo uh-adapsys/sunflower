@@ -2,12 +2,12 @@
 	<arg name="ns" default="" />
 	<arg name="scan" default="scan_front"/>
 	<node pkg="amcl" type="amcl" name="amcl">
+		<remap from="scan" to="$(arg ns)/$(arg scan)" />
 		<param name="odom_frame_id" value="$(arg ns)/odom" />
 		<param name="base_frame_id" value="$(arg ns)/base_link" />
 		<param name="global_frame_id" value="/map" />
 
 		<!-- Namespace support -->
-		<remap from="scan" to="$(arg ns)/$(arg scan)" />
 		<remap from="static_map" to="/static_map" />
 		
 		<param name="odom_model_type" value="diff" />

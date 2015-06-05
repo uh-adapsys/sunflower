@@ -19,7 +19,8 @@ Background {
 }
 DEF PERSON Person {
   translation 2 0.0975 -1
-  rotation 0 1 0 3.14159
+  rotation 0 1 0 1.57079
+  controller "personController"
 }
 DirectionalLight {
   ambientIntensity 1
@@ -130,7 +131,7 @@ DEF Furniture Solid {
 DEF Sunflower Pioneer3DX {
   rotation 0 1 0 -1.57079
   name "sunflower1-1"
-  controller "rosController"
+  controller "sunflowerController"
   extensionSlot [
     DEF SENSORS Group {
       children [
