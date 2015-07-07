@@ -40,7 +40,7 @@ else:
     from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
     from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
     from nav_msgs.msg import Odometry
-    from sensor_msgs.msg import LaserScan, JointState
+    from sensor_msgs.msg import LaserScan
     from tf import TransformBroadcaster
     from tf.transformations import quaternion_from_euler
 
