@@ -9,15 +9,17 @@ from collections import namedtuple
 
 from threading import Thread
 import math
-import rospy
 import time
-
 
 from controller import Robot
 try:
-    import roslib
     import os
     path = os.path.dirname(os.path.realpath(__file__))
+    if 'ROS_PACKAGE_PATH' not in os.environ:
+        os.environ['ROS_PACKAGE_PATH'] = ''
+    if os.environ['ROS_PACKAGE_PATH'].find(path) == -1:
+        os.environ['ROS_PACKAGE_PATH'] = ':'.join((path, os.environ['ROS_PACKAGE_PATH']))
+    roslib = __import__('roslib', globals(), locals())
     roslib.load_manifest('personController')
 except:
     import logging
@@ -32,6 +34,7 @@ except:
         print >> sys.stderr, traceback.format_exc()
     exit(1)
 else:
+    import rospy    
     import sf_controller_msgs.msg
     import actionlib
     from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
@@ -106,7 +109,7 @@ class Person(Robot):
                 callback=self.cmdvel_cb)
 
         rospy.loginfo(
-            'Started Persn Controller ActionServer on topic %s',
+            'Started Person Controller ActionServer on topic %s',
             self._action_name)
         self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
         self._result = sf_controller_msgs.msg.SunflowerResult()
@@ -314,8 +317,8 @@ class Person(Robot):
             self._rosTime = rospy.Time.now()
             
             # Give time for ros to initialise
-            #if not initialposepublished and self._rosTime.secs >= 5:
-            initialposepublished = self._publishInitialPose(initialPosePublisher)
+            if not initialposepublished and self._rosTime.secs >= 5:
+                initialposepublished = self._publishInitialPose(initialPosePublisher)
             
             self._updateLocation()
             self._updateLaser()
@@ -469,11 +472,12 @@ class Person(Robot):
         maxRotNeg, maxRotPos = self._rotationSpeed
 
         LINEAR_RATE = math.pi / 2  # [rad/s]
-        # WHEEL_DIAMETER = 0.195  # [m] From the manual
-        WHEEL_RADIUS = 0.0975
-        # BASE_SIZE = 0.3810  # [m] From the manual
-        AXEL_LENGTH = 0.33  # [m] From WeBots Definition
-        WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        WHEEL_RADIUS = 0.10
+        #AXEL_LENGTH = 0.36
+        #WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
+        # rotation_factor from guess and check
+        WHEEL_ROTATION = 9.5
 
         rotation = round(positions[0], 4)
         linear = round(positions[1], 4)
@@ -555,17 +559,20 @@ class Person(Robot):
         return _states['SUCCEEDED']
 
     def cmdvel_cb(self, msg):
-        WHEEL_RADIUS = 0.0975
-        
+        WHEEL_RADIUS = 0.1
+        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
+        # rotation_factor from guess and check
+        WHEEL_ROTATION = 9.5
+                
         # Get in-range linear and angular values
         linear = min(max(msg.linear.x, self._translationSpeed[0]), self._translationSpeed[1])
         angular = min(max(msg.angular.z, self._rotationSpeed[0]), self._rotationSpeed[1])
         
+        rotRads = angular * WHEEL_ROTATION
         linearRads = linear / WHEEL_RADIUS
         
-        # Get in-range p3DX hard limits
-        right = max(min(linearRads + angular, 5.24), -5.24)
-        left = max(min(linearRads - angular, 5.24), -5.24)
+        right = max(min(linearRads + rotRads, 10), -10)
+        left = max(min(linearRads - rotRads, 10), -10)
     
         for wheel in self._wheels['right'].itervalues():
             wheel.setVelocity(right)

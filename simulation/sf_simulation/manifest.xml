@@ -1,0 +1,13 @@
+<package>
+  <description brief="sf_simulation">
+     sf_simulation
+  </description>
+  <author>nathan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/sf_robot</url>
+  <depend package="sf_environments"/>
+  <depend package="sf_robot"/>
+  <depend package="person_sim"/>
+  <depend package="rviz"/>
+</package>

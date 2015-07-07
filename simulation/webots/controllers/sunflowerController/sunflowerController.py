@@ -9,15 +9,17 @@ from collections import namedtuple
 
 from threading import Thread
 import math
-import rospy
 import time
-
 
 from controller import Robot
 try:
-    import roslib
     import os
     path = os.path.dirname(os.path.realpath(__file__))
+    if 'ROS_PACKAGE_PATH' not in os.environ:
+        os.environ['ROS_PACKAGE_PATH'] = ''
+    if os.environ['ROS_PACKAGE_PATH'].find(path) == -1:
+        os.environ['ROS_PACKAGE_PATH'] = ':'.join((path, os.environ['ROS_PACKAGE_PATH']))
+    roslib = __import__('roslib', globals(), locals())
     roslib.load_manifest('sunflowerController')
 except:
     import logging
@@ -32,6 +34,7 @@ except:
         print >> sys.stderr, traceback.format_exc()
     exit(1)
 else:
+    import rospy
     import sf_controller_msgs.msg
     import actionlib
     from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
@@ -572,8 +575,11 @@ class Sunflower(Robot):
         # WHEEL_DIAMETER = 0.195  # [m] From the manual
         WHEEL_RADIUS = 0.0975
         # BASE_SIZE = 0.3810  # [m] From the manual
-        AXEL_LENGTH = 0.33  # [m] From WeBots Definition
-        WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        #AXEL_LENGTH = 0.33  # [m] From WeBots Definition
+        #WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
+        # rotation_factor from guess and check
+        WHEEL_ROTATION = 5.4
 
         rotation = round(positions[0], 4)
         linear = round(positions[1], 4)
@@ -650,16 +656,22 @@ class Sunflower(Robot):
 
     def cmdvel_cb(self, msg):
         WHEEL_RADIUS = 0.0975
+        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
+        # rotation_factor from guess and check
+        #AXEL_LENGTH = 0.33
+        #WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        WHEEL_ROTATION = 5.4
         
         #Get in-range linear and angular values
         linear = min(max(msg.linear.x, self._translationSpeed[0]), self._translationSpeed[1])
         angular = min(max(msg.angular.z, self._rotationSpeed[0]), self._rotationSpeed[1])
         
         linearRads = linear / WHEEL_RADIUS
+        rotRads = angular * WHEEL_ROTATION
         
         #Get in-range p3DX hard limits
-        right = max(min(linearRads + angular, 5.24), -5.24)
-        left = max(min(linearRads - angular, 5.24), -5.24)
+        right = max(min(linearRads + rotRads, 5.24), -5.24)
+        left = max(min(linearRads - rotRads, 5.24), -5.24)
         
         self._rightWheel.setVelocity(right)
         self._leftWheel.setVelocity(left)
