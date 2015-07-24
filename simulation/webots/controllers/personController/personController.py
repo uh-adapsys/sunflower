@@ -87,12 +87,12 @@ class Person(Robot):
     def __init__(self, name, namespace='/'):
         super(Person, self).__init__()
         self._namespace = namespace.rstrip('/') + '/'
-        self._time_step = int(self.getBasicTimeStep())
-        self._action_name = name
+        self._timeStep = int(self.getBasicTimeStep())
+        self._actionName = name
         self._as = actionlib.SimpleActionServer(
-            self._action_name,
+            self._actionName,
             sf_controller_msgs.msg.SunflowerAction,
-            execute_cb=self.execute_cb,
+            execute_cb=self.executeCB,
             auto_start=False)
         self._as.start()
         try:
@@ -100,17 +100,17 @@ class Person(Robot):
             self._cmdVel = rospy.Subscriber(
                 self._namespace + 'cmd_vel',
                 Twist,
-                callback=self.cmdvel_cb,
+                callback=self.cmdVelCB,
                 queue_size=2)
         except:
             self._cmdVel = rospy.Subscriber(
                 self._namespace + 'cmd_vel',
                 Twist,
-                callback=self.cmdvel_cb)
+                callback=self.cmdVelCB)
 
         rospy.loginfo(
             'Started Person Controller ActionServer on topic %s',
-            self._action_name)
+            self._actionName)
         self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
         self._result = sf_controller_msgs.msg.SunflowerResult()
         self._location = None
@@ -289,7 +289,7 @@ class Person(Robot):
                 msg.angle_max - msg.angle_min) / len(msg.ranges)
             msg.range_min = self._sensorValues[laserName].min_range
             msg.range_max = self._sensorValues[laserName].max_range
-            msg.scan_time = self._time_step
+            msg.scan_time = self._timeStep
             msg.time_increment = (msg.scan_time / laser_frequency / 
                                   len(self._sensorValues[laserName].ranges))
             laserPublisher.publish(msg)
@@ -312,7 +312,7 @@ class Person(Robot):
         laserTransform = TransformBroadcaster()
         initialposepublished = False
 
-        while not rospy.is_shutdown() and self.step(self._time_step) != -1:
+        while not rospy.is_shutdown() and self.step(self._timeStep) != -1:
             # self._rosTime = rospy.Time(self.getTime())
             self._rosTime = rospy.Time.now()
             
@@ -372,15 +372,15 @@ class Person(Robot):
         
         for sensor in self._sensors.itervalues():
             if(sensor):
-                sensor.enable(self._time_step)
+                sensor.enable(self._timeStep)
 
     def park(self):
         pass
 
-    def execute_cb(self, goal):
+    def executeCB(self, goal):
         # rospy.loginfo('Got goal: %s' % goal)
         if goal.component == 'light':
-            result = self.setlight(goal.jointPositions)
+            result = self.setLight(goal.jointPositions)
         elif goal.action == 'move':
             result = self.move(goal)
         elif goal.action == 'init':
@@ -407,7 +407,7 @@ class Person(Robot):
         return True
 
     def stop(self, name):
-        rospy.loginfo('%s: Stopping %s', self._action_name, name)
+        rospy.loginfo('%s: Stopping %s', self._actionName, name)
         if name == 'base':
             client = actionlib.SimpleActionClient(self._namespace + 'move_base', MoveBaseAction)
             client.wait_for_server()
@@ -415,7 +415,7 @@ class Person(Robot):
         else:
             pass
 
-    def setlight(self, color):
+    def setLight(self, color):
         # Webots selects the color as an array index of available colors
         # 3-bit color array is arranged in ascending binary order
         try:
@@ -444,7 +444,7 @@ class Person(Robot):
                 joints = rospy.get_param(param)[0]
 
         rospy.loginfo('%s: Setting %s to %s',
-                      self._action_name,
+                      self._actionName,
                       goal.component,
                       goal.namedPosition or joints)
 
@@ -457,7 +457,7 @@ class Person(Robot):
                 result = 4 # Aborted
 
             rospy.logdebug('%s: "%s to %s" Result:%s',
-                           self._action_name,
+                           self._actionName,
                            goal.component,
                            goal.namedPosition or joints,
                            result)
@@ -535,7 +535,7 @@ class Person(Robot):
         end_time = start_time + duration
         while not rospy.is_shutdown():
             if self._as.is_preempt_requested():
-                rospy.loginfo('%s: Preempted' % self._action_name)
+                rospy.loginfo('%s: Preempted' % self._actionName)
                 for wheel in self._wheels['right'].itervalues():
                     wheel.setVelocity(0)
                 for wheel in self._wheels['left'].itervalues():
@@ -558,7 +558,7 @@ class Person(Robot):
 
         return _states['SUCCEEDED']
 
-    def cmdvel_cb(self, msg):
+    def cmdVelCB(self, msg):
         WHEEL_RADIUS = 0.1
         #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
         # rotation_factor from guess and check
@@ -598,7 +598,7 @@ class Person(Robot):
 
         client.wait_for_server()
         rospy.loginfo('%s: Navigating to (%s, %s, %s)',
-                      self._action_name,
+                      self._actionName,
                       positions[0],
                       positions[1],
                       positions[2])
@@ -633,12 +633,12 @@ class _ActionHandle(object):
         t.join()
 
     def waitAsync(self, duration=None):
-        thread = Thread(target=self._wait_for_finished, args=(duration,))
+        thread = Thread(target=self._waitForFinished, args=(duration,))
         thread.setDaemon(True)
         thread.start()
         return thread
 
-    def _wait_for_finished(self, duration):
+    def _waitForFinished(self, duration):
         self._waiting = True
         if duration is None:
             self._client.wait_for_result()

@@ -118,12 +118,12 @@ class Sunflower(Robot):
     def __init__(self, name, namespace='/'):
         super(Sunflower, self).__init__()
         self._namespace = namespace.rstrip('/') + '/'
-        self._time_step = int(self.getBasicTimeStep())
-        self._action_name = name
+        self._timeStep = int(self.getBasicTimeStep())
+        self._actionName = name
         self._as = actionlib.SimpleActionServer(
-            self._action_name,
+            self._actionName,
             sf_controller_msgs.msg.SunflowerAction,
-            execute_cb=self.execute_cb,
+            execute_cb=self.executeCB,
             auto_start=False)
         self._as.start()
         try:
@@ -131,17 +131,17 @@ class Sunflower(Robot):
             self._cmdVel = rospy.Subscriber(
                 self._namespace + 'cmd_vel',
                 Twist,
-                callback=self.cmdvel_cb,
+                callback=self.cmdVelCB,
                 queue_size=2)
         except:
             self._cmdVel = rospy.Subscriber(
                 self._namespace + 'cmd_vel',
                 Twist,
-                callback=self.cmdvel_cb)
+                callback=self.cmdVelCB)
 
         rospy.loginfo(
             'Started Sunflower Controller ActionServer on topic %s',
-            self._action_name)
+            self._actionName)
         self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
         self._result = sf_controller_msgs.msg.SunflowerResult()
         self._location = None
@@ -312,7 +312,7 @@ class Sunflower(Robot):
                 msg.angle_max - msg.angle_min) / len(msg.ranges)
             msg.range_min = self._sensorValues['frontLaser'].min_range
             msg.range_max = self._sensorValues['frontLaser'].max_range
-            msg.scan_time = self._time_step
+            msg.scan_time = self._timeStep
             msg.time_increment = (msg.scan_time / laser_frequency / 
                                   len(self._sensorValues['frontLaser'].ranges))
             laserPublisher.publish(msg)
@@ -386,7 +386,7 @@ class Sunflower(Robot):
         cs.start()
         initialposepublished = False
 
-        while not rospy.is_shutdown() and self.step(self._time_step) != -1:
+        while not rospy.is_shutdown() and self.step(self._timeStep) != -1:
             # self._rosTime = rospy.Time(self.getTime())
             self._rosTime = rospy.Time.now()
             
@@ -444,20 +444,20 @@ class Sunflower(Robot):
         }
 
         for servo in self._servos.values():
-            servo.enablePosition(self._time_step)
+            servo.enablePosition(self._timeStep)
 
         self._sensors['frontLaser'] = self.getCamera('front_laser')
-        self._sensors['frontLaser'].enable(self._time_step)
+        self._sensors['frontLaser'].enable(self._timeStep)
 
         self._sensors['gps'] = self.getGPS('gps')
-        self._sensors['gps'].enable(self._time_step)
+        self._sensors['gps'].enable(self._timeStep)
 
         self._sensors['compass'] = self.getCompass('compass')
-        self._sensors['compass'].enable(self._time_step)
+        self._sensors['compass'].enable(self._timeStep)
 
         self._sensors['camera'] = self.getCamera('head_camera')
         if self._sensors['camera']:
-            self._sensors['camera'].enable(self._time_step)
+            self._sensors['camera'].enable(self._timeStep)
 
         self._leds['body'] = self.getLED('light')
 
@@ -470,13 +470,13 @@ class Sunflower(Robot):
         # self._sensors['sonar'] = []
         # for i in range(0, numSonarSensors):
         #    sensor = self.getDistanceSensor('so%s' % i)
-        #    sensor.enable(self._time_step)
+        #    sensor.enable(self._timeStep)
         #    self._sensors['sonar'].append(sensor)
 
     def park(self):
         pass
 
-    def execute_cb(self, goal):
+    def executeCB(self, goal):
         #rospy.loginfo('Got goal: %s' % goal)
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
@@ -506,7 +506,7 @@ class Sunflower(Robot):
         return True
 
     def stop(self, name):
-        rospy.loginfo('%s: Stopping %s', self._action_name, name)
+        rospy.loginfo('%s: Stopping %s', self._actionName, name)
         if name == 'base':
             client = actionlib.SimpleActionClient(self._namespace + 'move_base', MoveBaseAction)
             client.wait_for_server()
@@ -544,7 +544,7 @@ class Sunflower(Robot):
                 joints = rospy.get_param(param)[0]
 
         rospy.loginfo('%s: Setting %s to %s',
-                      self._action_name,
+                      self._actionName,
                       goal.component,
                       goal.namedPosition or joints)
 
@@ -557,7 +557,7 @@ class Sunflower(Robot):
                 result = self.moveJoints(goal, joints)
 
             rospy.logdebug('%s: "%s to %s" Result:%s',
-                           self._action_name,
+                           self._actionName,
                            goal.component,
                            goal.namedPosition or joints,
                            result)
@@ -575,11 +575,8 @@ class Sunflower(Robot):
         # WHEEL_DIAMETER = 0.195  # [m] From the manual
         WHEEL_RADIUS = 0.0975
         # BASE_SIZE = 0.3810  # [m] From the manual
-        #AXEL_LENGTH = 0.33  # [m] From WeBots Definition
-        #WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
-        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
-        # rotation_factor from guess and check
-        WHEEL_ROTATION = 5.4
+        AXEL_LENGTH = 0.33  # [m] From WeBots Definition
+        WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
 
         rotation = round(positions[0], 4)
         linear = round(positions[1], 4)
@@ -587,6 +584,7 @@ class Sunflower(Robot):
         if not isinstance(rotation, (int, float)):
             rospy.logerr('Non-numeric rotation in list, aborting moveBase')
             return _states['ABORTED']
+        """
         elif not isinstance(linear, (int, float)):
             rospy.logerr('Non-numeric translation in list, aborting moveBase')
             return _states['ABORTED']
@@ -610,6 +608,7 @@ class Sunflower(Robot):
                 'Maximal relative rotation step exceeded(max: %srad, requested: %sm), '
                 'aborting moveBase' % (maxRotNeg, rotation))
             return _states['ABORTED']
+        """
 
         rotRads = rotation * WHEEL_ROTATION
         linearRads = linear / WHEEL_RADIUS
@@ -637,7 +636,7 @@ class Sunflower(Robot):
         end_time = start_time + duration
         while not rospy.is_shutdown():
             if self._as.is_preempt_requested():
-                rospy.loginfo('%s: Preempted' % self._action_name)
+                rospy.loginfo('%s: Preempted' % self._actionName)
                 self._rightWheel.setVelocity(0)
                 self._leftWheel.setVelocity(0)
                 # self._as.set_preempted()
@@ -654,7 +653,7 @@ class Sunflower(Robot):
 
         return _states['SUCCEEDED']
 
-    def cmdvel_cb(self, msg):
+    def cmdVelCB(self, msg):
         WHEEL_RADIUS = 0.0975
         #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
         # rotation_factor from guess and check
@@ -695,7 +694,7 @@ class Sunflower(Robot):
 
         client.wait_for_server()
         rospy.loginfo('%s: Navigating to (%s, %s, %s)',
-                      self._action_name,
+                      self._actionName,
                       positions[0],
                       positions[1],
                       positions[2])
@@ -764,12 +763,12 @@ class _ActionHandle(object):
         t.join()
 
     def waitAsync(self, duration=None):
-        thread = Thread(target=self._wait_for_finished, args=(duration,))
+        thread = Thread(target=self._waitForFinished, args=(duration,))
         thread.setDaemon(True)
         thread.start()
         return thread
 
-    def _wait_for_finished(self, duration):
+    def _waitForFinished(self, duration):
         self._waiting = True
         if duration is None:
             self._client.wait_for_result()
