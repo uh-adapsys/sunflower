@@ -1,9 +1,0 @@
-<!-- -*- mode: XML -*- -->
-
-<launch>
-	<param name="robot_description"
-		command="$(find xacro)/xacro.py $(find person_sim)/config/person.xacro" />
-	<node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
-		<param name="publish_frequency" type="double" value="15.0" />
-	</node>
-</launch>

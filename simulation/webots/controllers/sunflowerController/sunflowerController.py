@@ -204,7 +204,7 @@ class Sunflower(Robot):
                 quaternion_from_euler(0, 0, 1.57079),
                 self._rosTime,
                 self._namespace + 'odom',
-                '/map',)
+                'map',)
 
     def _publishLaserTransform(self, laserPublisher):
         if self._location:
@@ -242,7 +242,7 @@ class Sunflower(Robot):
         if self._location:
             msg = PoseWithCovarianceStamped()
             msg.header.stamp = self._rosTime
-            msg.header.frame_id = '/map'
+            msg.header.frame_id = 'map'
             msg.pose.pose.position.x = self._location.x
             msg.pose.pose.position.y = self._location.y
             msg.pose.pose.position.z = 0
@@ -678,7 +678,7 @@ class Sunflower(Robot):
     def navigate(self, goal, positions):
         pose = PoseStamped()
         pose.header.stamp = self._rosTime
-        pose.header.frame_id = '/map'
+        pose.header.frame_id = 'map'
         pose.pose.position.x = positions[0]
         pose.pose.position.y = positions[1]
         pose.pose.position.z = 0.0
@@ -784,5 +784,5 @@ class _ActionHandle(object):
 
 if __name__ == '__main__':
     rospy.init_node('sf_controller')
-    sf = Sunflower(rospy.get_name(), namespace="/sunflower1_1")
+    sf = Sunflower(rospy.get_name(), namespace="sunflower1_1")
     sf.run()

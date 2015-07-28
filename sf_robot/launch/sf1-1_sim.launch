@@ -1,17 +1,14 @@
 <!-- -*- mode: XML -*- -->
 
 <launch>
-	<param name="/use_sim_time" value="true" />
-	<arg name="ns" value="/sunflower1_1" />
+	<arg name="ns" default="" />
 	<arg name="version" value="sf1-1" />
 
-	<group ns="$(arg ns)">
-		<param name="tf_prefix" value="$(arg ns)" />
-		<include file="$(find sf_robot)/launch/tf.launch">
-			<arg name="sf_version" value="$(arg version)" />
-		</include>
-		<include file="$(find sf_navigation)/launch/start.launch">
-			<arg name="ns" value="$(arg ns)" />
-		</include>
-	</group>
+	<include file="$(find sf_robot)/launch/tf.launch">
+		<arg name="sf_version" value="$(arg version)" />
+		<arg name="ns" value="$(arg ns)" />
+	</include>
+	<include file="$(find sf_navigation)/launch/start.launch">
+		<arg name="ns" value="$(arg ns)" />
+	</include>
 </launch>

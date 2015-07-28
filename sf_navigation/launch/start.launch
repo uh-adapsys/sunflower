@@ -1,27 +1,22 @@
-<!-- -*- mode: XML -*- -->
-
 <launch>
 	<arg name="ns" default="" />
-	<!--- Run AMCL -->
+	<!-- Run AMCL -->
 	<include file="$(find sf_navigation)/launch/amcl.launch">
 		<arg name="ns" value="$(arg ns)" />
-		<arg name="scan" value="scan_front" />
 	</include>
 
-	<node pkg="move_base" type="move_base" respawn="false" name="move_base"
-		output="screen">
-		<rosparam file="$(find sf_navigation)/config/costmap_common_params.yaml"
-			command="load" subst_value="True" />
-		<rosparam file="$(find sf_navigation)/config/costmap_common_params.yaml"
-			command="load" subst_value="True" />
-		<rosparam file="$(find sf_navigation)/config/local_costmap_params.yaml"
-			command="load" />
-		<rosparam file="$(find sf_navigation)/config/global_costmap_params.yaml"
-			command="load" />
-		<rosparam
-			file="$(find sf_navigation)/config/base_local_planner_params.yaml"
-			command="load" />
+	<!-- move_base node -->
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
 		<remap from="map" to="/map" />
 		<remap from="static_map" to="/static_map" />
+		
+		<rosparam file="$(find sf_navigation)/config/navigation.yaml" command="load" />
+		<rosparam file="$(find sf_navigation)/config/local_planner.yaml" command="load" />
+
+		<rosparam file="$(find sf_navigation)/config/common_costmap.yaml" command="load" ns="local_costmap" />
+		<rosparam file="$(find sf_navigation)/config/local_costmap.yaml" command="load" ns="local_costmap" />
+
+		<rosparam file="$(find sf_navigation)/config/common_costmap.yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find sf_navigation)/config/global_costmap.yaml" command="load" ns="global_costmap" />
 	</node>
 </launch>

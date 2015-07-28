@@ -6,8 +6,8 @@
 	xmlns:xacro="http://ros.org/wiki/xacro">
 
 	<!-- Base -->
-	<include filename="$(find p2os_urdf)/defs/pioneer3dx.xacro" />
-	<include filename="$(find sf_robot)/config/hokuyo_laser.xacro" />
+	<xacro:include filename="$(find p2os_urdf)/defs/pioneer3dx.xacro" />
+	<xacro:include filename="$(find sf_robot)/config/hokuyo_laser.xacro" />
 	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front"
 		parent="base" ros_topic="scan_front" update_rate="10" min_angle="-2.094"
 		max_angle="2.094">
@@ -107,8 +107,8 @@
 	</xacro:tray>
 
 	<!-- Neck -->
-	<include filename="$(find sf_dynamixel)/defs/dynamixel_ax12.xacro" />
-	<include filename="$(find sf_dynamixel)/defs/fp04_02.xacro" />
+	<xacro:include filename="$(find sf_dynamixel)/defs/dynamixel_ax12.xacro" />
+	<xacro:include filename="$(find sf_dynamixel)/defs/fp04_02.xacro" />
 	<xacro:macro name="neck" params="name parent *origin">
 		<xacro:ax12 name="neck_lower" parent="${parent}"
 			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
