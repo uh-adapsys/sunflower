@@ -1,0 +1,7 @@
+gazebo_ros_control:
+  pid_gains:
+    tray_joint: {p: 1.0, i: 0.0, d: 1.0}
+    neck_lower_joint: {p: 1.0, i: 0.0, d: 1.0}
+    neck_upper_joint: {p: 1.0, i: 0.0, d: 1.0}
+    head_pan_joint: {p: 1.0, i: 0.0, d: 1.0}
+    head_tilt_joint: {p: 1.0, i: 0.0, d: 1.0}

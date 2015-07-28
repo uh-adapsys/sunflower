@@ -1,0 +1,24 @@
+<launch>
+	<arg name="gui" default="True" />
+	<arg name="version" default="sf1-1" />
+	<arg name="use_sim_time" value="true" />
+	<arg name="sfNS" value="/sunflower1_1" />
+
+	<include file="$(find sf_environments)/launch/uh-rh.launch" />
+
+	<param name="use_gui" value="$(arg gui)" />
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="debug" value="false" />
+		<arg name="gui" value="$(arg gui)" />
+		<!-- <arg name="world_name" value="$(arg world_file)" /> -->
+	</include>
+
+	<group ns="$(arg sfNS)">
+		<rosparam file="$(find sf_simulation)/config/jointParams.yaml" command="load"/>	
+		<include file="$(find sf_robot)/launch/sf1-1_sim.launch">
+			<arg name="ns" value="$(arg sfNS)" />
+		</include>
+		<node name="spawn_robot" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -z 1 -model robot_model" respawn="false"
+			output="screen" />
+	</group>
+</launch>

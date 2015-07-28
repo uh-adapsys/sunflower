@@ -8,6 +8,7 @@
   <url>http://ros.org/wiki/sf_robot</url>
   <depend package="sf_environments"/>
   <depend package="sf_robot"/>
+  <depend package="gazebo_ros_control"/>
   <depend package="person_sim"/>
   <depend package="rviz"/>
 </package>
