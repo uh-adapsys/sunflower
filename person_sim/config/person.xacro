@@ -206,12 +206,12 @@
 	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front"
 		parent="base" ros_topic="scan_front" update_rate="10" min_angle="-2.094"
 		max_angle="2.094">
-		<origin rpy="0 0 0" xyz="0.10 0.0 0.05" />
+		<origin rpy="0 0 0" xyz="0.05 0.0 0.05" />
 	</xacro:hokuyo_04lx_laser_ug01>
 	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_back"
 		parent="base" ros_topic="scan_back" update_rate="10" min_angle="-2.094"
 		max_angle="2.094">
-		<origin rpy="0 0 3.14159" xyz="-0.10 0.0 0.05" />
+		<origin rpy="0 0 3.14159" xyz="-0.05 0.0 0.05" />
 	</xacro:hokuyo_04lx_laser_ug01>
 	
 	<xacro:torso name="torso" parent="base">
