@@ -309,7 +309,7 @@ class Person(Robot):
             backLaserPublisher = rospy.Publisher(self._namespace + 'scan_back', LaserScan)
             initialPosePublisher = rospy.Publisher(self._namespace + 'initialpose', PoseWithCovarianceStamped)
         odomTransform = TransformBroadcaster()
-        laserTransform = TransformBroadcaster()
+        # laserTransform = TransformBroadcaster()
         initialposepublished = False
 
         while not rospy.is_shutdown() and self.step(self._timeStep) != -1:
@@ -329,7 +329,7 @@ class Person(Robot):
             self._publishLaser(backLaserPublisher, 'backLaser')
             
             self._publishOdomTransform(odomTransform)
-            self._publishLaserTransform(laserTransform)
+            # self._publishLaserTransform(laserTransform)
 
             # It appears that we have to call sleep for ROS to process messages
             time.sleep(0.0001)

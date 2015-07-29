@@ -35,9 +35,9 @@
 		<joint name="${name}_scan_joint" type="fixed">
 			<origin xyz="0 0 0.041" rpy="0 0 0" />
 			<parent link="${name}_link" />
-			<child link="${name}_scan_link" />
+			<child link="${ros_topic}" />
 		</joint>
-		<link name="${name}_scan_link" type="laser">
+		<link name="${ros_topic}" type="laser">
 			<inertial>
 				<mass value="0.01" />
 				<origin xyz="0 0 0.0145" rpy="0 0 0" />

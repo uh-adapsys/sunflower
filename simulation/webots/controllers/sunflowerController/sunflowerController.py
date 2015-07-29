@@ -7,7 +7,7 @@ Created on 12 Mar 2013
 '''
 from collections import namedtuple
 
-from threading import Thread
+from threading import Thread, current_thread
 import math
 import time
 
@@ -80,19 +80,26 @@ class ClockSync(Thread):
         self._stop = False
 
     def run(self):
-        try:
-            # ROS Version >= Hydro
-            clockPublisher = rospy.Publisher('/clock', Clock, queue_size=2)
-        except:
-            clockPublisher = rospy.Publisher('/clock', Clock)
-
-        self._stop = False
-        starttime = time.time()
-        while not rospy.is_shutdown() and not self._stop:
-            rosTime = rospy.Time(self.getTime() + starttime)
-            clock = Clock(clock=rosTime)
-            clockPublisher.publish(clock)
-            time.sleep(0.001)
+        # We only want one clock publisher
+        topics = rospy.get_published_topics()
+        names = [name for name, _ in topics]
+        if '/clock' not in names:
+            print "Starting clock sync"
+            try:
+                # ROS Version >= Hydro
+                clockPublisher = rospy.Publisher('/clock', Clock, queue_size=2)
+            except:
+                clockPublisher = rospy.Publisher('/clock', Clock)
+    
+            self._stop = False
+            starttime = time.time()
+            while not rospy.is_shutdown() and not self._stop:
+                rosTime = rospy.Time(self.getTime() + starttime)
+                clock = Clock(clock=rosTime)
+                clockPublisher.publish(clock)
+                time.sleep(0.001)
+        else:
+            print "Skipping clock sync"
 
     def stop(self):
         self._stop = True
@@ -385,9 +392,10 @@ class Sunflower(Robot):
         cs = ClockSync(sf)
         cs.start()
         initialposepublished = False
+        
+        rospy.loginfo("Main loop starting on thread: %s", current_thread().ident)
 
         while not rospy.is_shutdown() and self.step(self._timeStep) != -1:
-            # self._rosTime = rospy.Time(self.getTime())
             self._rosTime = rospy.Time.now()
             
             # Give time for ros to initialise
@@ -397,15 +405,13 @@ class Sunflower(Robot):
             self._updateLocation()
             self._updateSonar()
             self._updateLaser()
-            # Published by ClockSync
-            # self._publishClock(clockPublisher)
             self._publishPose(posePublisher)
             self._publishOdom(odomPublisher)
             self._publishOdomTransform(odomTransform)
             # Published by robot_joint_publisher
-            self._publishLaserTransform(laserTransform)
+            # self._publishLaserTransform(laserTransform)
             # Published by sf_navigation
-#             self._publishLocationTransform(locationTransform)
+            # self._publishLocationTransform(locationTransform)
             # self._publishSonar(sonarPublisher)
             self._publishLaser(laserPublisher)
             self._publishJoints(jointPublisher, dynamixelPublishers)
@@ -477,6 +483,7 @@ class Sunflower(Robot):
         pass
 
     def executeCB(self, goal):
+        rospy.loginfo("executeCB called on thread: %s", current_thread().ident)
         #rospy.loginfo('Got goal: %s' % goal)
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
@@ -630,8 +637,8 @@ class Sunflower(Robot):
             else:
                 rightRate = rightRate * (rightDuration / leftDuration)
 
-        rospy.loginfo('Setting rates: L=%s, R=%s' % (leftRate, rightRate))
         duration = max(leftDuration, rightDuration)
+        rospy.loginfo('Setting rates: L=%s, R=%s for %ss' % (leftRate, rightRate, duration))
         start_time = self.getTime()
         end_time = start_time + duration
         while not rospy.is_shutdown():
@@ -654,6 +661,7 @@ class Sunflower(Robot):
         return _states['SUCCEEDED']
 
     def cmdVelCB(self, msg):
+        rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
         WHEEL_RADIUS = 0.0975
         #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
         # rotation_factor from guess and check
@@ -672,10 +680,12 @@ class Sunflower(Robot):
         right = max(min(linearRads + rotRads, 5.24), -5.24)
         left = max(min(linearRads - rotRads, 5.24), -5.24)
         
+        rospy.logdebug('Setting rates: L=%s, R=%s' % (left, right))
         self._rightWheel.setVelocity(right)
         self._leftWheel.setVelocity(left)
 
     def navigate(self, goal, positions):
+        rospy.loginfo("navigate called on thread: %s", current_thread().ident)
         pose = PoseStamped()
         pose.header.stamp = self._rosTime
         pose.header.frame_id = 'map'
@@ -759,16 +769,6 @@ class _ActionHandle(object):
         return self._result
 
     def wait(self, duration=None):
-        t = self.waitAsync(duration)
-        t.join()
-
-    def waitAsync(self, duration=None):
-        thread = Thread(target=self._waitForFinished, args=(duration,))
-        thread.setDaemon(True)
-        thread.start()
-        return thread
-
-    def _waitForFinished(self, duration):
         self._waiting = True
         if duration is None:
             self._client.wait_for_result()
@@ -777,6 +777,12 @@ class _ActionHandle(object):
 
         self._result = self._client.get_state()
         self._waiting = False
+
+    def waitAsync(self, duration=None):
+        thread = Thread(target=self.wait, args=(duration,))
+        thread.setDaemon(True)
+        thread.start()
+        return thread
 
     def cancel(self):
         self._client.cancel_all_goals()
