@@ -202,7 +202,7 @@
 		</gazebo>
 	</xacro:macro>
 
-	<include filename="$(find person_sim)/config/hokuyo_laser.xacro" />
+	<xacro:include filename="$(find person_sim)/config/hokuyo_laser.xacro" />
 	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front"
 		parent="base" ros_topic="scan_front" update_rate="10" min_angle="-2.094"
 		max_angle="2.094">
