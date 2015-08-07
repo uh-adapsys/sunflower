@@ -483,7 +483,7 @@ class Sunflower(Robot):
         pass
 
     def executeCB(self, goal):
-        rospy.loginfo("executeCB called on thread: %s", current_thread().ident)
+        #rospy.loginfo("executeCB called on thread: %s", current_thread().ident)
         #rospy.loginfo('Got goal: %s' % goal)
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
@@ -661,7 +661,7 @@ class Sunflower(Robot):
         return _states['SUCCEEDED']
 
     def cmdVelCB(self, msg):
-        rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
+        #rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
         WHEEL_RADIUS = 0.0975
         #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
         # rotation_factor from guess and check
