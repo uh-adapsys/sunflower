@@ -4,7 +4,7 @@
 	<arg name="ns" default="" />
 	<arg name="version" value="sf1-1" />
 
-	<include file="$(find sf_robot)/launch/tf.launch">
+	<include file="$(find sf_robot_desc)/launch/tf.launch">
 		<arg name="sf_version" value="$(arg version)" />
 		<arg name="ns" value="$(arg ns)" />
 	</include>

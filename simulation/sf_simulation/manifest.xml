@@ -6,8 +6,10 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/sf_robot</url>
+  <depend package="start_webots"/>
   <depend package="sf_environments"/>
-  <depend package="sf_robot"/>
+  <depend package="sf_navigation"/>
+  <depend package="sf_robot_desc"/>
   <depend package="gazebo_ros_control"/>
   <depend package="person_sim"/>
   <depend package="rviz"/>

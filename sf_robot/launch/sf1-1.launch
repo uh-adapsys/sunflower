@@ -17,7 +17,7 @@
 		<include file="$(find sf_base)/launch/start.launch" />
 		<include file="$(find sf_controller)/launch/start.launch" />
 		
-		<include file="$(find sf_robot)/launch/tf.launch">
+		<include file="$(find sf_robot_desc)/launch/tf.launch">
 			<arg name="sf_version" value="$(arg version)" />
 		</include>
 		

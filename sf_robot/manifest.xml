@@ -9,6 +9,13 @@
   <depend package="sf_lights"/>
   <depend package="sf_controller"/>
   <depend package="sf_dynamixel"/>
+  <depend package="sf_environments"/>
+  <depend package="sf_base"/>
+  <depend package="sf_robot_desc"/>
+  <depend package="p2os_dashboard"/>
+  <depend package="p2os_teleop"/>
+  <depend package="pr2_teleop"/>
+  <depend package="joy"/>
 </package>
 
 

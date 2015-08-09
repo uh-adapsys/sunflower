@@ -4,7 +4,7 @@
 
 	<!-- Base -->
 	<xacro:include filename="$(find p2os_urdf)/defs/pioneer3dx.xacro" />
-	<xacro:include filename="$(find sf_robot)/config/hokuyo_laser.xacro" />
+	<xacro:include filename="$(find sf_robot_desc)/config/hokuyo_laser.xacro" />
 	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front" parent="base" ros_topic="scan_front" update_rate="10"
 		min_angle="-2.094" max_angle="2.094">
 		<origin rpy="0 0 0" xyz="0.15 0.0 0.245" />
