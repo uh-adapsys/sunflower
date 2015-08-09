@@ -1,0 +1,8 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<arg name="world" value="/person" />
+	<arg name="mode" value="realtime" />
+	<node pkg="webots" type="start_webots" args="$(world) --mode=$(mode)"
+		name="webots" output="screen" required="true" />
+</launch>

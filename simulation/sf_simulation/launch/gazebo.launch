@@ -14,11 +14,14 @@
 	</include>
 
 	<group ns="$(arg sfNS)">
-		<rosparam file="$(find sf_simulation)/config/jointParams.yaml" command="load"/>	
-		<include file="$(find sf_robot)/launch/sf1-1_sim.launch">
+		<rosparam file="$(find sf_simulation)/config/jointParams.yaml"
+			command="load" />
+		<include file="$(find sf_robot)/launch/sim_common.launch">
 			<arg name="ns" value="$(arg sfNS)" />
+			<arg name="version" value="sf1-1" />
 		</include>
-		<node name="spawn_robot" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -z 1 -model robot_model" respawn="false"
-			output="screen" />
+		<node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
+			args="-urdf -param robot_description -z 1 -model robot_model"
+			respawn="false" output="screen" />
 	</group>
 </launch>
