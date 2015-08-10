@@ -6,8 +6,8 @@
 	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
 	xmlns:xacro="http://ros.org/wiki/xacro">
 
-	<include filename="$(find sf_robot_description)/config/pioneer3dx_wheel.xacro" />
-	<include filename="$(find sf_robot_description)/config/pioneer3dx_sonar.xacro" />
+	<xacro:include filename="$(find sf_robot_description)/config/pioneer3dx_wheel.xacro" />
+	<xacro:include filename="$(find sf_robot_description)/config/pioneer3dx_sonar.xacro" />
 
 	<!-- Chassis -->
 	<link name="base_link">

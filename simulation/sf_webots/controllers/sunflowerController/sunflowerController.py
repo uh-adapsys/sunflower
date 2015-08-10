@@ -336,7 +336,7 @@ class Sunflower(Robot):
         # position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         # velocity: []
         # effort: []
-        if self._servos and jointPublisher:
+        if (self._servos or self._staticJoints) and jointPublisher:
             msg = JointState()
             msg.header.stamp = self._rosTime
             names = []
@@ -387,8 +387,8 @@ class Sunflower(Robot):
             initialPosePublisher = rospy.Publisher(self._namespace + 'initialpose', PoseWithCovarianceStamped)
             dynamixelPublishers = {name: rospy.Publisher(self._namespace + '%s_controller/state' % name, DynJointState) for name in self._servos.iterkeys()}
         odomTransform = TransformBroadcaster()
-        locationTransform = TransformBroadcaster()
-        laserTransform = TransformBroadcaster()
+#         locationTransform = TransformBroadcaster()
+#         laserTransform = TransformBroadcaster()
 
         # Probably something wrong elsewhere, but we seem to need to publish
         # map->odom transform once to get sf_navigation to load
@@ -447,9 +447,9 @@ class Sunflower(Robot):
         self._rightWheel.setVelocity(0)
 
         self._staticJoints = [
-                              "base_swivel", 
-                              "base_swivel_wheel", 
-                              "base_left_wheel", 
+                              "base_swivel",
+                              "base_swivel_wheel",
+                              "base_left_wheel",
                               "base_right_wheel"
                               ]
 

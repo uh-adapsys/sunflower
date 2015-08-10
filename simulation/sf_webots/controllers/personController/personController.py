@@ -40,7 +40,7 @@ else:
     from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
     from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
     from nav_msgs.msg import Odometry
-    from sensor_msgs.msg import LaserScan
+    from sensor_msgs.msg import LaserScan, JointState
     from tf import TransformBroadcaster
     from tf.transformations import quaternion_from_euler
 
@@ -118,9 +118,11 @@ class Person(Robot):
         self._rosTime = None
         self._servos = {}
         self._sensors = {}
+        self._staticJoints = []
         self._sensorValues = {}
         self._leds = {}
         self.initialise()
+        self.pos = 0.0
 
     def _updateLocation(self):
         if self._sensors.get('gps', None) and self._sensors.get('compass', None):
@@ -294,6 +296,35 @@ class Person(Robot):
                                   len(self._sensorValues[laserName].ranges))
             laserPublisher.publish(msg)
 
+    def _publishJoints(self, jointPublisher):
+        # header:
+        #   seq: 375
+        #   stamp:
+        #     secs: 1423791124
+        #     nsecs: 372004985
+        #   frame_id: ''
+        # name: ['head_pan_joint', 'neck_lower_joint', 'swivel_hubcap_joint', 'base_swivel_joint', 'head_tilt_joint', 'neck_upper_joint']
+        # position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        # velocity: []
+        # effort: []
+        if (self._servos or self._staticJoints) and jointPublisher:
+            msg = JointState()
+            msg.header.stamp = self._rosTime
+            names = []
+            positions = []
+            for (name, servo) in self._servos.iteritems():
+                names.append('%s_joint' % name)
+                # 'or 0.0' to prevent null from being published
+                positions.append(servo.getPosition() or 0.0)
+            for name in self._staticJoints:
+                names.append('%s_joint' % name)
+                # 'or 0.0' to prevent null from being published
+                positions.append(0.0)
+
+            msg.name = names
+            msg.position = positions
+            jointPublisher.publish(msg)
+
     def run(self):
         try:
             # ROS Version >= Hydro
@@ -301,12 +332,14 @@ class Person(Robot):
             posePublisher = rospy.Publisher(self._namespace + 'pose', Odometry, queue_size=2)
             frontLaserPublisher = rospy.Publisher(self._namespace + 'scan_front', LaserScan, queue_size=2)
             backLaserPublisher = rospy.Publisher(self._namespace + 'scan_back', LaserScan, queue_size=2)
+            jointPublisher = rospy.Publisher(self._namespace + 'joint_states', JointState, queue_size=2)
             initialPosePublisher = rospy.Publisher(self._namespace + 'initialpose', PoseWithCovarianceStamped, queue_size=2)
         except:
             odomPublisher = rospy.Publisher(self._namespace + 'odom', Odometry)
             posePublisher = rospy.Publisher(self._namespace + 'pose', Odometry)
             frontLaserPublisher = rospy.Publisher(self._namespace + 'scan_front', LaserScan)
             backLaserPublisher = rospy.Publisher(self._namespace + 'scan_back', LaserScan)
+            jointPublisher = rospy.Publisher(self._namespace + 'joint_states', JointState)
             initialPosePublisher = rospy.Publisher(self._namespace + 'initialpose', PoseWithCovarianceStamped)
         odomTransform = TransformBroadcaster()
         # laserTransform = TransformBroadcaster()
@@ -327,6 +360,7 @@ class Person(Robot):
             self._publishOdom(odomPublisher)
             self._publishLaser(frontLaserPublisher, 'frontLaser')
             self._publishLaser(backLaserPublisher, 'backLaser')
+            self._publishJoints(jointPublisher)
             
             self._publishOdomTransform(odomTransform)
             # self._publishLaserTransform(laserTransform)
@@ -347,12 +381,12 @@ class Person(Robot):
                       }
         self._wheels = {
                         'left':{
-                            'front': self.getMotor('fl_wheel'), 
+                            'front': self.getMotor('fl_wheel'),
                             'back': self.getMotor('rl_wheel'),
                         },
                         'right': { 
-                            'front': self.getMotor('fr_wheel'), 
-                            'back': self.getMotor('rr_wheel'), 
+                            'front': self.getMotor('fr_wheel'),
+                            'back': self.getMotor('rr_wheel'),
                         }
                     }
         
@@ -369,6 +403,7 @@ class Person(Robot):
                             'compass': self.getCompass('person_compass'),
                             'camera': self.getCamera('head_camera'),
                         }
+        self._staticJoints = ["base_front_right_wheel", "base_front_left_wheel", "base_rear_right_wheel", "base_rear_left_wheel"]
         
         for sensor in self._sensors.itervalues():
             if(sensor):
@@ -454,7 +489,7 @@ class Person(Robot):
             elif goal.component == 'base_direct':
                 result = self.moveBase(goal, joints)
             else:
-                result = 4 # Aborted
+                result = 4  # Aborted
 
             rospy.logdebug('%s: "%s to %s" Result:%s',
                            self._actionName,
@@ -473,9 +508,9 @@ class Person(Robot):
 
         LINEAR_RATE = math.pi / 2  # [rad/s]
         WHEEL_RADIUS = 0.10
-        #AXEL_LENGTH = 0.36
-        #WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
-        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
+        # AXEL_LENGTH = 0.36
+        # WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        # Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
         # rotation_factor from guess and check
         WHEEL_ROTATION = 9.5
 
@@ -560,7 +595,7 @@ class Person(Robot):
 
     def cmdVelCB(self, msg):
         WHEEL_RADIUS = 0.1
-        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
+        # Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
         # rotation_factor from guess and check
         WHEEL_ROTATION = 9.5
                 
