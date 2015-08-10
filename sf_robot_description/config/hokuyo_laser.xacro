@@ -31,6 +31,9 @@
 				</geometry>
 			</collision>
 		</link>
+		<gazebo reference="${name}_link">
+			<material>Gazebo/FlatBlack</material>
+		</gazebo>
 
 		<joint name="${name}_scan_joint" type="fixed">
 			<origin xyz="0 0 0.041" rpy="0 0 0" />
@@ -63,11 +66,10 @@
 
 		<!-- Gazebo Config -->
 		<gazebo reference="${name}_link">
-			<sensor type="ray" name="${name}">
-				<always_on>true</always_on>
-				<update_rate>${update_rate}</update_rate>
+			<sensor type="gpu_ray" name="${name}">
 				<pose>0 0 0 0 0 0</pose>
 				<visualize>false</visualize>
+				<update_rate>${update_rate}</update_rate>
 				<ray>
 					<scan>
 						<horizontal>
@@ -83,23 +85,14 @@
 						<resolution>0.06</resolution>
 					</range>
 				</ray>
-				<plugin name="gazebo_ros_${name}_controller" filename="libgazebo_ros_laser.so">
+				<plugin name="gazebo_ros_${name}_controller" filename="libgazebo_ros_gpu_laser.so">
 					<gaussianNoise>0.005</gaussianNoise>
 					<hokuyoMinIntensity>101</hokuyoMinIntensity>
 					<alwaysOn>true</alwaysOn>
-					<updateRate>${update_rate}</updateRate>
 					<topicName>${ros_topic}</topicName>
 					<frameName>${name}_link</frameName>
 				</plugin>
 			</sensor>
-		</gazebo>
-
-		<gazebo reference="${name}_link">
-			<material>Gazebo/FlatBlack</material>
-		</gazebo>
-
-		<gazebo reference="${name}_scan_link">
-			<material>Gazebo/FlatBlack</material>
 		</gazebo>
 	</xacro:macro>
 </robot>

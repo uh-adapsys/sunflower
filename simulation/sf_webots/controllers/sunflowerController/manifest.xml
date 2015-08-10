@@ -18,6 +18,5 @@
   <depend package="move_base_msgs"/>
   <depend package="nav_msgs"/>
   <depend package="sensor_msgs"/>
-  <depend package="p2os_msgs"/>
   <depend package="rosgraph_msgs"/>
 </package>

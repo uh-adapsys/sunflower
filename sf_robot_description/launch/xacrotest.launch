@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model" default="$(find sf_robot_desc)/config/servo.xacro"/>
+  <arg name="model" default="$(find sf_robot_description)/config/servo.xacro"/>
   <arg name="gui" default="True" />
   <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)" />
   <param name="use_gui" value="$(arg gui)"/>

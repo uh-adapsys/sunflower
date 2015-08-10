@@ -61,11 +61,13 @@
 			<child link="${name}_box_link" />
 			<insert_block name="origin" />
 		</joint>
-		
-		<!--  Gazebo Config -->
+
+		<!-- Gazebo Config -->
 		<transmission name="${name}_trans">
 			<type>transmission_interface/SimpleTransmission</type>
-			<joint name="${name}_joint" />
+			<joint name="${name}_joint">
+				<hardwareInterface>PositionJointInterface</hardwareInterface>
+			</joint>
 			<actuator name="${name}_motor">
 				<hardwareInterface>PositionJointInterface</hardwareInterface>
 				<mechanicalReduction>1</mechanicalReduction>
@@ -143,17 +145,19 @@
 			<child link="${name}_link" />
 			<origin xyz="0 0 0.038" />
 		</joint>
-		
-		<!--  Gazebo Config -->
+
+		<!-- Gazebo Config -->
 		<transmission name="${name}_trans">
 			<type>transmission_interface/SimpleTransmission</type>
-			<joint name="${name}_joint" />
+			<joint name="${name}_joint">
+				<hardwareInterface>PositionJointInterface</hardwareInterface>
+			</joint>
 			<actuator name="${name}_motor">
 				<hardwareInterface>PositionJointInterface</hardwareInterface>
 				<mechanicalReduction>1</mechanicalReduction>
 			</actuator>
 		</transmission>
-		
+
 		<gazebo reference="${name}_box_link">
 			<material>Gazebo/FlatBlack</material>
 		</gazebo>

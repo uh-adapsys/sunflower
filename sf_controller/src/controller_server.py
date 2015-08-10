@@ -23,7 +23,6 @@ import rospy
 import sf_controller_msgs.msg
 import sf_lights_msgs.msg
 
-
 class SunflowerAction(object):
 
     _actionHandles = {}

@@ -155,6 +155,7 @@ class Sunflower(Robot):
         self._lastLocation = None
         self._rosTime = None
         self._servos = {}
+        self._staticJoints = []
         self._sensors = {}
         self._sensorValues = {}
         self._leds = {}
@@ -344,6 +345,10 @@ class Sunflower(Robot):
                 names.append('%s_joint' % name)
                 # 'or 0.0' to prevent null from being published
                 positions.append(servo.getPosition() or 0.0)
+            for name in self._staticJoints:
+                names.append('%s_joint' % name)
+                # 'or 0.0' to prevent null from being published
+                positions.append(0.0)
 
             msg.name = names
             msg.position = positions
@@ -441,6 +446,13 @@ class Sunflower(Robot):
         self._rightWheel.setPosition(float('+inf'))
         self._rightWheel.setVelocity(0)
 
+        self._staticJoints = [
+                              "base_swivel", 
+                              "base_swivel_wheel", 
+                              "base_left_wheel", 
+                              "base_right_wheel"
+                              ]
+
         self._servos = {
             'tray': self.getMotor('tray'),
             'neck_lower': self.getMotor('neck_lower'),
@@ -483,8 +495,8 @@ class Sunflower(Robot):
         pass
 
     def executeCB(self, goal):
-        #rospy.loginfo("executeCB called on thread: %s", current_thread().ident)
-        #rospy.loginfo('Got goal: %s' % goal)
+        # rospy.loginfo("executeCB called on thread: %s", current_thread().ident)
+        # rospy.loginfo('Got goal: %s' % goal)
         if goal.component == 'light':
             result = self.setlight(goal.jointPositions)
         elif goal.action == 'move':
@@ -661,22 +673,22 @@ class Sunflower(Robot):
         return _states['SUCCEEDED']
 
     def cmdVelCB(self, msg):
-        #rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
+        # rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
         WHEEL_RADIUS = 0.0975
-        #Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
+        # Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
         # rotation_factor from guess and check
-        #AXEL_LENGTH = 0.33
-        #WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        # AXEL_LENGTH = 0.33
+        # WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
         WHEEL_ROTATION = 5.4
         
-        #Get in-range linear and angular values
+        # Get in-range linear and angular values
         linear = min(max(msg.linear.x, self._translationSpeed[0]), self._translationSpeed[1])
         angular = min(max(msg.angular.z, self._rotationSpeed[0]), self._rotationSpeed[1])
         
         linearRads = linear / WHEEL_RADIUS
         rotRads = angular * WHEEL_ROTATION
         
-        #Get in-range p3DX hard limits
+        # Get in-range p3DX hard limits
         right = max(min(linearRads + rotRads, 5.24), -5.24)
         left = max(min(linearRads - rotRads, 5.24), -5.24)
         

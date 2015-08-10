@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
-<robot name="sf11" xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller" xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="sf11"
+	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:xacro="http://ros.org/wiki/xacro">
+
+	<xacro:include filename="$(find sf_robot_description)/config/hokuyo_laser.xacro" />
+	<xacro:include filename="$(find sf_dynamixel)/defs/dynamixel_ax12.xacro" />
+	<xacro:include filename="$(find sf_dynamixel)/defs/fp04_02.xacro" />
 
 	<!-- Base -->
-	<xacro:include filename="$(find p2os_urdf)/defs/pioneer3dx.xacro" />
-	<xacro:include filename="$(find sf_robot_desc)/config/hokuyo_laser.xacro" />
-	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front" parent="base" ros_topic="scan_front" update_rate="10"
-		min_angle="-2.094" max_angle="2.094">
-		<origin rpy="0 0 0" xyz="0.15 0.0 0.245" />
-	</xacro:hokuyo_04lx_laser_ug01>
-
+	<xacro:include filename="$(find sf_robot_description)/config/pioneer3dx.xacro" />
 	<joint name="base_plate_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="0 0 0.0085" />
 		<parent link="top_plate" />
@@ -34,21 +35,9 @@
 			</geometry>
 		</collision>
 	</link>
-	<gazebo reference="base_plate_joint">
+	<gazebo reference="base_plate_link">
 		<material>Gazebo/Wood</material>
 	</gazebo>
-
-	<!-- Override the 'continuous' joint from p3dx.xacro which rviz doesn't support -->
-	<joint name="base_swivel_joint_fixed" type="fixed">
-		<origin xyz="-0.185 0 0.055" rpy="0 0 0" />
-		<parent link="base_link" />
-		<child link="swivel" />
-	</joint>
-	<joint name="swivel_hubcap_joint_fixed" type="fixed">
-		<origin xyz="-0.026 0 -0.016" rpy="0 0 0" />
-		<parent link="swivel" />
-		<child link="center_wheel" />
-	</joint>
 
 	<!-- Tray -->
 	<xacro:macro name="tray" params="name parent *origin">
@@ -62,7 +51,8 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="2" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -81,7 +71,9 @@
 
 		<transmission name="${name}_trans">
 			<type>transmission_interface/SimpleTransmission</type>
-			<joint name="${name}_joint" />
+			<joint name="${name}_joint">
+				<hardwareInterface>PositionJointInterface</hardwareInterface>
+			</joint>
 			<actuator name="${name}_motor">
 				<hardwareInterface>PositionJointInterface</hardwareInterface>
 				<mechanicalReduction>1</mechanicalReduction>
@@ -94,36 +86,31 @@
 		</gazebo>
 	</xacro:macro>
 
-	<xacro:tray name="tray" parent="base">
-		<origin rpy="0 0 0" xyz="0.01 0 0.645" />
-	</xacro:tray>
-
 	<!-- Neck -->
-	<xacro:include filename="$(find sf_dynamixel)/defs/dynamixel_ax12.xacro" />
-	<xacro:include filename="$(find sf_dynamixel)/defs/fp04_02.xacro" />
 	<xacro:macro name="neck" params="name parent *origin">
-		<xacro:ax12 name="neck_lower" parent="${parent}" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12 name="neck_lower" parent="${parent}"
+			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<insert_block name="origin" />
 		</xacro:ax12>
 		<xacro:fp04_02 name="neck_lower_hinge" parent="neck_lower">
 		</xacro:fp04_02>
-		<xacro:ax12 name="neck_upper" parent="neck_lower_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12 name="neck_upper" parent="neck_lower_hinge"
+			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 0" xyz="0 0 0" />
 		</xacro:ax12>
 		<xacro:fp04_02 name="neck_upper_hinge" parent="neck_upper">
 		</xacro:fp04_02>
-		<xacro:ax12inverted name="head_pan" parent="neck_upper_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12inverted name="head_pan" parent="neck_upper_hinge"
+			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 -1.57079" xyz="0 0 0" />
 		</xacro:ax12inverted>
-		<xacro:ax12 name="head_tilt" parent="head_pan" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12 name="head_tilt" parent="head_pan" minPosition="-1.5707"
+			maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 0" xyz="0 0 0" />
 		</xacro:ax12>
 		<xacro:fp04_02 name="head_tilt_hinge" parent="head_tilt">
 		</xacro:fp04_02>
 	</xacro:macro>
-	<xacro:neck name="neck" parent="base">
-		<origin rpy="0 0 1.5707" xyz="0 0 0.75" />
-	</xacro:neck>
 
 	<!-- Head -->
 	<xacro:macro name="simple_camera" params="name parent *origin">
@@ -135,7 +122,8 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="0.01" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -203,7 +191,8 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="0.01" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -239,7 +228,8 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="0.1" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -272,10 +262,6 @@
 		</xacro:simple_camera>
 	</xacro:macro>
 
-	<xacro:head name="head" parent="head_tilt_hinge">
-		<origin rpy="0 0 0" xyz="0 0 0" />
-	</xacro:head>
-
 	<!--Body -->
 	<xacro:macro name="body" params="name parent *origin">
 		<joint name="${name}_joint" type="fixed">
@@ -287,7 +273,8 @@
 			<inertial>
 				<mass value="10" />
 				<origin xyz="0 0 0.2525" rpy="0 0 0" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
 			</inertial>
 			<visual>
 				<origin xyz="0 0 0.2525" rpy="0 0 0" />
@@ -310,25 +297,29 @@
 		</gazebo>
 	</xacro:macro>
 
+	<xacro:head name="head" parent="head_tilt_hinge">
+		<origin rpy="0 0 0" xyz="0 0 0" />
+	</xacro:head>
+	<xacro:tray name="tray" parent="base">
+		<origin rpy="0 0 0" xyz="0.01 0 0.645" />
+	</xacro:tray>
+	<xacro:neck name="neck" parent="base">
+		<origin rpy="0 0 1.5707" xyz="0 0 0.75" />
+	</xacro:neck>
 	<xacro:body name="body" parent="base">
 		<origin rpy="0 0 0" xyz="-0.04 0 0.245" />
 	</xacro:body>
+
+	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front"
+		parent="base" ros_topic="scan_front" update_rate="10" min_angle="-2.094"
+		max_angle="2.094">
+		<origin rpy="0 0 0" xyz="0.15 0.0 0.245" />
+	</xacro:hokuyo_04lx_laser_ug01>
 
 	<gazebo>
 		<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
 			<robotNamespace>/sunflower1_1</robotNamespace>
 		</plugin>
-		<plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
-			<alwaysOn>true</alwaysOn>
-			<updateRate>100.0</updateRate>
-			<bodyName>base_link</bodyName>
-			<topicName>base_pose_ground_truth</topicName>
-			<gaussianNoise>0.01</gaussianNoise>
-			<frameName>map</frameName>
-			<xyzOffset>0 0 0</xyzOffset>
-			<rpyOffset>0 0 0</rpyOffset>
-		</plugin>
-		<canonicalBody>base_footprint</canonicalBody>
 	</gazebo>
 
 </robot>

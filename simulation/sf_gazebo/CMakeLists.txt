@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(person_sim)
+project(gazebo)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -77,7 +77,7 @@ find_package(catkin REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES sf_navigation
+#  LIBRARIES gazebo
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -91,19 +91,19 @@ catkin_package(
 # include_directories(include)
 
 ## Declare a cpp library
-# add_library(sf_navigation
-#   src/${PROJECT_NAME}/sf_navigation.cpp
+# add_library(gazebo
+#   src/${PROJECT_NAME}/gazebo.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(sf_navigation_node src/sf_navigation_node.cpp)
+# add_executable(gazebo_node src/gazebo_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(sf_navigation_node sf_navigation_generate_messages_cpp)
+# add_dependencies(gazebo_node gazebo_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(sf_navigation_node
+# target_link_libraries(gazebo_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -122,7 +122,7 @@ catkin_package(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS sf_navigation sf_navigation_node
+# install(TARGETS gazebo gazebo_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -147,7 +147,7 @@ catkin_package(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_sf_navigation.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_gazebo.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

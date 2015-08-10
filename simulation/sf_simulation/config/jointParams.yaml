@@ -1,22 +1,38 @@
-gazebo_ros_control:
-  pid_gains:
-    tray_joint:
-      p: 1.0
-      i: 0.0
-      d: 1.0
-    neck_lower_joint:
-      p: 1.0
-      i: 0.0
-      d: 1.0
-    neck_upper_joint:
-      p: 1.0
-      i: 0.0
-      d: 1.0
-    head_pan_joint:
-      p: 1.0
-      i: 0.0
-      d: 1.0
-    head_tilt_joint:
-      p: 1.0
-      i: 0.0
-      d: 1.0
+tray_joint_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: tray_joint
+  pid:
+    p: 1.0
+    i: 0.0
+    d: 1.0
+neck_lower_joint_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: neck_lower_joint
+  pid:
+    p: 1.0
+    i: 0.0
+    d: 1.0
+neck_upper_joint_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: neck_upper_joint
+  pid:
+    p: 1.0
+    i: 0.0
+    d: 1.0
+head_pan_joint_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: head_pan_joint
+  pid:
+    p: 1.0
+    i: 0.0
+    d: 1.0
+head_tilt_joint_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: head_tilt_joint
+  pid:
+    p: 1.0
+    i: 0.0
+    d: 1.0
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 50
