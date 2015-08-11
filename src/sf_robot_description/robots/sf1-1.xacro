@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
-<robot name="sf11"
-	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+<robot name="sf1_1" 
+	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller" 
 	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" 
 	xmlns:xacro="http://ros.org/wiki/xacro">
 
-	<xacro:include filename="$(find sf_robot_description)/config/hokuyo_laser.xacro" />
-	<xacro:include filename="$(find sf_dynamixel)/defs/dynamixel_ax12.xacro" />
-	<xacro:include filename="$(find sf_dynamixel)/defs/fp04_02.xacro" />
+	<xacro:include filename="$(find sf_robot_description)/urdf/sensors/hokuyo_laser.xacro" />
+	<xacro:include filename="$(find sf_dynamixel)/urdf/dynamixel_ax12.xacro" />
+	<xacro:include filename="$(find sf_dynamixel)/urdf/fp04_02.xacro" />
+	<xacro:include filename="$(find sf_robot_description)/robots/pioneer3dx.xacro" />
 
 	<!-- Base -->
-	<xacro:include filename="$(find sf_robot_description)/config/pioneer3dx.xacro" />
 	<joint name="base_plate_joint" type="fixed">
 		<origin rpy="0 0 0" xyz="0 0 0.0085" />
 		<parent link="top_plate" />
@@ -51,8 +51,7 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="2" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -88,24 +87,20 @@
 
 	<!-- Neck -->
 	<xacro:macro name="neck" params="name parent *origin">
-		<xacro:ax12 name="neck_lower" parent="${parent}"
-			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12 name="neck_lower" parent="${parent}" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<insert_block name="origin" />
 		</xacro:ax12>
 		<xacro:fp04_02 name="neck_lower_hinge" parent="neck_lower">
 		</xacro:fp04_02>
-		<xacro:ax12 name="neck_upper" parent="neck_lower_hinge"
-			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12 name="neck_upper" parent="neck_lower_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 0" xyz="0 0 0" />
 		</xacro:ax12>
 		<xacro:fp04_02 name="neck_upper_hinge" parent="neck_upper">
 		</xacro:fp04_02>
-		<xacro:ax12inverted name="head_pan" parent="neck_upper_hinge"
-			minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12inverted name="head_pan" parent="neck_upper_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 -1.57079" xyz="0 0 0" />
 		</xacro:ax12inverted>
-		<xacro:ax12 name="head_tilt" parent="head_pan" minPosition="-1.5707"
-			maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12 name="head_tilt" parent="head_pan" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 0" xyz="0 0 0" />
 		</xacro:ax12>
 		<xacro:fp04_02 name="head_tilt_hinge" parent="head_tilt">
@@ -122,8 +117,7 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="0.01" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -191,8 +185,7 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="0.01" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -228,8 +221,7 @@
 		<link name="${name}_link">
 			<inertial>
 				<mass value="0.1" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
 				<geometry>
@@ -273,8 +265,7 @@
 			<inertial>
 				<mass value="10" />
 				<origin xyz="0 0 0.2525" rpy="0 0 0" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
 				<origin xyz="0 0 0.2525" rpy="0 0 0" />
@@ -310,9 +301,8 @@
 		<origin rpy="0 0 0" xyz="-0.04 0 0.245" />
 	</xacro:body>
 
-	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front"
-		parent="base" ros_topic="scan_front" update_rate="10" min_angle="-2.094"
-		max_angle="2.094">
+	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front" parent="base" ros_topic="scan_front" update_rate="10"
+		min_angle="-2.094" max_angle="2.094">
 		<origin rpy="0 0 0" xyz="0.15 0.0 0.245" />
 	</xacro:hokuyo_04lx_laser_ug01>
 
