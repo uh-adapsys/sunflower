@@ -5,7 +5,7 @@
 	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
 	xmlns:xacro="http://ros.org/wiki/xacro">
 
-	<xacro:include filename="$(find sf_robot_description)/config/hokuyo_laser.xacro" />
+	<xacro:include filename="$(find sf_robot_description)/urdf/sensors/hokuyo_laser.xacro" />
 
 	<link name="base_link">
 	</link>
