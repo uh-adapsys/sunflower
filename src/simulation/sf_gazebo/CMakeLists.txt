@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sf_webots)
+project(sf_gazebo)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-)
+find_package(catkin REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -79,8 +77,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES sf_webots
-#  CATKIN_DEPENDS roscpp
+#  LIBRARIES gazebo
+#  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
 
@@ -91,26 +89,23 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
 
 ## Declare a cpp library
-# add_library(sf_webots
-#   src/${PROJECT_NAME}/sf_webots.cpp
+# add_library(gazebo
+#   src/${PROJECT_NAME}/gazebo.cpp
 # )
 
 ## Declare a cpp executable
-add_executable(sf_webots_node src/start_webots.cpp)
+# add_executable(gazebo_node src/gazebo_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(sf_webots_node sf_webots_generate_messages_cpp)
+# add_dependencies(gazebo_node gazebo_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(sf_webots_node
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(gazebo_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -127,7 +122,7 @@ target_link_libraries(sf_webots_node
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS sf_webots sf_webots_node
+# install(TARGETS gazebo gazebo_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -152,7 +147,7 @@ target_link_libraries(sf_webots_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_sf_webots.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_gazebo.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
