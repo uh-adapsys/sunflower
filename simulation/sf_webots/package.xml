@@ -5,15 +5,9 @@
 	<description>Webots package for the sunflower robot</description>
 	<maintainer email="n.burke@natbur.com">Nathan Burke</maintainer>
 	<license>MIT</license>
-	<!-- <url type="website">http://wiki.ros.org/sf_navigation</url> -->
-	<!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
-	<!-- Use build_depend for packages you need at compile time: -->
-	<!-- <build_depend>message_generation</build_depend> -->
-	<!-- Use buildtool_depend for build tool packages: -->
-	<!-- <buildtool_depend>catkin</buildtool_depend> -->
-	<!-- Use run_depend for packages you need at runtime: -->
-	<!-- <run_depend>message_runtime</run_depend> -->
+	<buildtool_depend>catkin</buildtool_depend>
+	<build_depend>roscpp</build_depend>
 	<run_depend>std_msgs</run_depend>
 	<run_depend>roscpp</run_depend>
 	<run_depend>rospy</run_depend>
@@ -27,7 +21,7 @@
 	<run_depend>nav_msgs</run_depend>
 	<run_depend>sensor_msgs</run_depend>
 	<run_depend>rosgraph_msgs</run_depend>
-	<buildtool_depend>catkin</buildtool_depend>
+
 	<!-- The export tag contains other, unspecified, tags -->
 	<export>
 		<!-- Other tools can request additional information be placed here -->

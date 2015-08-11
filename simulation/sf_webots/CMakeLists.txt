@@ -4,7 +4,9 @@ project(sf_webots)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -77,8 +79,8 @@ find_package(catkin REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES webots
-#  CATKIN_DEPENDS other_catkin_pkg
+#  LIBRARIES sf_webots
+#  CATKIN_DEPENDS roscpp
 #  DEPENDS system_lib
 )
 
@@ -89,23 +91,26 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
 
 ## Declare a cpp library
-# add_library(webots
-#   src/${PROJECT_NAME}/webots.cpp
+# add_library(sf_webots
+#   src/${PROJECT_NAME}/sf_webots.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(webots_node src/webots_node.cpp)
+add_executable(sf_webots_node src/start_webots.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(webots_node webots_generate_messages_cpp)
+# add_dependencies(sf_webots_node sf_webots_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(webots_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(sf_webots_node
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -122,7 +127,7 @@ catkin_package(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS webots webots_node
+# install(TARGETS sf_webots sf_webots_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -147,7 +152,7 @@ catkin_package(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_webots.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_sf_webots.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
