@@ -4,7 +4,11 @@ project(sf_lights_msgs)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED genmsg actionlib_msgs)
+find_package(catkin REQUIRED COMPONENTS 
+  genmsg
+  std_msgs 
+  actionlib_msgs
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -63,6 +67,7 @@ add_action_files(
 generate_messages(
   DEPENDENCIES
   actionlib_msgs
+  std_msgs
 )
 
 ###################################
@@ -77,7 +82,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sf_lights_msgs
-#  CATKIN_DEPENDS other_catkin_pkg
+ CATKIN_DEPENDS actionlib_msgs
 #  DEPENDS system_lib
 )
 
