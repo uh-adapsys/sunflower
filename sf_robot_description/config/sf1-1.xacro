@@ -297,15 +297,15 @@
 		</gazebo>
 	</xacro:macro>
 
-	<xacro:head name="head" parent="head_tilt_hinge">
-		<origin rpy="0 0 0" xyz="0 0 0" />
-	</xacro:head>
-	<xacro:tray name="tray" parent="base">
-		<origin rpy="0 0 0" xyz="0.01 0 0.645" />
-	</xacro:tray>
-	<xacro:neck name="neck" parent="base">
-		<origin rpy="0 0 1.5707" xyz="0 0 0.75" />
-	</xacro:neck>
+<!-- 	<xacro:head name="head" parent="head_tilt_hinge"> -->
+<!-- 		<origin rpy="0 0 0" xyz="0 0 0" /> -->
+<!-- 	</xacro:head> -->
+<!-- 	<xacro:tray name="tray" parent="base"> -->
+<!-- 		<origin rpy="0 0 0" xyz="0.01 0 0.645" /> -->
+<!-- 	</xacro:tray> -->
+<!-- 	<xacro:neck name="neck" parent="base"> -->
+<!-- 		<origin rpy="0 0 1.5707" xyz="0 0 0.75" /> -->
+<!-- 	</xacro:neck> -->
 	<xacro:body name="body" parent="base">
 		<origin rpy="0 0 0" xyz="-0.04 0 0.245" />
 	</xacro:body>
@@ -316,6 +316,7 @@
 		<origin rpy="0 0 0" xyz="0.15 0.0 0.245" />
 	</xacro:hokuyo_04lx_laser_ug01>
 
+	<xacro:gazebo_plugin ns="/sunflower1_1" />
 	<gazebo>
 		<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
 			<robotNamespace>/sunflower1_1</robotNamespace>
