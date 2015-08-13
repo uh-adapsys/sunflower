@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package>
+	<name>sf_navigation</name>
+	<version>1.0.0</version>
+	<description>Sunflower Navigation Package</description>
+	<maintainer email="n.burke@natbur.com">Nathan Burke</maintainer>
+	<license>MIT</license>
+	<buildtool_depend>catkin</buildtool_depend>
+	<run_depend>amcl</run_depend>
+	<run_depend>move_base</run_depend>
+	<!-- The export tag contains other, unspecified, tags -->
+	<export>
+		<!-- Other tools can request additional information be placed here -->
+	</export>
+</package>

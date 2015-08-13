@@ -1,0 +1,12 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<arg name="sf_version" />
+	<arg name="ns" default="" />
+	<param name="robot_description"
+		command="$(find xacro)/xacro.py $(find sf_robot_description)/robots/$(arg sf_version).xacro" />
+	<param name="tf_prefix" value="$(arg ns)" />
+	<node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
+		<param name="publish_frequency" type="double" value="15.0" />
+	</node>
+</launch>

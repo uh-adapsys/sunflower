@@ -1,0 +1,34 @@
+<launch>
+	<arg name="ns" default="" />
+
+	<!-- publish the robot -->
+	<param name="tf_prefix" value="$(arg ns)" />
+	<param name="robot_description" command="$(find xacro)/xacro.py $(find person_sim)/robots/person.xacro" />
+	<node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
+		<param name="publish_frequency" type="double" value="15.0" />
+	</node>
+
+	<!-- combine front and rear scanner -->
+	<node pkg="topic_tools" type="relay" name="scan_front_relay" args="scan_front scan_combined" />
+	<node pkg="topic_tools" type="relay" name="scan_back_relay" args="scan_back scan_combined" />
+
+	<!-- Run AMCL -->
+	<include file="$(find person_sim)/launch/amcl.launch">
+		<arg name="ns" value="$(arg ns)" />
+	</include>
+
+	<!-- move_base node -->
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+		<remap from="map" to="/map" />
+		<remap from="static_map" to="/static_map" />
+		
+		<rosparam file="$(find person_sim)/config/navigation.yaml" command="load" />
+		<rosparam file="$(find person_sim)/config/local_planner.yaml" command="load" />
+
+		<rosparam file="$(find person_sim)/config/common_costmap.yaml" command="load" ns="local_costmap" />
+		<rosparam file="$(find person_sim)/config/local_costmap.yaml" command="load" ns="local_costmap" />
+
+		<rosparam file="$(find person_sim)/config/common_costmap.yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find person_sim)/config/global_costmap.yaml" command="load" ns="global_costmap" />
+	</node>
+</launch>
