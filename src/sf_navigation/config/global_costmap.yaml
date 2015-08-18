@@ -1,7 +1,7 @@
-global_frame: /map
-update_frequency: 5.0
-publish_frequency: 2.0
-resolution: 0.10
+global_frame: map
+update_frequency: 2.0
+publish_frequency: 10.0
+
 plugins:
    - name: static_map
      type: "costmap_2d::StaticLayer"

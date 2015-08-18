@@ -7,9 +7,6 @@
 
 	<!-- move_base node -->
 	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-		<remap from="map" to="/map" />
-		<remap from="static_map" to="/static_map" />
-		
 		<rosparam file="$(find sf_navigation)/config/navigation.yaml" command="load" />
 		<rosparam file="$(find sf_navigation)/config/local_planner.yaml" command="load" />
 
@@ -18,5 +15,10 @@
 
 		<rosparam file="$(find sf_navigation)/config/common_costmap.yaml" command="load" ns="global_costmap" />
 		<rosparam file="$(find sf_navigation)/config/global_costmap.yaml" command="load" ns="global_costmap" />
+
+		<!-- Remappings to support namespaces -->
+		<remap from="map" to="/map" />
+		<param name="global_costmap/global_frame" value="/map" />
+		<remap from="static_map" to="/static_map" />
 	</node>
 </launch>

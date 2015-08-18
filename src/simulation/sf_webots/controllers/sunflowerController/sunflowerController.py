@@ -12,6 +12,7 @@ import math
 import time
 
 from controller import Robot
+from matplotlib import axes
 try:
     import os
     path = os.path.dirname(os.path.realpath(__file__))
@@ -149,8 +150,6 @@ class Sunflower(Robot):
         rospy.loginfo(
             'Started Sunflower Controller ActionServer on topic %s',
             self._actionName)
-        self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
-        self._result = sf_controller_msgs.msg.SunflowerResult()
         self._location = None
         self._lastLocation = None
         self._rosTime = None
@@ -495,45 +494,51 @@ class Sunflower(Robot):
         pass
 
     def executeCB(self, goal):
-        # rospy.loginfo("executeCB called on thread: %s", current_thread().ident)
-        # rospy.loginfo('Got goal: %s' % goal)
+        # wrap 'done' in a dict for scoping reasons
+        done = { 'done': False }
+        def doneCB(state=-1, result=None):
+            print "Done: state:%s, result:%s" % (state, result)
+            server_result = sf_controller_msgs.msg.SunflowerResult()
+            server_result.result = state
+            if result == 3:
+                self._as.set_succeeded(server_result)
+            elif result == 2:
+                self._as.set_preempted(server_result)
+            else:
+                self._as.set_aborted(server_result)
+            
+            done['done'] = True
+        
         if goal.component == 'light':
-            result = self.setlight(goal.jointPositions)
+            self.setlight(goal.jointPositions, doneCB)
         elif goal.action == 'move':
-            result = self.move(goal)
+            self.move(goal, doneCB)
         elif goal.action == 'init':
-            result = self.init(goal.component)
+            self.init(goal.component, doneCB)
         elif goal.action == 'stop':
-            self.stop(goal.component)
-            result = True
+            self.stop(goal.component, doneCB)
         elif goal.action == 'park':
-            self.park()
-            result = True
+            self.park(doneCB)
         else:
             rospy.logwarn('Unknown action %s', goal.action)
-            self._result.result = -1
-            self._as.set_aborted(self._result)
+            doneCB(4, None)
+        
+        while not done['done']:
+            rospy.sleep(0.1)
 
-        if result:
-            self._result.result = 0
-            self._as.set_succeeded(self._result)
-        else:
-            self._result.result = -1
-            self._as.set_aborted(self._result)
+    def init(self, name, doneCB):
+        doneCB(3)
 
-    def init(self, name):
-        return True
-
-    def stop(self, name):
+    def stop(self, name, doneCB):
         rospy.loginfo('%s: Stopping %s', self._actionName, name)
         if name == 'base':
             client = actionlib.SimpleActionClient(self._namespace + 'move_base', MoveBaseAction)
             client.wait_for_server()
             client.cancel_all_goals()
-        else:
-            pass
+            
+        doneCB(3)
 
-    def setlight(self, color):
+    def setlight(self, color, doneCB):
         # Sunflower hardware only supports on/off states for RGB array
         # Webots selects the color as an array index of available colors
         # 3-bit color array is arranged in ascending binary order
@@ -545,15 +550,15 @@ class Sunflower(Robot):
             colorIndex = r + g + b + 1
             if self._leds['body']:
                 self._leds['body'].set(colorIndex)
-                return True
+                doneCB(3)
             else:
                 rospy.logerr('Unable to set color.  Body LED not found.')
-                return False
+                doneCB(-1)
         except Exception:
             rospy.logerr('Error setting color to: %s' % (color), exc_info=True)
-            return False
+            doneCB(-1)
 
-    def move(self, goal):
+    def move(self, goal, doneCB):
         joints = goal.jointPositions
 
         if(goal.namedPosition != '' and goal.namedPosition is not None):
@@ -567,35 +572,32 @@ class Sunflower(Robot):
                       goal.component,
                       goal.namedPosition or joints)
 
-        try:
-            if goal.component == 'base':
-                result = self.navigate(goal, joints)
-            elif goal.component == 'base_direct':
-                result = self.moveBase(goal, joints)
-            else:
-                result = self.moveJoints(goal, joints)
-
+        def onDone(state=-1, result=None):
             rospy.logdebug('%s: "%s to %s" Result:%s',
                            self._actionName,
                            goal.component,
                            goal.namedPosition or joints,
                            result)
+            doneCB(state, result)
+
+        try:
+            if goal.component == 'base':
+                self.navigate(goal, joints, onDone)
+            elif goal.component == 'base_direct':
+                self.moveBase(goal, joints, onDone)
+            else:
+                self.moveJoints(goal, joints, onDone)
         except Exception as e:
             rospy.logerr('Error occurred: %s' % e)
-            return False
+            onDone(-1)
 
-        return result == _states['SUCCEEDED']
-
-    def moveBase(self, goal, positions):
-        maxTransNeg, maxTransPos = self._translationSpeed
-        maxRotNeg, maxRotPos = self._rotationSpeed
-
+    def moveBase(self, goal, positions, doneCB):
         LINEAR_RATE = math.pi / 2  # [rad/s]
         # WHEEL_DIAMETER = 0.195  # [m] From the manual
         WHEEL_RADIUS = 0.0975
         # BASE_SIZE = 0.3810  # [m] From the manual
-        AXEL_LENGTH = 0.33  # [m] From WeBots Definition
-        WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
+        AXLE_LENGTH = 0.33  # [m] From WeBots Definition
+        WHEEL_ROTATION = AXLE_LENGTH / (2 * WHEEL_RADIUS)
 
         rotation = round(positions[0], 4)
         linear = round(positions[1], 4)
@@ -603,31 +605,6 @@ class Sunflower(Robot):
         if not isinstance(rotation, (int, float)):
             rospy.logerr('Non-numeric rotation in list, aborting moveBase')
             return _states['ABORTED']
-        """
-        elif not isinstance(linear, (int, float)):
-            rospy.logerr('Non-numeric translation in list, aborting moveBase')
-            return _states['ABORTED']
-        if linear > maxTransPos:
-            rospy.logerr(
-                'Maximal relative translation step exceeded(max: %sm, requested: %sm), '
-                'aborting moveBase' % (maxTransPos, linear))
-            return _states['ABORTED']
-        if linear < maxTransNeg:
-            rospy.logerr(
-                'Minimal relative translation step exceeded(min: %sm, requested: %sm), '
-                'aborting moveBase' % (maxTransNeg, linear))
-            return _states['ABORTED']
-        if rotation > maxRotPos:
-            rospy.logerr(
-                'Maximal relative rotation step exceeded(max: %srad, requested: %sm), '
-                'aborting moveBase' % (maxRotPos, rotation))
-            return _states['ABORTED']
-        if rotation < maxRotNeg:
-            rospy.logerr(
-                'Maximal relative rotation step exceeded(max: %srad, requested: %sm), '
-                'aborting moveBase' % (maxRotNeg, rotation))
-            return _states['ABORTED']
-        """
 
         rotRads = rotation * WHEEL_ROTATION
         linearRads = linear / WHEEL_RADIUS
@@ -658,8 +635,8 @@ class Sunflower(Robot):
                 rospy.loginfo('%s: Preempted' % self._actionName)
                 self._rightWheel.setVelocity(0)
                 self._leftWheel.setVelocity(0)
-                # self._as.set_preempted()
-                return _states['PREEMPTED']
+                doneCB(2)
+                return
 
             self._rightWheel.setVelocity(rightRate)
             self._leftWheel.setVelocity(leftRate)
@@ -670,33 +647,34 @@ class Sunflower(Robot):
         self._rightWheel.setVelocity(0)
         self._leftWheel.setVelocity(0)
 
-        return _states['SUCCEEDED']
+        doneCB(3)
 
     def cmdVelCB(self, msg):
         # rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
         WHEEL_RADIUS = 0.0975
-        # Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
-        # rotation_factor from guess and check
-        # AXEL_LENGTH = 0.33
-        # WHEEL_ROTATION = AXEL_LENGTH / (2 * WHEEL_RADIUS)
-        WHEEL_ROTATION = 5.4
+        AXLE_LENGTH = 0.33
+        BASE_RADIUS = AXLE_LENGTH / 2
         
-        # Get in-range linear and angular values
-        linear = min(max(msg.linear.x, self._translationSpeed[0]), self._translationSpeed[1])
-        angular = min(max(msg.angular.z, self._rotationSpeed[0]), self._rotationSpeed[1])
+        #rospy.logwarn("Linear: %s, Angular: %s" % (msg.linear.x, msg.angular.z))
         
-        linearRads = linear / WHEEL_RADIUS
-        rotRads = angular * WHEEL_ROTATION
+        # gazebo__ros__diff__drive
+        vR = (msg.linear.x + (msg.angular.z * BASE_RADIUS)) / WHEEL_RADIUS
+        vL = (msg.linear.x - (msg.angular.z * BASE_RADIUS)) / WHEEL_RADIUS
         
-        # Get in-range p3DX hard limits
-        right = max(min(linearRads + rotRads, 5.24), -5.24)
-        left = max(min(linearRads - rotRads, 5.24), -5.24)
+        # my guesses
+        linearRads = msg.linear.x / WHEEL_RADIUS
+        angularRads = msg.angular.z * (BASE_RADIUS / WHEEL_RADIUS) * math.pi
         
-        rospy.logdebug('Setting rates: L=%s, R=%s' % (left, right))
-        self._rightWheel.setVelocity(right)
-        self._leftWheel.setVelocity(left)
+        vR1 = linearRads + angularRads
+        vL1 = linearRads - angularRads
 
-    def navigate(self, goal, positions):
+        #rospy.logwarn('Rates: L=%s, R=%s, L1=%s, R1=%s' % (vL, vR, vL1, vR1))
+        
+        rospy.logdebug('Setting rates: L=%s, R=%s' % (vL1, vR1))
+        self._rightWheel.setVelocity(vR1)
+        self._leftWheel.setVelocity(vL1)
+
+    def navigate(self, goal, positions, doneCB):
         rospy.loginfo("navigate called on thread: %s", current_thread().ident)
         pose = PoseStamped()
         pose.header.stamp = self._rosTime
@@ -721,12 +699,9 @@ class Sunflower(Robot):
                       positions[1],
                       positions[2])
 
-        handle = _ActionHandle(client)
-        client.send_goal(client_goal)
-        handle.wait()
-        return handle.result
+        client.send_goal(client_goal, done_cb=doneCB)
 
-    def moveJoints(self, goal, positions):
+    def moveJoints(self, goal, positions, doneCB):
         try:
             joint_names = rospy.get_param(
                 self._namespace + 'sf_controller/%s/joint_names' % 
@@ -742,7 +717,8 @@ class Sunflower(Robot):
             servoName = joint_names[i]
             if servoName not in self._servos:
                 rospy.logerr('Undefined joint %s', servoName)
-                return _states['ABORTED']
+                doneCB(4)
+                return
             self._servos[servoName].setPosition(positions[i])
 
         inpos_threshold = 0.1
@@ -755,50 +731,10 @@ class Sunflower(Robot):
                 target = positions[i]                    
                 done = done and abs(current - target) <= inpos_threshold
             if done:
-                return _states['SUCCEEDED']
+                doneCB(3)
+                return
 
-        return _states['ABORTED']
-
-
-class _ActionHandle(object):
-    # ------------------- action_handle section ------------------- #
-    # Action handle class.
-    #
-    # The action handle is used to implement asynchronous behaviour within the
-    # script.
-
-    def __init__(self, simpleActionClient):
-        # Initialises the action handle.
-        self._client = simpleActionClient
-        self._waiting = False
-        self._result = None
-
-    @property
-    def result(self):
-        if self._waiting:
-            return None
-
-        return self._result
-
-    def wait(self, duration=None):
-        self._waiting = True
-        if duration is None:
-            self._client.wait_for_result()
-        else:
-            self._client.wait_for_result(rospy.Duration(duration))
-
-        self._result = self._client.get_state()
-        self._waiting = False
-
-    def waitAsync(self, duration=None):
-        thread = Thread(target=self.wait, args=(duration,))
-        thread.setDaemon(True)
-        thread.start()
-        return thread
-
-    def cancel(self):
-        self._client.cancel_all_goals()
-
+        doneCB(4)
 
 if __name__ == '__main__':
     rospy.init_node('sf_controller')
