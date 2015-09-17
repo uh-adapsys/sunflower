@@ -80,26 +80,28 @@
 		reflect="1" />
 	<xacro:p3dx_swivel parent="base" />
 
-	<gazebo>
-		<plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
-			<alwaysOn>true</alwaysOn>
-			<rosDebugLevel>na</rosDebugLevel>
-			<updateRate>100.0</updateRate>
-			<robotNamespace>/</robotNamespace>
-			<leftJoint>base_right_wheel_joint</leftJoint>
-			<rightJoint>base_left_wheel_joint</rightJoint>
-			<wheelAcceleration>0</wheelAcceleration>
-			<wheelTorque>200</wheelTorque>
-			<wheelSeparation>0.39</wheelSeparation>
-			<wheelDiameter>0.15</wheelDiameter>
-			<publishTf>false</publishTf>
-			<publishWheelTF>false</publishWheelTF>
-			<publishWheelJointState>false</publishWheelJointState>
-			<commandTopic>cmd_vel</commandTopic>
-			<odometrySource>1</odometrySource>
-			<odometryTopic>odom</odometryTopic>
-			<odometryFrame>odom</odometryFrame>
-			<robotBaseFrame>base_link</robotBaseFrame>
-		</plugin>
-	</gazebo>
+	<xacro:macro name="gazebo_plugin" params="ns">
+		<gazebo>
+			<plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+				<alwaysOn>true</alwaysOn>
+				<rosDebugLevel>na</rosDebugLevel>
+				<updateRate>100.0</updateRate>
+				<robotNamespace>${ns}</robotNamespace>
+				<leftJoint>base_right_wheel_joint</leftJoint>
+				<rightJoint>base_left_wheel_joint</rightJoint>
+				<wheelAcceleration>0</wheelAcceleration>
+				<wheelTorque>200</wheelTorque>
+				<wheelSeparation>0.39</wheelSeparation>
+				<wheelDiameter>0.15</wheelDiameter>
+				<publishTf>true</publishTf>
+				<publishWheelTF>true</publishWheelTF>
+				<publishWheelJointState>true</publishWheelJointState>
+				<commandTopic>cmd_vel</commandTopic>
+				<odometrySource>true</odometrySource>
+				<odometryTopic>odom</odometryTopic>
+				<odometryFrame>odom</odometryFrame>
+				<robotBaseFrame>base_link</robotBaseFrame>
+			</plugin>
+		</gazebo>
+	</xacro:macro>
 </robot>
