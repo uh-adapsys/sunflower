@@ -594,25 +594,21 @@ class Person(Robot):
         return _states['SUCCEEDED']
 
     def cmdVelCB(self, msg):
-        WHEEL_RADIUS = 0.1
-        # Logically, this feels like it should be axle_length / (2 * wheel_radius), but that doesn't work
-        # rotation_factor from guess and check
-        WHEEL_ROTATION = 9.5
-                
-        # Get in-range linear and angular values
-        linear = min(max(msg.linear.x, self._translationSpeed[0]), self._translationSpeed[1])
-        angular = min(max(msg.angular.z, self._rotationSpeed[0]), self._rotationSpeed[1])
+        # rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
+        WHEEL_RADIUS = 0.01
+        AXLE_LENGTH = 0.36
+        BASE_RADIUS = AXLE_LENGTH / 2
         
-        rotRads = angular * WHEEL_ROTATION
-        linearRads = linear / WHEEL_RADIUS
+        vR = (msg.linear.x + (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
+        vL = (msg.linear.x - (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
         
-        right = max(min(linearRads + rotRads, 10), -10)
-        left = max(min(linearRads - rotRads, 10), -10)
-    
+        rospy.logdebug('Setting rates: L=%s, R=%s' % (vL, vR))
+        
         for wheel in self._wheels['right'].itervalues():
-            wheel.setVelocity(right)
+            wheel.setVelocity(vR)
         for wheel in self._wheels['left'].itervalues():
-            wheel.setVelocity(left)
+            # -vL as the left wheel is 'magically' mounted on an outside axle
+            wheel.setVelocity(-vL)
 
     def navigate(self, goal, positions):
         pose = PoseStamped()

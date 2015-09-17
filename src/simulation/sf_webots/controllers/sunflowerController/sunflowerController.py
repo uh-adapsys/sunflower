@@ -12,7 +12,7 @@ import math
 import time
 
 from controller import Robot
-from matplotlib import axes
+
 try:
     import os
     path = os.path.dirname(os.path.realpath(__file__))
@@ -42,7 +42,6 @@ else:
     from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
     from nav_msgs.msg import Odometry
     # from p2os_msgs.msg import SonarArray
-    from rosgraph_msgs.msg import Clock
     from sensor_msgs.msg import LaserScan, JointState
     from dynamixel_msgs.msg import JointState as DynJointState
     from tf import TransformBroadcaster
@@ -71,39 +70,6 @@ _states = {
     9: 'LOST',
     'LOST': 9,
 }
-
-
-class ClockSync(Thread):
-
-    def __init__(self, robot):
-        super(ClockSync, self).__init__()
-        self.getTime = robot.getTime
-        self._stop = False
-
-    def run(self):
-        # We only want one clock publisher
-        topics = rospy.get_published_topics()
-        names = [name for name, _ in topics]
-        if '/clock' not in names:
-            print "Starting clock sync"
-            try:
-                # ROS Version >= Hydro
-                clockPublisher = rospy.Publisher('/clock', Clock, queue_size=2)
-            except:
-                clockPublisher = rospy.Publisher('/clock', Clock)
-    
-            self._stop = False
-            starttime = time.time()
-            while not rospy.is_shutdown() and not self._stop:
-                rosTime = rospy.Time(self.getTime() + starttime)
-                clock = Clock(clock=rosTime)
-                clockPublisher.publish(clock)
-                time.sleep(0.001)
-        else:
-            print "Skipping clock sync"
-
-    def stop(self):
-        self._stop = True
 
 
 class Sunflower(Robot):
@@ -242,7 +208,7 @@ class Sunflower(Robot):
 
             odomPublisher.publish(msg)
         else:
-            rospy.logerr('Skipped updating odom! Last: %s, Cur: %s' % 
+            rospy.logerr('Skipped updating odom! Last: %s, Cur: %s' %
                          (self._location, self._lastLocation))
 
     def _publishInitialPose(self, posePublisher):
@@ -260,8 +226,8 @@ class Sunflower(Robot):
             msg.pose.pose.orientation.y = orientation[1]
             msg.pose.pose.orientation.z = orientation[2]
             msg.pose.pose.orientation.w = orientation[3]
-            
-            posePublisher.publish(msg)            
+
+            posePublisher.publish(msg)
             return True
         return False
 
@@ -320,7 +286,7 @@ class Sunflower(Robot):
             msg.range_min = self._sensorValues['frontLaser'].min_range
             msg.range_max = self._sensorValues['frontLaser'].max_range
             msg.scan_time = self._timeStep
-            msg.time_increment = (msg.scan_time / laser_frequency / 
+            msg.time_increment = (msg.scan_time / laser_frequency /
                                   len(self._sensorValues['frontLaser'].ranges))
             laserPublisher.publish(msg)
 
@@ -375,7 +341,8 @@ class Sunflower(Robot):
             # clockPublisher = rospy.Publisher('/clock', Clock, queue_size=2)
             jointPublisher = rospy.Publisher(self._namespace + 'joint_states', JointState, queue_size=2)
             initialPosePublisher = rospy.Publisher(self._namespace + 'initialpose', PoseWithCovarianceStamped, queue_size=2)
-            dynamixelPublishers = {name: rospy.Publisher(self._namespace + '%s_controller/state' % name, DynJointState, queue_size=2) for name in self._servos.iterkeys()}
+            dynamixelPublishers = {name: rospy.Publisher(
+                self._namespace + '%s_controller/state' % name, DynJointState, queue_size=2) for name in self._servos.iterkeys()}
         except:
             # sonarPublisher = rospy.Publisher(self._namespace + 'sonar', SonarArray)
             odomPublisher = rospy.Publisher(self._namespace + 'odom', Odometry)
@@ -392,20 +359,18 @@ class Sunflower(Robot):
         # Probably something wrong elsewhere, but we seem to need to publish
         # map->odom transform once to get sf_navigation to load
 #         self._publishLocationTransform(locationTransform)
-        # Start the ros clock 
-        cs = ClockSync(sf)
-        cs.start()
+        # Start the ros clock
         initialposepublished = False
-        
+
         rospy.loginfo("Main loop starting on thread: %s", current_thread().ident)
 
         while not rospy.is_shutdown() and self.step(self._timeStep) != -1:
             self._rosTime = rospy.Time.now()
-            
+
             # Give time for ros to initialise
             if not initialposepublished and self._rosTime.secs >= 5:
                 initialposepublished = self._publishInitialPose(initialPosePublisher)
-            
+
             self._updateLocation()
             self._updateSonar()
             self._updateLaser()
@@ -422,9 +387,6 @@ class Sunflower(Robot):
 
             # It appears that we have to call sleep for ROS to process messages
             time.sleep(0.0001)
-
-        cs.stop()
-        cs.join()
 
     def webotsToRos(self, x, y, z, theta):
         rX = -z
@@ -446,11 +408,11 @@ class Sunflower(Robot):
         self._rightWheel.setVelocity(0)
 
         self._staticJoints = [
-                              "base_swivel",
-                              "base_swivel_wheel",
-                              "base_left_wheel",
-                              "base_right_wheel"
-                              ]
+            "base_swivel",
+            "base_swivel_wheel",
+            "base_left_wheel",
+            "base_right_wheel"
+        ]
 
         self._servos = {
             'tray': self.getMotor('tray'),
@@ -495,7 +457,8 @@ class Sunflower(Robot):
 
     def executeCB(self, goal):
         # wrap 'done' in a dict for scoping reasons
-        done = { 'done': False }
+        done = {'done': False}
+
         def doneCB(state=-1, result=None):
             print "Done: state:%s, result:%s" % (state, result)
             server_result = sf_controller_msgs.msg.SunflowerResult()
@@ -506,9 +469,9 @@ class Sunflower(Robot):
                 self._as.set_preempted(server_result)
             else:
                 self._as.set_aborted(server_result)
-            
+
             done['done'] = True
-        
+
         if goal.component == 'light':
             self.setlight(goal.jointPositions, doneCB)
         elif goal.action == 'move':
@@ -522,7 +485,7 @@ class Sunflower(Robot):
         else:
             rospy.logwarn('Unknown action %s', goal.action)
             doneCB(4, None)
-        
+
         while not done['done']:
             rospy.sleep(0.1)
 
@@ -535,7 +498,7 @@ class Sunflower(Robot):
             client = actionlib.SimpleActionClient(self._namespace + 'move_base', MoveBaseAction)
             client.wait_for_server()
             client.cancel_all_goals()
-            
+
         doneCB(3)
 
     def setlight(self, color, doneCB):
@@ -654,25 +617,13 @@ class Sunflower(Robot):
         WHEEL_RADIUS = 0.0975
         AXLE_LENGTH = 0.33
         BASE_RADIUS = AXLE_LENGTH / 2
-        
-        #rospy.logwarn("Linear: %s, Angular: %s" % (msg.linear.x, msg.angular.z))
-        
-        # gazebo__ros__diff__drive
-        vR = (msg.linear.x + (msg.angular.z * BASE_RADIUS)) / WHEEL_RADIUS
-        vL = (msg.linear.x - (msg.angular.z * BASE_RADIUS)) / WHEEL_RADIUS
-        
-        # my guesses
-        linearRads = msg.linear.x / WHEEL_RADIUS
-        angularRads = msg.angular.z * (BASE_RADIUS / WHEEL_RADIUS) * math.pi
-        
-        vR1 = linearRads + angularRads
-        vL1 = linearRads - angularRads
 
-        #rospy.logwarn('Rates: L=%s, R=%s, L1=%s, R1=%s' % (vL, vR, vL1, vR1))
-        
-        rospy.logdebug('Setting rates: L=%s, R=%s' % (vL1, vR1))
-        self._rightWheel.setVelocity(vR1)
-        self._leftWheel.setVelocity(vL1)
+        vR = (msg.linear.x + (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
+        vL = (msg.linear.x - (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
+
+        rospy.logdebug('Setting rates: L=%s, R=%s' % (vL, vR))
+        self._rightWheel.setVelocity(vR)
+        self._leftWheel.setVelocity(vL)
 
     def navigate(self, goal, positions, doneCB):
         rospy.loginfo("navigate called on thread: %s", current_thread().ident)
@@ -704,7 +655,7 @@ class Sunflower(Robot):
     def moveJoints(self, goal, positions, doneCB):
         try:
             joint_names = rospy.get_param(
-                self._namespace + 'sf_controller/%s/joint_names' % 
+                self._namespace + 'sf_controller/%s/joint_names' %
                 goal.component)
         except KeyError:
             # TODO: we're not publishing the dynamixel yaml configs for webots
@@ -728,7 +679,7 @@ class Sunflower(Robot):
             done = True
             for i in range(0, len(joint_names)):
                 current = self._servos[joint_names[i]].getPosition()
-                target = positions[i]                    
+                target = positions[i]
                 done = done and abs(current - target) <= inpos_threshold
             if done:
                 doneCB(3)

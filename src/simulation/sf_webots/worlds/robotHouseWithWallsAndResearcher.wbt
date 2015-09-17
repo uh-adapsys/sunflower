@@ -18,9 +18,14 @@ Background {
   ]
 }
 DEF PERSON Person {
-  translation 2 0.0975 -1
+  translation 3 0.0975 -0.5
   rotation 0 1 0 1.57079
   controller "personController"
+}
+DEF ROSCLOCK RosClock {
+  translation 0.8 0.76 -2.3
+  rotation 0 1 0 3.14159
+  controller "clockController"
 }
 DirectionalLight {
   ambientIntensity 1
