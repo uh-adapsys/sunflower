@@ -614,12 +614,21 @@ class Sunflower(Robot):
 
     def cmdVelCB(self, msg):
         # rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
+        MAX_VEL = 5.24
+
         WHEEL_RADIUS = 0.0975
         AXLE_LENGTH = 0.33
         BASE_RADIUS = AXLE_LENGTH / 2
 
         vR = (msg.linear.x + (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
         vL = (msg.linear.x - (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
+
+        if abs(vR) > MAX_VEL or abs(vL) > MAX_VEL:
+            # scale vR/vL
+            maxVel = max(abs(vR), abs(vL))
+            scale = MAX_VEL / maxVel
+            vR *= scale
+            vL *= scale
 
         rospy.logdebug('Setting rates: L=%s, R=%s' % (vL, vR))
         self._rightWheel.setVelocity(vR)
