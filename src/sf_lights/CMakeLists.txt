@@ -102,7 +102,9 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-# add_executable(sf_lights_node src/sf_lights_node.cpp)
+add_executable(sf_lights
+ src/lights_server.cpp
+)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

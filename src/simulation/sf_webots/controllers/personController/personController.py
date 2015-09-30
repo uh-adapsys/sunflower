@@ -34,7 +34,7 @@ except:
         print >> sys.stderr, traceback.format_exc()
     exit(1)
 else:
-    import rospy    
+    import rospy
     import sf_controller_msgs.msg
     import actionlib
     from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
@@ -66,6 +66,7 @@ _states = {
     9: 'LOST',
     'LOST': 9,
 }
+
 
 class Person(Robot):
 
@@ -152,7 +153,7 @@ class Person(Robot):
                 sampleRate,
                 ranges
             )
-            
+
         if self._sensors.get('backLaser', None):
             fov = self._sensors['backLaser'].getFov()
             ranges = self._sensors['backLaser'].getRangeImage()
@@ -223,7 +224,7 @@ class Person(Robot):
 
             odomPublisher.publish(msg)
         else:
-            rospy.logerr('Skipped updating odom! Last: %s, Cur: %s' % 
+            rospy.logerr('Skipped updating odom! Last: %s, Cur: %s' %
                          (self._location, self._lastLocation))
 
     def _publishInitialPose(self, posePublisher):
@@ -241,9 +242,8 @@ class Person(Robot):
             msg.pose.pose.orientation.y = orientation[1]
             msg.pose.pose.orientation.z = orientation[2]
             msg.pose.pose.orientation.w = orientation[3]
-            
-            
-            posePublisher.publish(msg)            
+
+            posePublisher.publish(msg)
             return True
         return False
 
@@ -292,7 +292,7 @@ class Person(Robot):
             msg.range_min = self._sensorValues[laserName].min_range
             msg.range_max = self._sensorValues[laserName].max_range
             msg.scan_time = self._timeStep
-            msg.time_increment = (msg.scan_time / laser_frequency / 
+            msg.time_increment = (msg.scan_time / laser_frequency /
                                   len(self._sensorValues[laserName].ranges))
             laserPublisher.publish(msg)
 
@@ -348,20 +348,20 @@ class Person(Robot):
         while not rospy.is_shutdown() and self.step(self._timeStep) != -1:
             # self._rosTime = rospy.Time(self.getTime())
             self._rosTime = rospy.Time.now()
-            
+
             # Give time for ros to initialise
             if not initialposepublished and self._rosTime.secs >= 5:
                 initialposepublished = self._publishInitialPose(initialPosePublisher)
-            
+
             self._updateLocation()
             self._updateLaser()
-            
+
             self._publishPose(posePublisher)
             self._publishOdom(odomPublisher)
             self._publishLaser(frontLaserPublisher, 'frontLaser')
             self._publishLaser(backLaserPublisher, 'backLaser')
             self._publishJoints(jointPublisher)
-            
+
             self._publishOdomTransform(odomTransform)
             # self._publishLaserTransform(laserTransform)
 
@@ -377,19 +377,19 @@ class Person(Robot):
 
     def initialise(self):
         self._leds = {
-                        'body': self.getLED('light')
-                      }
+            'body': self.getLED('light')
+        }
         self._wheels = {
-                        'left':{
-                            'front': self.getMotor('fl_wheel'),
-                            'back': self.getMotor('rl_wheel'),
-                        },
-                        'right': { 
-                            'front': self.getMotor('fr_wheel'),
-                            'back': self.getMotor('rr_wheel'),
-                        }
-                    }
-        
+            'left': {
+                'front': self.getMotor('fl_wheel'),
+                'back': self.getMotor('rl_wheel'),
+            },
+            'right': {
+                'front': self.getMotor('fr_wheel'),
+                'back': self.getMotor('rr_wheel'),
+            }
+        }
+
         for location in self._wheels.itervalues():
             for wheel in location.itervalues():
                 wheel.setPosition(float('+inf'))
@@ -397,14 +397,14 @@ class Person(Robot):
 
         self._lasers = ['frontLaser', 'baclLaser']
         self._sensors = {
-                            'frontLaser': self.getCamera('front_laser'),
-                            'backLaser': self.getCamera('back_laser'),
-                            'gps': self.getGPS('person_gps'),
-                            'compass': self.getCompass('person_compass'),
-                            'camera': self.getCamera('head_camera'),
-                        }
+            'frontLaser': self.getCamera('front_laser'),
+            'backLaser': self.getCamera('back_laser'),
+            'gps': self.getGPS('person_gps'),
+            'compass': self.getCompass('person_compass'),
+            'camera': self.getCamera('head_camera'),
+        }
         self._staticJoints = ["base_front_right_wheel", "base_front_left_wheel", "base_rear_right_wheel", "base_rear_left_wheel"]
-        
+
         for sensor in self._sensors.itervalues():
             if(sensor):
                 sensor.enable(self._timeStep)
@@ -594,21 +594,18 @@ class Person(Robot):
         return _states['SUCCEEDED']
 
     def cmdVelCB(self, msg):
-        # rospy.loginfo("cmdVelCB called on thread: %s", current_thread().ident)
-        WHEEL_RADIUS = 0.01
+        WHEEL_RADIUS = 0.10
         AXLE_LENGTH = 0.36
         BASE_RADIUS = AXLE_LENGTH / 2
-        
+
         vR = (msg.linear.x + (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
         vL = (msg.linear.x - (msg.angular.z * BASE_RADIUS * math.pi)) / WHEEL_RADIUS
-        
+
         rospy.logdebug('Setting rates: L=%s, R=%s' % (vL, vR))
-        
         for wheel in self._wheels['right'].itervalues():
             wheel.setVelocity(vR)
         for wheel in self._wheels['left'].itervalues():
-            # -vL as the left wheel is 'magically' mounted on an outside axle
-            wheel.setVelocity(-vL)
+            wheel.setVelocity(vL)
 
     def navigate(self, goal, positions):
         pose = PoseStamped()
@@ -638,6 +635,7 @@ class Person(Robot):
         client.send_goal(client_goal)
         handle.wait()
         return handle.result
+
 
 class _ActionHandle(object):
     # ------------------- action_handle section ------------------- #
