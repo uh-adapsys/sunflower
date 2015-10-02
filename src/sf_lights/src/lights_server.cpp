@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <sf_lights_msgs/LightsAction.h>
-#include <phidget21.h>
+#include <libphidgets/phidget21.h>
 #include <exception>
 
 //#define NOPHIDGET

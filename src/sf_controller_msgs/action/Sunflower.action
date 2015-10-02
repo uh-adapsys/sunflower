@@ -8,3 +8,4 @@ float64[] jointPositions
 int32 result
 ---
 #feedback
+string msg
