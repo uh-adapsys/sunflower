@@ -1,8 +1,0 @@
-<!-- -*- mode: XML -*- -->
-
-<launch>
-	<arg name="world" />
-	<arg name="mode" default="realtime" />
-	<node pkg="sf_webots" type="start_webots" args="$(arg world) --mode=$(arg mode)"
-		name="webots" output="screen" required="true" />
-</launch>

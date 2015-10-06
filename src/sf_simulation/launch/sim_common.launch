@@ -3,7 +3,7 @@
 	<arg name="sunflower_ns"/>
 	<arg name="version" />
 
-	<include file="$(find sf_environments)/launch/uh-rh.launch" />
+	<include file="$(find uh_environments)/launch/robot_house_map.launch" />
 
 	<group ns="$(arg sunflower_ns)">
 		<include file="$(find sf_robot_description)/launch/tf.launch">

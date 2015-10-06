@@ -16,7 +16,7 @@
 	<run_depend>person_sim</run_depend>
 	<run_depend>sf_robot_description</run_depend>
 	<run_depend>sf_navigation</run_depend>
-	<run_depend>sf_environments</run_depend>
+	<run_depend>uh_environments</run_depend>
 	<run_depend>sf_webots</run_depend>
 
 	<!-- The export tag contains other, unspecified, tags -->
