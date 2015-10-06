@@ -1,0 +1,23 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<arg name="robotVersion" default="sf1-1" />
+	<arg name="robot_ns" default="/sunflower1_1" />
+	<arg name="world" default="$(find uh_simulation)/webots/worlds/robotHouse.wbt" />
+	<arg name="world_partials"
+		default="['$(find uh_simulation)/webots/partials/researcher.partial', 
+	          '$(find uh_simulation)/webots/partials/sunflower.partial', 
+	          '$(find uh_simulation)/webots/partials/rosclock.partial', 
+	          '$(find uh_simulation)/webots/partials/barriers.partial']" />
+	<arg name="person_ns" default="/person" />
+
+	<include file="$(find sf_simulation)/launch/webots.launch">
+		<arg name="robotVersion" value="sf1-1" />
+		<arg name="robot_ns" value="/sunflower1_1" />
+		<arg name="world" value="$(find uh_simulation)/webots/worlds/robotHouse.wbt" />
+		<arg name="world_partials" value="$(arg world_partials)" />
+	</include>
+	<include file="$(find uh_simulation)/launch/start_person_sim.launch" ns="$(arg person_ns)">
+		<arg name="ns" value="$(arg person_ns)" />
+	</include>
+</launch>
