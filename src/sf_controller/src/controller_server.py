@@ -5,173 +5,205 @@ Created on 12 Mar 2013
 
 @author: nathan
 '''
-from threading import Thread
+import sys
 import math
-import time
 
-import roslib
-roslib.load_manifest('sf_controller')
-
-from dynamixel_msgs.msg import JointState
-from geometry_msgs.msg import PoseStamped, Twist
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from p2os_driver.msg import MotorState
-from std_msgs.msg import Float64
-from tf.transformations import quaternion_from_euler
 import actionlib
 import rospy
-import sf_controller_msgs.msg
-import sf_lights_msgs.msg
 
-class SunflowerAction(object):
+from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
+from geometry_msgs.msg import PoseStamped, Twist
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from p2os_msgs.msg import MotorState
+from PyKDL import Rotation
+from trajectory_msgs.msg import JointTrajectoryPoint
 
-    _actionHandles = {}
+from sf_controller_msgs.msg import SunflowerAction, SunflowerFeedback, SunflowerResult
+from sf_lights_msgs.msg import LightsAction, LightsGoal
 
-    def __init__(self, name):
-        self._action_name = name
-        self._as = actionlib.SimpleActionServer(
-            self._action_name, sf_controller_msgs.msg.SunflowerAction, execute_cb=self.execute_cb, auto_start=False)
+
+class SunflowerController(object):
+
+    def __init__(self, topic, joints):
+        self._as = actionlib.ActionServer(
+            topic,
+            SunflowerAction,
+            goal_cb=self._goalCB,
+            cancel_cb=self._cancelCB,
+            auto_start=False)
         self._as.start()
-        rospy.loginfo("Started Sunflower Controller ActionServer")
-        self._pubs = self._connectToJoints()
-        self._subs = {}
-        (self._cmdVel, self._motorState) = self._connectToWheels()
-        self._feedback = sf_controller_msgs.msg.SunflowerFeedback()
-        self._result = sf_controller_msgs.msg.SunflowerResult()
+
+        rospy.loginfo("Started Sunflower Controller on %s", topic)
+
+        if 'base' in joints:
+            # TODO: These should be in a config file
+            self._maxTrans = joints['base'].get('max_translation', 1.0)
+            self._linear_rate = joints['base'].get('linear_rate', 0.1)
+            self._maxRot = joints['base'].get('max_rotation', math.pi)
+            self._rotation_rate = joints['base'].get('rotation_rate', 0.1)
+        else:
+            rospy.logerr("Limits for base movement not specified, exiting")
+            exit(1)
+
+        self._goals = {}
+        self._parkPosition = joints.get('park', {})
+        self._jointsControllers, self._jointUpdates = self._connectToJoints(joints)
+        self._cmdVel, self._motorState = self._connectToWheels()
+        self._actions = {
+            'init': self.init,
+            'move': self.move,
+            'park': self.park,
+            'stop': self.stop}
 
     def __del__(self):
-        for pub in self._pubs:
-            pub.unregister()
+        map(lambda h: h.unregister(), self._joints)
+        map(lambda h: h.unregister(), self._jointUpdates)
 
-    def park(self):
-        g = sf_controller_msgs.msg.SunflowerAction()
-        g.component = 'head'
-        g.positions = [0, 0, -1.67, 1.67]
-        self.execute_cb(g)
-        g = sf_controller_msgs.msg.SunflowerAction()
-        g.component = 'tray'
-        g.positions = [0, ]
-        self.execute_cb(g)
-        g = sf_controller_msgs.msg.SunflowerAction()
-        g.component = 'lights'
-        g.positions = [0, 0, 0]
-        self.execute_cb(g)
-
-    def _connectToWheels(self):
-        return (rospy.Publisher('cmd_vel', Twist), rospy.Publisher('cmd_motor_state', MotorState))
-
-    def _connectToJoints(self):
-        pubs = {}
-        joints = rospy.get_param('/sf_controller', None)
-        if joints:
-            for value in joints.values():
-                if 'joint_names' in value:
-                    for jointName in value['joint_names']:
-                        topic = jointName + '_controller'
-                        if topic not in pubs:
-                            pubs[topic] = rospy.Publisher(
-                                topic + '/command', Float64)
-        else:
-            rospy.logerr("%s:  No joints received from parameter server",
-                         self._action_name)
-
-        return pubs
-
-    def execute_cb(self, goal):
-        if goal.component == 'light':
-            result = self.setlight(goal.jointPositions)
-        elif goal.action == 'move':
-            result = self.move(goal)
-        elif goal.action == 'init':
-            result = self.init(goal.component)
-        elif goal.action == 'stop':
-            self.stop(goal.component)
-            result = True
-        elif goal.action == 'park':
-            self.park()
-            result = True
-        else:
-            rospy.logwarn("Unknown action %s", goal.action)
-            self._result.result = -1
-            self._as.set_aborted(self._result)
-
-        if result:
-            self._result.result = 0
-            self._as.set_succeeded(self._result)
-        else:
-            self._result.result = -1
-            self._as.set_aborted(self._result)
-
-    def init(self, name):
-        if name == 'base' or name == 'base_direct':
-            self._motorState.publish(MotorState(1))
-
-        self._as.set_succeeded(self._result)
-
-    def stop(self, name):
-        rospy.loginfo("%s: Stopping %s",
-                      self._action_name,
-                      name)
-        if name == 'base':
-            client = actionlib.SimpleActionClient(
-                '/lights', sf_lights_msgs.msg.LightsAction)
-            client.wait_for_server()
-            client.cancel_all_goals()
-        elif name == 'light':
-            client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
-            client.wait_for_server()
-            client.cancel_all_goals()
-        else:
+    def run(self):
+        try:
+            rospy.spin()
+        except rospy.ROSInterruptException:
             pass
 
-        self._as.set_succeeded(self._result)
+    def _connectToWheels(self):
+        return (rospy.Publisher('cmd_vel', Twist),
+                rospy.Publisher('cmd_motor_state', MotorState))
 
-    def setlight(self, color):
-        client = actionlib.SimpleActionClient(
-            '/lights', sf_lights_msgs.msg.LightsAction)
-        client.wait_for_server()
-        goal = sf_lights_msgs.msg.LightsGoal(rgb=color)
-        handle = _ActionHandle(client)
-        client.send_goal(goal)
-        handle.wait()
-        handle.result
+    def _connectToJoints(self, joints):
+        controllers = {}
+        state_subscribers = {}
+        for name, config in joints.iteritems():
+            controller = config.get('controller', None)
+            typeName = config.get('type', None)
+            if controller and typeName:
+                if typeName == 'MoveBaseAction':
+                    ActionClass = MoveBaseAction
+                elif typeName == 'FollowJointTrajectoryAction':
+                    ActionClass = FollowJointTrajectoryAction
+                elif typeName == 'LightsAction':
+                    ActionClass = LightsAction
+                else:
+                    rospy.logwarn("Unknown action type: %s" % (typeName, ))
+                a = ActionClass()
+                ActionFeedback = type(a.action_feedback)
+                controllers[name] = actionlib.SimpleActionClient(controller, ActionClass)
+                state_subscribers[name] = rospy.Subscriber('%s/status' % (controller, ),
+                                                           ActionFeedback,
+                                                           callback=self._updateJointState,
+                                                           callback_args=(topic, ),
+                                                           queue_size=2)
 
-    def move(self, goal):
+        return controllers, state_subscribers
+
+    def _updateJointState(self, msg):
+        pass
+
+    def _cancelCB(self, goalHandle):
+        def statusCB(status, msg='', *args, **kwargs):
+            feedback = SunflowerFeedback()
+            feedback.status = status
+            feedback.msg = msg if type(msg) == str else ''
+            goalHandle.publish_feedback(feedback)
+
+        def doneCB(result, msg=""):
+            res = SunflowerResult(result, msg)
+            goalHandle.set_canceled(res)
+
+        self.stop(goalHandle, statusCB, doneCB)
+
+    def _goalCB(self, goalHandle):
+        goalHandle.set_accepted()
+        goal = goalHandle.get_goal()
+
+        def updateStatus(status, msg='', *args, **kwargs):
+            feedback = SunflowerFeedback()
+            feedback.status = status
+            feedback.msg = msg if type(msg) == str else ''
+            goalHandle.publish_feedback(feedback)
+
+        def completed(result):
+            status = goalHandle.get_goal_status().status
+            updateStatus(status, "Finished action %s on %s" % (goal.action, goal.robot))
+
+            if status == actionlib.GoalStatus.ACTIVE:
+                goalHandle.set_succeeded(result)
+            elif status == actionlib.GoalStatus.PREEMPTED:
+                goalHandle.set_preempted(result)
+            else:
+                goalHandle.set_canceled(result)
+
+        if goal.action in self._actions:
+            updateStatus(goalHandle.get_goal_status().status, "Starting action %s on %s" % (goal.action, goal.robot))
+            self._actions[goal.action](goalHandle, updateStatus, completed)
+        else:
+            rospy.logwarn("Unknown action %s", goal.action)
+            goalHandle.set_rejected()
+
+    def park(self, goalHandle, statusCB, doneCB):
+        pass
+
+    def init(self, goalHandle, statusCB, doneCB):
+        name = goalHandle.get_goal().component
+        if name[:4] == 'base':
+            statusCB(actionlib.GoalStatus.ACTIVE, 'Initialising base')
+            self._motorState.publish(MotorState(1))
+
+        doneCB()
+
+    def stop(self, goalHandle, statusCB, doneCB):
+        name = goalHandle.get_goal().component
+        if name in self._jointsControllers:
+            rospy.loginfo("%s: Stopping %s", rospy.get_name(), name)
+            client = self._jointsControllers[name]
+            client.cancel_all_calls()
+        else:
+            goalHandle.set_cancel_requested()
+
+        doneCB(client.get_result() if client else None)
+
+    def setlight(self, goalHandle, statusCB, doneCB):
+        goal = goalHandle.get_goal()
+        client = self._jointControllers.get('light', None)
+        if client:
+            client.wait_for_server()
+
+            lightGoal = LightsGoal(rgb=goal.jointPositions)
+            client.send_goal(lightGoal, done_cb=doneCB)
+        else:
+            goalHandle.set_rejected()
+
+    def move(self, goalHandle, statusCB, doneCB):
+        goal = goalHandle.get_goal()
         joints = goal.jointPositions
 
-        if(goal.namedPosition != '' and goal.namedPosition is not None):
-            param = '/sf_controller/' + \
-                goal.component + '/' + goal.namedPosition
-            if(rospy.has_param(param)):
-                joints = rospy.get_param(param)[0]
+        def done(result=None, msg=None):
+            rospy.logdebug("%s: '%s to %s' Result:%s",
+                           rospy.get_name(),
+                           goal.component,
+                           goal.namedPosition or joints,
+                           result)
+            doneCB(result, msg)
+
+        if goal.namedPosition:
+            goal.jointPositions = rospy.get_param('~%s/positions/%s' % (goal.component, goal.namedPosition), [None])[0]
 
         rospy.loginfo("%s: Setting %s to %s",
-                      self._action_name,
+                      rospy.get_name(),
                       goal.component,
                       goal.namedPosition or joints)
 
         if goal.component == 'base':
-            result = self.navigate(goal, joints)
+            self.navigate(goalHandle, statusCB, done)
         elif goal.component == 'base_direct':
-            result = self.moveBase(goal, joints)
+            self.moveBase(goalHandle, statusCB, done)
+        elif goal.component == 'light':
+            self.setlight(goalHandle, statusCB, done)
         else:
-            result = self.moveJoints(goal, joints)
+            self.moveJoints(goalHandle, statusCB, done)
 
-        rospy.logdebug("%s: '%s to %s' Result:%s",
-                       self._action_name,
-                       goal.component,
-                       goal.namedPosition or joints,
-                       result)
-
-        return result == 3
-
-    def moveBase(self, goal, positions):
-        # TODO: These should be in a config file
-        maxTrans = 1.5
-        LINEAR_RATE = 0.3  # [m/s]
-        maxRot = 2 * math.pi
-        ROTATION_RATE = 0.5  # [rad/s]
-
+    def moveBase(self, goalHandle, statusCB, doneCB):
+        goal = goalHandle.get_goal()
+        positions = goal.jointPositions
         rotation = positions[0]
         linear = positions[1]
 
@@ -180,20 +212,20 @@ class SunflowerAction(object):
         # step 0: check validity of parameters:
         if not isinstance(rotation, (int, float)) or not isinstance(linear, (int, float)):
             rospy.logerr("Non-numeric rotation list, aborting moveBase")
-            return False
-        if abs(linear) >= maxTrans:
+            doneCB()
+        if abs(linear) >= self._maxTrans:
             rospy.logerr(
-                "Maximal relative translation step exceeded(max: %sm), aborting moveBase" % maxTrans)
-            return False
-        if abs(rotation) >= maxRot:
+                "Maximal relative translation step exceeded(max: %sm), aborting moveBase" % self._maxTrans)
+            doneCB()
+        if abs(rotation) >= self._maxRot:
             rospy.logerr(
-                "Maximal relative rotation step exceeded(max: %srad), aborting moveBase" % maxRot)
-            return False
+                "Maximal relative rotation step exceeded(max: %srad), aborting moveBase" % self._maxRot)
+            doneCB()
 
         # step 1: determine duration of motion so that upper thresholds for
         # both translational as well as rotational velocity are not exceeded
-        duration_trans_sec = abs(linear) / LINEAR_RATE
-        duration_rot_sec = abs(rotation) / ROTATION_RATE
+        duration_trans_sec = abs(linear) / self._linear_rate
+        duration_rot_sec = abs(rotation) / self._rotation_rate
         duration_sec = max(duration_trans_sec, duration_rot_sec)
 
         # step 2: determine actual velocities based on calculated duration
@@ -208,238 +240,85 @@ class SunflowerAction(object):
         # duration of motion in ROS time
         duration_ros = rospy.Duration.from_sec(duration_sec)
 
-        r = rospy.Rate(50)
+        rate = rospy.Rate(50)
         end_time = rospy.Time.now() + duration_ros
         self._cmdVel.publish(twist)
         while not rospy.is_shutdown() and rospy.Time.now() < end_time:
-            # pub.publish(twist) #p2os has issues if you republish, seems to
-            # continue using last received cmd_vel
-            if self._as.is_preempt_requested():
-                rospy.loginfo('%s: Preempted' % self._action_name)
-                self._as.set_preempted()
-                return 2
-            r.sleep()
+            # pub.publish(twist)
+            # p2os has issues if you republish,
+            # but seems to continue using last received cmd_vel
+            if goalHandle.get_goal_status() != actionlib.GoalStatus.ACTIVE:
+                rospy.loginfo('%s: Preempted move' % rospy.get_name())
+                goalHandle.set_preempted()
+                break
+            rate.sleep()
 
         self._cmdVel.publish(Twist())  # send a stop command, see above comment
+        doneCB()
 
-        return 3
-
-    def navigate(self, goal, positions):
+    def navigate(self, goalHandle, statusCB, doneCB):
+        positions = goalHandle.get_goal().jointPositions
         pose = PoseStamped()
         pose.header.stamp = rospy.Time.now()
-        pose.header.frame_id = "/map"
+        pose.header.frame_id = "map"
         pose.pose.position.x = positions[0]
         pose.pose.position.y = positions[1]
         pose.pose.position.z = 0.0
-        q = quaternion_from_euler(0, 0, positions[2])
+        q = Rotation.RotZ(positions[2]).GetQuaternion()
         pose.pose.orientation.x = q[0]
         pose.pose.orientation.y = q[1]
         pose.pose.orientation.z = q[2]
         pose.pose.orientation.w = q[3]
-
-        client = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
         client_goal = MoveBaseGoal()
         client_goal.target_pose = pose
 
-        client.wait_for_server()
-        rospy.loginfo("%s: Navigating to %s",
-                      self._action_name,
-                      pose)
+        client = self._jointControllers.get('base', None)
+        if client:
+            client.wait_for_server()
+            rospy.loginfo("%s: Navigating to %s",
+                          rospy.get_name(),
+                          pose)
 
-        handle = _ActionHandle(client)
-        client.send_goal(client_goal)
-        handle.wait()
-        return handle.result
-
-    def moveJoints(self, goal, positions):
-        subs = []
-        pubs = {}
-
-        component_name = '/sf_controller/' + goal.component
-        try:
-            joint_names = rospy.get_param(component_name + '/joint_names')
-        except KeyError:
-            # assume component is a named joint
-            joint_names = [goal.component, ]
-        for i in range(0, len(joint_names)):
-            topic = joint_names[i] + '_controller'
-            if topic not in self._pubs:
-                rospy.logerr('Undefined joint controller %s', topic)
-                return False
-
-            subs.append(RosSubscriber(topic + '/state', JointState))
-            pubs[topic] = self._pubs[topic]
-            self._pubs[topic].publish(Float64(positions[i]))
-
-        handle = _SubscriberHandle(subs, pubs)
-        handle.wait()
-        return handle.result
-
-
-# ------------------- action_handle section ------------------- #
-class _SubscriberHandle(object):
-    # Subscriber handle class.
-    #
-    # The subscriber handle is used to implement asynchronous behaviour within
-    # the script.
-
-    def __init__(self, subscribers, publishers):
-        # Initialises the action handle.
-        self._subscribers = subscribers
-        self._publishers = publishers
-        self._waiting = False
-        self._result = None
-
-    @property
-    def result(self):
-        if self._waiting:
-            return None
-
-        return self._result
-
-    def wait(self, duration=None):
-        t = self.waitAsync(duration)
-        # An attempt to fix parallel action issue
-        # t.join()
-        # Potential race condition, isAlive returns false before starting
-        time.sleep(0.01)
-        while t.isAlive():
-            time.sleep(0.001)
-
-    def waitAsync(self, duration=None):
-        thread = Thread(target=self._wait_for_finished, args=(duration,))
-        thread.setDaemon(True)
-        thread.start()
-        return thread
-
-    def _wait_for_finished(self, duration):
-        self._waiting = True
-        reached = True
-        while True:
-            r = rospy.Rate(100)
-            for sub in self._subscribers:
-                if rospy.is_shutdown():
-                    return False
-
-                while not sub.hasNewMessage:
-                    r.sleep()
-
-                if sub.lastMessage.is_moving:
-                    continue
-
-                reached &= abs(sub.lastMessage.error) < 0.03
-                if not reached:
-                    rospy.logwarn("%s unable to reach %s.  Error value: %s" % (
-                        sub.topic, sub.lastMessage.goal_pos, sub.lastMessage.error))
-
-                self._subscribers.remove(sub)
-
-            if not self._subscribers:
-                break
-
-        self._result = 3 if reached else 4
-
-    def cancel(self):
-        for sub in self._subscribers:
-            self._publishers[sub.topic].publish(
-                Float64(sub.lastMessage.current_pos))
-
-
-# ------------------- action_handle section ------------------- #
-class _ActionHandle(object):
-    # Action handle class.
-    #
-    # The action handle is used to implement asynchronous behaviour within the
-    # script.
-
-    def __init__(self, simpleActionClient):
-        # Initialises the action handle.
-        self._client = simpleActionClient
-        self._waiting = False
-        self._result = None
-
-    @property
-    def result(self):
-        if self._waiting:
-            return None
-
-        return self._result
-
-    def wait(self, duration=None):
-        t = self.waitAsync(duration)
-        # An attempt to fix parallel action issue
-        # t.join()
-        # Potential race condition, isAlive returns false before starting
-        time.sleep(0.01)
-        while t.isAlive():
-            time.sleep(0.001)
-
-    def waitAsync(self, duration=None):
-        thread = Thread(target=self._wait_for_finished, args=(duration,))
-        thread.setDaemon(True)
-        thread.start()
-        return thread
-
-    def _wait_for_finished(self, duration):
-        self._waiting = True
-        if duration is None:
-            self._client.wait_for_result()
+            client.send_goal(client_goal, done_cb=doneCB)
         else:
-            self._client.wait_for_result(rospy.Duration(duration))
+            goalHandle.set_rejected()
 
-        self._result = self._client.get_state()
-        self._waiting = False
+    def moveJoints(self, goalHandle, statusCB, doneCB):
+        name = goalHandle.get_goal().component
+        positions = goalHandle.get_goal().jointPositions
 
-    def cancel(self):
-        self._client.cancel_all_goals()
+        controller = self._jointControllers.get(name, None)
+        if controller:
+            joint_names = rospy.get_param('~%s/joint_names' % (name, ), [name, ])
+            goal = FollowJointTrajectoryGoal()
+            goal.trajectory.joint_names = joint_names
+            point = JointTrajectoryPoint()
+            point.positions = positions
+            point.time_from_start = rospy.Duration(3)
+            goal.trajectory.points.append(point)
+            controller.send_goal(goal, doneCB)
+        else:
+            rospy.logerr('Undefined joint: %s', name)
+            goalHandle.set_rejected('Undefined joint: %s', name)
 
-
-class RosSubscriber(object):
-
-    def __init__(self, topic, dataType, idleTime=15):
-        self._lastAccess = time.time()
-        self._subscriber = None
-        self._topic = topic
-        self._dataType = dataType
-        self._newMessage = False
-        self._idleTimeout = idleTime
-        self._data = None
-
-    @property
-    def topic(self):
-        return self._topic
-
-    @property
-    def hasNewMessage(self):
-        self._touch()
-        return self._newMessage
-
-    @property
-    def lastMessage(self):
-        self._touch()
-        self._newMessage = False
-        return self._data
-
-    def _touch(self):
-        self._lastAccess = time.time()
-        if self._subscriber is None:
-            self._subscriber = rospy.Subscriber(
-                self._topic, self._dataType, self._callback)
-
-    def unregister(self):
-        if self._subscriber is not None:
-            self._subscriber.unregister()
-            self._subscriber = None
-
-    def _callback(self, msg):
-        self._data = msg
-
-        self._newMessage = True
-        if time.time() - self._lastAccess > self._idleTimeout:
-            self.unregister()
+        # TODO: How to detect done?
 
 if __name__ == '__main__':
-
     rospy.init_node('sf_controller')
-    SunflowerAction(rospy.get_name())
+
+    if len(sys.argv) == 1:
+        import yaml
+        with open('../config/joint_configurations.yaml') as jointConfig:
+            jointDict = yaml.load(jointConfig)
+            rospy.set_param('~joints', jointDict)
+
+    try:
+        topic = rospy.get_param('~topic')
+        joints = rospy.get_param('~joints')
+    except KeyError as e:
+        rospy.logfatal("sf_controller Missing param: %s" % (e.message,))
+        exit(0)
+
+    SunflowerController(topic, joints)
+
     rospy.spin()

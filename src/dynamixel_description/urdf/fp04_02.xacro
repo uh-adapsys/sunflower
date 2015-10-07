@@ -8,7 +8,7 @@
 		<link name="${name}_mesh_link">
 			<visual>
 				<geometry name="fp04_02mesh">
-					<mesh filename="package://sf_dynamixel/meshes/F2.stl" scale="0.001 0.001 0.001" />
+					<mesh filename="package://dynamixel_description/meshes/F2.stl" scale="0.001 0.001 0.001" />
 				</geometry>
 				<material name="plastic_green">
 					<color rgba="0.1 0.8 0.3 1" />
@@ -17,7 +17,7 @@
 			</visual>
 			<collision>
 				<geometry name="fp04_02mesh">
-					<mesh filename="package://sf_dynamixel/meshes/F2.stl" scale="0.001 0.001 0.001" />
+					<mesh filename="package://dynamixel_description/meshes/F2.stl" scale="0.001 0.001 0.001" />
 				</geometry>
 			</collision>
 			<inertial>

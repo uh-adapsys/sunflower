@@ -1,13 +1,13 @@
 <!-- -*- mode: XML -*- -->
 <launch>
 	<arg name="sunflower_ns"/>
-	<arg name="version" />
+	<arg name="robotName" />
 
 	<include file="$(find uh_environments)/launch/robot_house_map.launch" />
 
 	<group ns="$(arg sunflower_ns)">
 		<include file="$(find sf_robot_description)/launch/tf.launch">
-			<arg name="sf_version" value="$(arg version)" />
+			<arg name="robotName" value="$(arg robotName)" />
 			<arg name="ns" value="$(arg sunflower_ns)" />
 		</include>
 		<include file="$(find sf_navigation)/launch/start.launch">

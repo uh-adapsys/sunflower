@@ -5,11 +5,12 @@ project(sf_controller_msgs)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS 
+  rospy 
   genmsg
+  message_generation
   std_msgs
   actionlib_msgs
 )
-
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -47,8 +48,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Message1.msg
-#   Message2.msg
+#   Action1.msg
+#   Action2.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -83,7 +84,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sf_controller_msgs
- CATKIN_DEPENDS actionlib_msgs
+ CATKIN_DEPENDS message_runtime actionlib_msgs
 #  DEPENDS system_lib
 )
 

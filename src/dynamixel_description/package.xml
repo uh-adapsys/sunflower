@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package>
+	<name>dynamixel_description</name>
+	<version>1.0.0</version>
+	<description>Definitions and meshes for dynamixel AX-12 servos</description>
+	<maintainer email="n.burke@natbur.com">Nathan Burke</maintainer>
+	<license>MIT</license>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<run_depend>xacro</run_depend>
+</package>

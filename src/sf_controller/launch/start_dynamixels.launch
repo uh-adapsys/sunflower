@@ -1,0 +1,45 @@
+<!-- -*- mode: XML -*- -->
+<launch>
+	<arg name="topic" default="dxl_manager" />
+	<arg name="serialPort" default="/dev/dynamixel" />
+	<arg name="serialSpeed" default="1000000" />
+	<arg name="minMotorID" default="0" />
+	<arg name="maxMotorID" default="30" />
+	<arg name="rate" default="20" />
+
+	<node name="sf_dynamixel_manager" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
+		<param name="namespace" value="$(arg topic)" />
+		<param name="serial_ports/joints_port/port_name" value="$(arg serialPort)" />
+		<param name="serial_ports/joints_port/baud_rate" value="$(arg serialSpeed)" />
+		<param name="serial_ports/joints_port/min_motor_id" value="$(arg minMotorID)" />
+		<param name="serial_ports/joints_port/max_motor_id" value="$(arg maxMotorID)" />
+		<param name="serial_ports/joints_port/update_rate" value="$(arg rate)" />
+	</node>
+
+	<node name="controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+		args="--manager=$(arg topic) 
+			  --port=joints_port
+			  --type=simple 
+                head_controller
+			    head_pan_controller
+			    head_tilt_controller
+			    neck_upper_controller
+			    neck_lower_controller
+                tray_joint_controller" output="screen" />
+
+	<group if="$(arg hasMetaControllers)">
+		<node name="controller_spawner_meta" pkg="dynamixel_controllers" type="controller_spawner.py"
+			args="--manager=$(arg topic) 
+                --type=meta
+                head_controller
+			    head_pan_controller
+			    head_tilt_controller
+			    neck_upper_controller
+			    neck_lower_controller" output="screen" />
+		<node name="controller_spawner_meta" pkg="dynamixel_controllers" type="controller_spawner.py"
+			args="--manager=$(arg topic) 
+                --type=meta
+                tray_controller
+                tray_joint_controller" output="screen" />
+	</group>
+</launch>

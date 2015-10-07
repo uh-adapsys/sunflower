@@ -6,8 +6,8 @@
 	xmlns:xacro="http://ros.org/wiki/xacro">
 
 	<xacro:include filename="$(find sf_robot_description)/urdf/sensors/hokuyo_laser.xacro" />
-	<xacro:include filename="$(find sf_dynamixel)/urdf/dynamixel_ax12.xacro" />
-	<xacro:include filename="$(find sf_dynamixel)/urdf/fp04_02.xacro" />
+	<xacro:include filename="$(find dynamixel_description)/urdf/dynamixel_ax12.xacro" />
+	<xacro:include filename="$(find dynamixel_description)/urdf/fp04_02.xacro" />
 	<xacro:include filename="$(find sf_robot_description)/robots/pioneer3dx.xacro" />
 
 	<!-- Base -->

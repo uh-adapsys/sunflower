@@ -8,7 +8,7 @@
 		<link name="${name}_box_link">
 			<visual>
 				<geometry name="ax12mesh">
-					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
 						scale="0.001 0.001 0.001" />
 				</geometry>
 				<material name="plastic_black">
@@ -23,7 +23,7 @@
 			</inertial>
 			<collision>
 				<geometry name="ax12mesh">
-					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
 						scale="0.001 0.001 0.001" />
 				</geometry>
 			</collision>
@@ -86,7 +86,7 @@
 		<link name="${name}_box_link">
 			<visual>
 				<geometry name="ax12mesh">
-					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
 						scale="0.001 0.001 0.001" />
 				</geometry>
 				<material name="plastic_black" />
@@ -101,7 +101,7 @@
 			<collision>
 				<origin rpy="1.57075 0 3.14159" xyz="-0.012 0 0.019" />
 				<geometry name="ax12mesh">
-					<mesh filename="package://sf_dynamixel/meshes/ax12_box_plain.stl"
+					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
 						scale="0.001 0.001 0.001" />
 				</geometry>
 			</collision>
