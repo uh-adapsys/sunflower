@@ -1,23 +1,24 @@
 <launch>
+	<arg name="robot_name" default="sunflower1_1" />
+	<arg name="robot_ns" default="/$(arg robot_name)" />
+	<arg name="person_name" default="person" />
+	<arg name="person_ns" default="/$(arg person_name)" />
 	<arg name="gui" default="True" />
-	<arg name="version" default="sf1-1" />
-	<arg name="sunflower_ns" value="/sunflower1_1" />
-	<arg name="person_ns" value="/person" />
 
 	<include file="$(find sf_simulation)/launch/sim_common.launch">
-		<arg name="sunflower_ns" value="$(arg sunflower_ns)" />
-		<arg name="version" value="sf1-1" />
+		<arg name="robot_ns" value="$(arg robot_ns)" />
+		<arg name="robot_name" value="$(arg robot_name)" />
 	</include>
 
 	<include file="$(find sf_gazebo)/launch/start.launch">
 		<arg name="gui" value="$(arg gui)"></arg>
 	</include>
 
-<!-- 	<include file="$(find person_sim)/launch/start.launch" ns="$(arg person_ns)"> -->
+<!-- 	<include file="$(find uh_simulation)/launch/start_person_sim.launch" ns="$(arg person_ns)"> -->
 <!-- 		<arg name="ns" value="$(arg person_ns)" /> -->
 <!-- 	</include> -->
 
-	<group ns="$(arg sunflower_ns)">
+	<group ns="$(arg robot_ns)">
 		<!-- Spawn a robot into Gazebo -->
 		<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
 			args="-param robot_description -urdf -model sf1_1" />

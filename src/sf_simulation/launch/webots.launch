@@ -1,8 +1,10 @@
 <!-- -*- mode: XML -*- -->
 
 <launch>
-	<arg name="robotName" default="sunflower1_1" />
-	<arg name="robot_ns" default="/$(arg robotName)" />
+	<arg name="robot_name" default="sunflower1_1" />
+	<arg name="robot_ns" default="/$(arg robot_name)" />
+	<arg name="global_frame" default="/map" />
+	<arg name="static_map" default="/static_map" />
 	<arg name="world" default="$(find uh_simulation)/webots/worlds/robotHouse.wbt" />
 	<arg name="world_partials"
 		default="['$(find uh_simulation)/webots/partials/sunflower.partial', 
@@ -10,12 +12,14 @@
 
 	<param name="/use_sim_time" value="true" />
 	<include file="$(find sf_simulation)/launch/sim_common.launch">
-		<arg name="sunflower_ns" value="$(arg robot_ns)" />
-		<arg name="robotName" value="$(arg robotName)" />
+		<arg name="robot_ns" value="$(arg robot_ns)" />
+		<arg name="robot_name" value="$(arg robot_name)" />
+		<arg name="global_frame" value="$(arg global_frame)" />
+		<arg name="static_map" value="$(arg static_map)" />
 	</include>
+
 	<include file="$(find uh_simulation)/launch/start_webots.launch">
 		<arg name="world" value="$(arg world)" />
 		<arg name="partials" value="$(arg world_partials)" />
 	</include>
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find sf_simulation)/config/webots.rviz" />
 </launch>

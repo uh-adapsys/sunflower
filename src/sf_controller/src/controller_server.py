@@ -34,20 +34,21 @@ class SunflowerController(object):
         self._as.start()
 
         rospy.loginfo("Started Sunflower Controller on %s", topic)
+        joint_config = rospy.get_param(joints, {})
 
-        if 'base' in joints:
+        if 'base' in joint_config:
             # TODO: These should be in a config file
-            self._maxTrans = joints['base'].get('max_translation', 1.0)
-            self._linear_rate = joints['base'].get('linear_rate', 0.1)
-            self._maxRot = joints['base'].get('max_rotation', math.pi)
-            self._rotation_rate = joints['base'].get('rotation_rate', 0.1)
+            self._maxTrans = joint_config['base'].get('max_translation', 1.0)
+            self._linear_rate = joint_config['base'].get('linear_rate', 0.1)
+            self._maxRot = joint_config['base'].get('max_rotation', math.pi)
+            self._rotation_rate = joint_config['base'].get('rotation_rate', 0.1)
         else:
             rospy.logerr("Limits for base movement not specified, exiting")
             exit(1)
 
         self._goals = {}
-        self._parkPosition = joints.get('park', {})
-        self._jointsControllers, self._jointUpdates = self._connectToJoints(joints)
+        self._joints = joints
+        self._jointsControllers, self._jointUpdates = self._connectToJoints(joint_config)
         self._cmdVel, self._motorState = self._connectToWheels()
         self._actions = {
             'init': self.init,
@@ -72,6 +73,7 @@ class SunflowerController(object):
     def _connectToJoints(self, joints):
         controllers = {}
         state_subscribers = {}
+        rospy.loginfo("Connecting to controllers...")
         for name, config in joints.iteritems():
             controller = config.get('controller', None)
             typeName = config.get('type', None)
@@ -87,6 +89,9 @@ class SunflowerController(object):
                 a = ActionClass()
                 ActionFeedback = type(a.action_feedback)
                 controllers[name] = actionlib.SimpleActionClient(controller, ActionClass)
+                rospy.loginfo("Waiting on %s...", controller)
+                controllers[name].wait_for_server()
+                rospy.loginfo("Connected to %s!", controller)
                 state_subscribers[name] = rospy.Subscriber('%s/status' % (controller, ),
                                                            ActionFeedback,
                                                            callback=self._updateJointState,
@@ -185,7 +190,7 @@ class SunflowerController(object):
             doneCB(result, msg)
 
         if goal.namedPosition:
-            goal.jointPositions = rospy.get_param('~%s/positions/%s' % (goal.component, goal.namedPosition), [None])[0]
+            goal.jointPositions = rospy.get_param('%s/%s/positions/%s' % (self._joints, goal.component, goal.namedPosition), [None])[0]
 
         rospy.loginfo("%s: Setting %s to %s",
                       rospy.get_name(),
@@ -289,7 +294,7 @@ class SunflowerController(object):
 
         controller = self._jointControllers.get(name, None)
         if controller:
-            joint_names = rospy.get_param('~%s/joint_names' % (name, ), [name, ])
+            joint_names = rospy.get_param('%s/%s/joint_names' % (self._joints, name), [name, ])
             goal = FollowJointTrajectoryGoal()
             goal.trajectory.joint_names = joint_names
             point = JointTrajectoryPoint()
@@ -307,10 +312,7 @@ if __name__ == '__main__':
     rospy.init_node('sf_controller')
 
     if len(sys.argv) == 1:
-        import yaml
-        with open('../config/joint_configurations.yaml') as jointConfig:
-            jointDict = yaml.load(jointConfig)
-            rospy.set_param('~joints', jointDict)
+        rospy.set_param('~joints', 'sunflower1_1/joints')
 
     try:
         topic = rospy.get_param('~topic')

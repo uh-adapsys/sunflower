@@ -1,23 +1,37 @@
 <!-- -*- mode: XML -*- -->
 
 <launch>
-	<arg name="robotName" default="sunflower1_1" />
-	<arg name="robot_ns" default="/$(arg robotName)" />
+	<arg name="robot_name" default="sunflower1_1" />
+	<arg name="robot_ns" default="/$(arg robot_name)" />
+	<arg name="person_name" default="person" />
+	<arg name="person_ns" default="/$(arg person_name)" />
+	<arg name="global_frame" default="/map" />
+	<arg name="static_map" default="/static_map" />
 	<arg name="world" default="$(find uh_simulation)/webots/worlds/robotHouse.wbt" />
 	<arg name="world_partials"
 		default="['$(find uh_simulation)/webots/partials/researcher.partial', 
 	          '$(find uh_simulation)/webots/partials/sunflower.partial', 
 	          '$(find uh_simulation)/webots/partials/rosclock.partial', 
 	          '$(find uh_simulation)/webots/partials/barriers.partial']" />
-	<arg name="person_ns" default="/person" />
 
 	<include file="$(find sf_simulation)/launch/webots.launch">
-		<arg name="robotName" value="$(arg robotName)" />
+		<arg name="robot_name" value="$(arg robot_name)" />
 		<arg name="robot_ns" value="$(arg robot_ns)" />
 		<arg name="world" value="$(find uh_simulation)/webots/worlds/robotHouse.wbt" />
 		<arg name="world_partials" value="$(arg world_partials)" />
+		<arg name="global_frame" value="$(arg global_frame)" />
+		<arg name="static_map" value="$(arg static_map)" />
 	</include>
-	<include file="$(find uh_simulation)/launch/start_person_sim.launch" ns="$(arg person_ns)">
-		<arg name="ns" value="$(arg person_ns)" />
-	</include>
+
+	<group ns="$(arg person_ns)">
+		<remap from="map" to="$(arg global_frame)" />
+		<remap from="static_map" to="$(arg static_map)" />
+		<param name="tf_prefix" value="$(arg person_ns)" />
+
+		<include file="$(find uh_simulation)/launch/start_person_sim.launch">
+			<arg name="global_frame" value="$(arg global_frame)" />
+			<arg name="odom" value="$(arg person_ns)/odom" />
+			<arg name="base_link" value="$(arg person_ns)/base_link" />
+		</include>
+	</group>
 </launch>

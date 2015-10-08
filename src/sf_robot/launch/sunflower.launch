@@ -1,0 +1,48 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<arg name="robot_name" default="sunflower1_1" />
+	<arg name="robot_ns" default="/$(arg robot_name)" />
+	<arg name="robot_controller" default="$(arg robot_ns)/controller" />
+	<arg name="global_frame" default="/map" />
+	<arg name="static_map" default="/static_map" />
+	<arg name="joint_configuration" default="$(arg find sf_controller)/config/joint_configurations.yaml" />
+
+	<group ns="$(arg robot_ns)">
+		<remap from="map" to="$(arg global_frame)" />
+		<remap from="static_map" to="$(arg static_map)" />
+		<param name="tf_prefix" value="$(arg robot_ns)" />
+
+		<!-- Hokoyu/Pioneer Base -->
+		<include file="$(find sf_robot)/launch/start_base.launch" />
+
+		<!-- Phidget LED Driver -->
+		<include file="$(find sf_lights)/launch/start_phidgets.launch">
+			<!-- Match controller specified in joint_configuration.yaml -->
+			<arg name="topic" value="light_controller" />
+		</include>
+
+		<!-- Dynamixel Servo Driver -->
+		<include file="$(find sf_controller)/launch/start_dynamixels.launch" />
+
+		<!-- ActionSever controller -->
+		<arg name="joints_ns" value="joints" />
+		<rosparam ns="$(arg joints_ns)" file="$(arg joint_configuration)" command="load" />
+		<include file="$(find sf_controller)/launch/start_controller.launch">
+			<arg name="topic" value="$(arg robot_controller)" />
+			<arg name="joints" value="$(arg joints_ns)" />
+		</include>
+
+		<!-- Robot Description (urdf) -->
+		<include file="$(find sf_robot_description)/launch/tf.launch">
+			<arg name="robot_name" value="$(arg robot_name)" />
+		</include>
+
+		<!-- Robot Navigation -->
+		<include file="$(find sf_navigation)/launch/start.launch">
+			<arg name="global_frame" value="$(arg global_frame)" />
+			<arg name="odom" value="$(arg robot_ns)/odom" />
+			<arg name="base_link" value="$(arg robot_ns)/base_link" />
+		</include>
+	</group>
+</launch>

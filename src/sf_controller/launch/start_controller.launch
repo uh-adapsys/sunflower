@@ -2,22 +2,12 @@
 
 <launch>
 	<arg name="topic" default="sf_controller" />
-	<rosparam command="load" ns="$(arg topic)" file="$(find sf_controller)/config/joints/named_positions.yaml" />
+	<arg name="joints" default="~joints" />
 
-	<rosparam file="$(find sf_robot)/config/joints/controllers.yaml" command="load" />
-	<!-- Has to match from above, can't see any way around redeclaring -->
-	<arg name="controllers" value="tray_controller
-								   head_pan_controller
-								   head_tilt_controller
-								   neck_lower_controller
-								   neck_upper_controller" />
+	<include file="$(find sf_controller)/launch/start_dynamixels.launch" />
 
-	<include file="$(find sf_controller)/launch/start_dynamixels.launch">
-		<arg name="controllers" value="$(arg controllers)" />
-	</include>
 	<node name="sf_controller" pkg="sf_controller" type="controller_server.py" output="screen">
 		<param name="topic" value="$(arg topic)" />
-		<!-- as defined in controllers.yaml -->
-		<param name="joint_controllers" value="meta_controller_names" />
+		<param name="joints" value="$(arg joints)" />
 	</node>
 </launch>

@@ -1,4 +1,4 @@
-Sunflower Dynamixel Package
+ Dynamixel Description Package
 ===
 
-Descriptions and meshes for dynamixel ax-12 servos
+Descriptions and meshes for dynamixel ax-12 servos and dynamixel fp04_02 mounts

@@ -1,8 +1,7 @@
-Sunflower Controller Package
+Sunflower Navigation Package
 ===
 
-Provides a mid-level, unified control system for the Sunflower robot.
-Creates an ActionServer on /sf_controller and acts as an interface with the low level control packages.
+Configuration and launch files for ROS Navigation on the UH Sunflower robots 
 
 ##Configuration
 

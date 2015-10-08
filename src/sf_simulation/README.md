@@ -1,20 +1,18 @@
-Sunflower Package
+Sunflower Simulation Package
 ===
 
-Provides the high-level entry points for starting the sunflower robot.
+Provides Webots and Gazebo(partial) Simulation support for the UH-Sunflower Robot
 
 ##Configuration
 
-Contains the ```{VERSION}.xacro``` files that describe the physical configuration of the robot
+```jointParams.yaml``` joint configuration for Gazebo joint controllers
+
+```simulation.rviz``` RViz Configuration for simulation including Sunflower and person_sim
 
 ##Launching
 
-```{version}.launch``` base, lights, dynamixel drivers and sunflower controller
+```webots.launch``` Starts Webots with Sunflower robot
 
-```dashboard.launch``` Simple dashboard with battery stats and enable/diable motor command
+```webots_person.launch``` Starts Webots with Sunflower robot and Person_Sim
 
-```teleop.launch``` Keyboard teleoperation
-
-```teleop_joy.launch``` Joystick teleoperation (must be run on the computer that the joystick is attached to, connects to js0)
-
-```tf.launch``` Starts the joint state publisher based off the configuration from the ```{VERSION}.xacro``` file
+```gazebo.launch``` Starts Gazebo with Sunflower robot

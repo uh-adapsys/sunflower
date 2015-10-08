@@ -28,13 +28,15 @@ protected:
 
 public:
 
-	LightsAction(std::string name) :
-			as_(nh_, name, boost::bind(&LightsAction::executeCB, this, _1), false), action_name_(name) {
+	LightsAction(std::string name, std::string topic) :
+			as_(nh_, topic, boost::bind(&LightsAction::executeCB, this, _1),
+					false), action_name_(name) {
 #ifndef NOPHIDGET
 		CPhidget_enableLogging(PHIDGET_LOG_WARNING, NULL);
 		CPhidgetInterfaceKit_create(&phidgetInterface); //create Phidget Handle
 		CPhidget_open((CPhidgetHandle) phidgetInterface, -1); //open the port for connection to Phidget
-		int resultDisplay = CPhidget_waitForAttachment((CPhidgetHandle) phidgetInterface, 2000);
+		int resultDisplay = CPhidget_waitForAttachment(
+				(CPhidgetHandle) phidgetInterface, 2000);
 		if (resultDisplay > 0) {
 			const char *err;
 			CPhidget_getErrorDescription(resultDisplay, &err);
@@ -43,10 +45,14 @@ public:
 		} else {
 			const char* name;
 
-			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_RED, 0);
-			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_GREEN, 0);
-			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BLUE, 0);
-			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BOARD, 0);
+			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_RED,
+					0);
+			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_GREEN,
+					0);
+			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BLUE,
+					0);
+			CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BOARD,
+					0);
 			CPhidget_getDeviceName((CPhidgetHandle) phidgetInterface, &name);
 			ROS_INFO("Connected to Phidget: %s", name);
 		}
@@ -70,12 +76,16 @@ public:
 		// Everything is okay if errorCode = 0
 		if (errorCode != 0) {
 			const char *errorDescription;
-			int err = CPhidget_getErrorDescription(errorCode, &errorDescription);
-			if(err == 0){
-				ROS_ERROR("Settings state %i for %s failed, error: %s", value, deviceName, errorDescription);
+			int err = CPhidget_getErrorDescription(errorCode,
+					&errorDescription);
+			if (err == 0) {
+				ROS_ERROR("Settings state %i for %s failed, error: %s", value,
+						deviceName, errorDescription);
 			} else {
 				ROS_ERROR("Settings state %i for %s failed", value, deviceName);
-				ROS_ERROR("An error occurred while retrieving error description.  Error code: %i", err);
+				ROS_ERROR(
+						"An error occurred while retrieving error description.  Error code: %i",
+						err);
 			}
 		}
 
@@ -88,13 +98,18 @@ public:
 		bool blue = goal->rgb[2];
 		bool board = red || green || blue;
 
-		ROS_INFO("%s: Setting lights: R(%i) G(%i) B(%i)", action_name_.c_str(), red, green, blue);
+		ROS_INFO("%s: Setting lights: R(%i) G(%i) B(%i)", action_name_.c_str(),
+				red, green, blue);
 
 #ifndef NOPHIDGET
-		int rErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_RED, red);
-		int gErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_GREEN, green);
-		int bErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BLUE, blue);
-		int oErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface, PHIDGET_BOARD, board);
+		int rErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface,
+				PHIDGET_RED, red);
+		int gErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface,
+				PHIDGET_GREEN, green);
+		int bErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface,
+				PHIDGET_BLUE, blue);
+		int oErr = CPhidgetInterfaceKit_setOutputState(phidgetInterface,
+				PHIDGET_BOARD, board);
 #endif
 
 		result_.result = rErr + gErr + bErr + oErr;
@@ -112,8 +127,16 @@ public:
 };
 
 int main(int argc, char** argv) {
-	ros::init(argc, argv, "lights");
-	LightsAction lights(ros::this_node::getName());
+	ros::init(argc, argv, "phidget_leds");
+
+	std::string topic;
+	if (ros::param::get("~topic", topic)) {
+		LightsAction lights(ros::this_node::getName(), topic);
+	} else {
+		LightsAction lights(ros::this_node::getName(),
+				ros::this_node::getName());
+	}
+
 	ros::spin();
 
 	return 0;

@@ -1,8 +1,7 @@
-Sunflower Controller Package
+Sunflower Controller Messages Package
 ===
 
-Provides a mid-level, unified control system for the Sunflower robot.
-Creates an ActionServer on /sf_controller and acts as an interface with the low level control packages.
+Messages for the sf_controller package
 
 ##Action Description
 __component__: The named joint to control (```head```, ```tray```, matched to the ```sf_base/*joint_configurations.yaml```)
@@ -15,7 +14,3 @@ __jointPoisitions__: List of joint positions (in radians) to use.  Length must m
 
 
 __result__: Always 0
-
-##Launching
-
-The ```start.launch``` launches the controller.

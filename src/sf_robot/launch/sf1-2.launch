@@ -1,8 +1,0 @@
-<!-- -*- mode: XML -*- -->
-
-<launch>
-	<include file="$(find sf_robot)/launch/sf1-1.launch">
-		<arg name="ns" value="/sunflower1_2" />
-		<arg name="version" default="sf1-1" />
-	</include>
-</launch>

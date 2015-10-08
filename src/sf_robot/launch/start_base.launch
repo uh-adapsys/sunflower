@@ -1,10 +1,29 @@
 <!-- -*- mode: XML -*- -->
-
 <launch>
-   <node name="p2os" pkg="p2os_driver" type="p2os" output="screen" >
-      <param name="port" value="/dev/p3dxBase" />
-      <param name="use_sonar" value="true" />
-      <param name="bumpstall" value="3" />
-      <remap from="pose" to="odom" />
-   </node>
+	<arg name="port" default="/dev/p3dxBase" />
+	<arg name="sonar" default="true" />
+	<arg name="bumpers" default="3" />
+	<arg name="odom" default="odom" />
+
+	<arg name="port" default="/dev/p3dxBase" />
+	<arg name="scanner" default="base_laser_front_link" />
+
+	<!-- Start Pioneer base -->
+	<node name="p2os" pkg="p2os_driver" type="p2os" output="screen">
+		<param name="port" value="$(arg port)" />
+		<param name="use_sonar" value="$(arg sonar)" />
+		<param name="bumpstall" value="$(arg bumpers)" />
+
+		<remap from="pose" to="$(arg odom)" />
+	</node>
+
+	<!-- Start Hokuyo scanner -->
+	<node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node" respawn="false" output="screen">
+		<param name="calibrate_time" type="bool" value="false" />
+		<param name="frame_id" value="$(arg scanner)" />
+		<param name="min_ang" value="-1.570796327" />
+		<param name="max_ang" value="1.570796327" />
+
+		<remap from="scan" to="scan_front" />
+	</node>
 </launch>
