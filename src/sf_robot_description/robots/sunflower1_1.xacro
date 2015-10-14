@@ -120,6 +120,7 @@
 				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
+				<origin rpy="0 1.5707 0" />
 				<geometry>
 					<cylinder length="0.002" radius="0.015" />
 				</geometry>
@@ -128,6 +129,7 @@
 				</material>
 			</visual>
 			<collision>
+				<origin rpy="0 1.5707 0" />
 				<geometry>
 					<cylinder length="0.002" radius="0.015" />
 				</geometry>
@@ -188,6 +190,7 @@
 				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
+				<origin rpy="0 1.5707 0" />
 				<geometry>
 					<cylinder length="0.015" radius="0.03" />
 				</geometry>
@@ -196,6 +199,7 @@
 				</material>
 			</visual>
 			<collision>
+				<origin rpy="0 1.5707 0" />
 				<geometry>
 					<cylinder length="0.015" radius="0.03" />
 				</geometry>
@@ -242,15 +246,15 @@
 		</gazebo>
 
 		<xacro:eye name="eye_r" parent="${name}">
-			<origin rpy="0.23 1.57 0" xyz="0.12 -0.06 0" />
+			<origin rpy="0 0 -0.23" xyz="0.12 -0.06 0" />
 		</xacro:eye>
 
 		<xacro:eye name="eye_l" parent="${name}">
-			<origin rpy="-0.23 1.57 0" xyz="0.12 0.06 0" />
+			<origin rpy="0 0 0.23" xyz="0.12 0.06 0" />
 		</xacro:eye>
 
 		<xacro:simple_camera name="camera" parent="${name}">
-			<origin rpy="0 1.57 0" xyz="0.11 0.00 -0.02" />
+			<origin rpy="0 0 0" xyz="0.11 0.00 -0.02" />
 		</xacro:simple_camera>
 	</xacro:macro>
 
