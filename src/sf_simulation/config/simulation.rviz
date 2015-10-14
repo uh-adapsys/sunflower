@@ -606,6 +606,15 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Sunflower
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /iha/locations
+      Name: Locations
+      Namespaces:
+        "": true
+        _label: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
