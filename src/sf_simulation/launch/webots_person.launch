@@ -13,6 +13,7 @@
 	          '$(find uh_simulation)/webots/partials/sunflower.partial', 
 	          '$(find uh_simulation)/webots/partials/rosclock.partial', 
 	          '$(find uh_simulation)/webots/partials/barriers.partial']" />
+	<arg name="rviz_config" default="$(find sf_simulation)/config/simulation_person.rviz" />
 
 	<include file="$(find sf_simulation)/launch/webots.launch">
 		<arg name="robot_name" value="$(arg robot_name)" />
@@ -21,6 +22,7 @@
 		<arg name="world_partials" value="$(arg world_partials)" />
 		<arg name="global_frame" value="$(arg global_frame)" />
 		<arg name="static_map" value="$(arg static_map)" />
+		<arg name="rviz_config" value="$(arg rviz_config)" />
 	</include>
 
 	<group ns="$(arg person_ns)">

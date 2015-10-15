@@ -9,6 +9,7 @@
 	<arg name="world_partials"
 		default="['$(find uh_simulation)/webots/partials/sunflower.partial', 
 		          '$(find uh_simulation)/webots/partials/rosclock.partial']" />
+	<arg name="rviz_config" default="$(find sf_simulation)/config/simulation.rviz" />
 
 	<param name="/use_sim_time" value="true" />
 	<include file="$(find sf_simulation)/launch/sim_common.launch">
@@ -16,6 +17,7 @@
 		<arg name="robot_name" value="$(arg robot_name)" />
 		<arg name="global_frame" value="$(arg global_frame)" />
 		<arg name="static_map" value="$(arg static_map)" />
+		<arg name="rviz_config" value="$(arg rviz_config)" />
 	</include>
 
 	<include file="$(find uh_simulation)/launch/start_webots.launch">

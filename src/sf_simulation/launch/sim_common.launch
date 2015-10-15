@@ -3,9 +3,10 @@
 	<arg name="robot_ns" />
 	<arg name="robot_name" />
 	<arg name="global_frame" default="/map" />
-	<arg name="static_map" default="/static_map" />	
+	<arg name="static_map" default="/static_map" />
+	<arg name="rviz_config" default="$(find sf_simulation)/config/simulation.rviz" />	
 	
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find sf_simulation)/config/simulation.rviz" />
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config)" />
 
 	<include file="$(find uh_environments)/launch/robot_house_map.launch">
 		<arg name="frame_id" value="$(arg global_frame)" />
