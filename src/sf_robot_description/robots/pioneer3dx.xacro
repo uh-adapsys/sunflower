@@ -83,7 +83,7 @@
 	<xacro:macro name="gazebo_plugin" params="ns">
 		<gazebo>
 			<plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
-				<alwaysOn>true</alwaysOn>
+				<alwaysOn>1</alwaysOn>
 				<rosDebugLevel>na</rosDebugLevel>
 				<updateRate>100.0</updateRate>
 				<robotNamespace>${ns}</robotNamespace>
@@ -93,11 +93,11 @@
 				<wheelTorque>200</wheelTorque>
 				<wheelSeparation>0.39</wheelSeparation>
 				<wheelDiameter>0.15</wheelDiameter>
-				<publishTf>true</publishTf>
+				<publishTf>1</publishTf>
 				<publishWheelTF>true</publishWheelTF>
 				<publishWheelJointState>true</publishWheelJointState>
 				<commandTopic>cmd_vel</commandTopic>
-				<odometrySource>true</odometrySource>
+				<odometrySource>world</odometrySource>
 				<odometryTopic>odom</odometryTopic>
 				<odometryFrame>odom</odometryFrame>
 				<robotBaseFrame>base_link</robotBaseFrame>

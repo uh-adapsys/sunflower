@@ -15,11 +15,6 @@
 				</material>
 				<origin rpy="-1.57075 0 1.57075" xyz="0 0 0.0" />
 			</visual>
-			<collision>
-				<geometry name="fp04_02mesh">
-					<mesh filename="package://dynamixel_description/meshes/F2.stl" scale="0.001 0.001 0.001" />
-				</geometry>
-			</collision>
 			<inertial>
 				<mass value="0.005" />
 				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"

@@ -22,9 +22,8 @@
 					izz="0.001" />
 			</inertial>
 			<collision>
-				<geometry name="ax12mesh">
-					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
-						scale="0.001 0.001 0.001" />
+				<geometry name="ax12simple">
+					<box size="0.050 0.038 0.032" />
 				</geometry>
 			</collision>
 		</link>
@@ -43,11 +42,6 @@
 				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
 					izz="0.001" />
 			</inertial>
-			<collision>
-				<geometry>
-					<cylinder length="0.005" radius="0.011" />
-				</geometry>
-			</collision>
 		</link>
 		<joint name="${name}_joint" type="revolute">
 			<parent link="${name}_box_link" />
@@ -100,9 +94,8 @@
 			</inertial>
 			<collision>
 				<origin rpy="1.57075 0 3.14159" xyz="-0.012 0 0.019" />
-				<geometry name="ax12mesh">
-					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
-						scale="0.001 0.001 0.001" />
+				<geometry name="ax12simple">
+					<box size="0.050 0.038 0.032" />
 				</geometry>
 			</collision>
 		</link>
