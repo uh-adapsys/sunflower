@@ -10,7 +10,7 @@
 		<arg name="robot_name" value="$(arg robot_name)" />
 	</include>
 
-	<include file="$(find sf_gazebo)/launch/start.launch">
+	<include file="$(find uh_simulation)/launch/robot_house_gazebo.launch">
 		<arg name="gui" value="$(arg gui)"></arg>
 	</include>
 

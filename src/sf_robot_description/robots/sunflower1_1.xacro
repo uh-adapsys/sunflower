@@ -40,6 +40,7 @@
 	</gazebo>
 
 	<!-- Tray -->
+	<!-- TODO: The tray isn't a box -->
 	<xacro:macro name="tray" params="name parent *origin">
 		<joint name="${name}_joint" type="prismatic">
 			<insert_block name="origin" />
@@ -50,10 +51,12 @@
 		</joint>
 		<link name="${name}_link">
 			<inertial>
+				<origin xyz="0 0 0.01" />
 				<mass value="2" />
 				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<visual>
+				<origin xyz="0 0 0.01" />
 				<geometry>
 					<box size="0.23 0.325 0.18" />
 				</geometry>
@@ -62,6 +65,7 @@
 				</material>
 			</visual>
 			<collision>
+				<origin xyz="0 0 0.01" />
 				<geometry>
 					<box size="0.23 0.325 0.18" />
 				</geometry>
@@ -87,17 +91,38 @@
 
 	<!-- Neck -->
 	<xacro:macro name="neck" params="name parent *origin">
-		<xacro:ax12 name="neck_lower" parent="${parent}" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<joint name="${name}_mount_joint" type="fixed">
 			<insert_block name="origin" />
+			<parent link="${parent}_link" />
+			<child link="${name}_link" />
+		</joint>
+		<link name="${name}_link">
+			<inertial>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<mass value="0.0001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+			</inertial>
+			<visual>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<geometry>
+					<box size="0.02 0.02 0.001" />
+				</geometry>
+				<material name="black">
+					<color rgba="0.08 0.08 0.08 1.0" />
+				</material>
+			</visual>
+		</link>
+		<xacro:ax12 name="${name}_lower" parent="${name}" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+			<origin rpy="0 0 1.57079" xyz="0 0 0" />
 		</xacro:ax12>
-		<xacro:fp04_02 name="neck_lower_hinge" parent="neck_lower">
+		<xacro:fp04_02 name="${name}_lower_hinge" parent="${name}_lower">
 		</xacro:fp04_02>
-		<xacro:ax12 name="neck_upper" parent="neck_lower_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12 name="${name}_upper" parent="${name}_lower_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 0" xyz="0 0 0" />
 		</xacro:ax12>
-		<xacro:fp04_02 name="neck_upper_hinge" parent="neck_upper">
+		<xacro:fp04_02 name="${name}_upper_hinge" parent="${name}_upper">
 		</xacro:fp04_02>
-		<xacro:ax12inverted name="head_pan" parent="neck_upper_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
+		<xacro:ax12inverted name="head_pan" parent="${name}_upper_hinge" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
 			<origin rpy="0 0 -1.57079" xyz="0 0 0" />
 		</xacro:ax12inverted>
 		<xacro:ax12 name="head_tilt" parent="head_pan" minPosition="-1.5707" maxPosition="1.5707" maxVelocity="1">
@@ -258,12 +283,33 @@
 		</xacro:simple_camera>
 	</xacro:macro>
 
-	<!--Body -->
+	<!-- Body -->
+	<!-- TODO: Hole for the tray -->
 	<xacro:macro name="body" params="name parent *origin">
 		<joint name="${name}_joint" type="fixed">
 			<insert_block name="origin" />
 			<parent link="${parent}_link" />
 			<child link="${name}_link" />
+		</joint>
+		<joint name="${name}_top_joint" type="fixed">
+			<origin rpy="0 0 0" xyz="0 0 0.505" />
+			<parent link="${name}_link" />
+			<child link="${name}_top_link" />
+		</joint>
+		<joint name="${name}_tray_joint" type="fixed">
+			<origin rpy="0 0 0" xyz="0 0 0.380" />
+			<parent link="${name}_link" />
+			<child link="${name}_tray_link" />
+		</joint>
+		<joint name="${name}_arm_l_joint" type="fixed">
+			<origin rpy="-1.57079 0 0" xyz="0.11 0.165 0.455" />
+			<parent link="${name}_link" />
+			<child link="${name}_arm_l_link" />
+		</joint>
+		<joint name="${name}_arm_r_joint" type="fixed">
+			<origin rpy="1.57079 0 0" xyz="0.11 -0.165 0.455" />
+			<parent link="${name}_link" />
+			<child link="${name}_arm_r_link" />
 		</joint>
 		<link name="${name}_link">
 			<inertial>
@@ -287,23 +333,99 @@
 				</geometry>
 			</collision>
 		</link>
+		<link name="${name}_top_link">
+			<inertial>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<mass value="0.0001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+			</inertial>
+			<visual>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<geometry>
+					<box size="0.02 0.02 0.001" />
+				</geometry>
+				<material name="black">
+					<color rgba="0.08 0.08 0.08 1.0" />
+				</material>
+			</visual>
+		</link>
+		<link name="${name}_tray_link">
+			<inertial>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<mass value="0.0001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+			</inertial>
+			<visual>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<geometry>
+					<box size="0.02 0.02 0.001" />
+				</geometry>
+				<material name="black">
+					<color rgba="0.08 0.08 0.08 1.0" />
+				</material>
+			</visual>
+		</link>
+		<link name="${name}_arm_r_link">
+			<inertial>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<mass value="0.0001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+			</inertial>
+			<visual>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<geometry>
+					<box size="0.02 0.02 0.001" />
+				</geometry>
+				<material name="black">
+					<color rgba="0.08 0.08 0.08 1.0" />
+				</material>
+			</visual>
+		</link>
+		<link name="${name}_arm_l_link">
+			<inertial>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<mass value="0.0001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+			</inertial>
+			<visual>
+				<origin xyz="0 0 0.0005" rpy="0 0 0" />
+				<geometry>
+					<box size="0.02 0.02 0.001" />
+				</geometry>
+				<material name="black">
+					<color rgba="0.08 0.08 0.08 1.0" />
+				</material>
+			</visual>
+		</link>
 		<gazebo reference="${name}_link">
 			<material>Gazebo/White</material>
 		</gazebo>
+		<gazebo reference="${name}_top_link">
+			<material>Gazebo/Black</material>
+		</gazebo>
+		<gazebo reference="${name}_tray_link">
+			<material>Gazebo/Black</material>
+		</gazebo>
+		<gazebo reference="${name}_arm_r_link">
+			<material>Gazebo/Black</material>
+		</gazebo>
+		<gazebo reference="${name}_arm_l_link">
+			<material>Gazebo/Black</material>
+		</gazebo>
 	</xacro:macro>
 
-	<xacro:head name="head" parent="head_tilt_hinge">
-		<origin rpy="0 0 0" xyz="0 0 0" />
-	</xacro:head>
-	<xacro:tray name="tray" parent="base">
-		<origin rpy="0 0 0" xyz="0.01 0 0.645" />
-	</xacro:tray>
-	<xacro:neck name="neck" parent="base">
-		<origin rpy="0 0 1.5707" xyz="0 0 0.75" />
-	</xacro:neck>
 	<xacro:body name="body" parent="base">
 		<origin rpy="0 0 0" xyz="-0.04 0 0.245" />
 	</xacro:body>
+	<xacro:tray name="tray" parent="body_tray">
+		<origin rpy="0 0 0" xyz="0.045 0 0" />
+	</xacro:tray>
+	<xacro:neck name="neck" parent="body_top">
+		<origin rpy="0 0 0" xyz="0 0 0" />
+	</xacro:neck>
+	<xacro:head name="head" parent="head_tilt_hinge">
+		<origin rpy="0 0 0" xyz="0 0 0" />
+	</xacro:head>
 
 	<xacro:hokuyo_04lx_laser_ug01 name="base_laser_front" parent="base" ros_topic="scan_front" update_rate="10"
 		min_angle="-2.094" max_angle="2.094">

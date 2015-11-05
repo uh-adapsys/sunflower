@@ -7,6 +7,7 @@ Created on 12 Mar 2013
 '''
 import sys
 import math
+from threading import Thread
 
 import actionlib
 import rospy
@@ -34,7 +35,9 @@ class SunflowerController(object):
         self._as.start()
 
         rospy.loginfo("Started Sunflower Controller on %s", topic)
-        joint_config = rospy.get_param(joints, {})
+        global ros_param_lock
+        with ros_param_lock:
+            joint_config = rospy.get_param(joints, {})
 
         if 'base' in joint_config:
             # TODO: These should be in a config file
@@ -121,14 +124,15 @@ class SunflowerController(object):
         goal = goalHandle.get_goal()
 
         def updateStatus(status, msg='', *args, **kwargs):
+            rospy.loginfo("Status: %s", msg)
             feedback = SunflowerFeedback()
             feedback.status = status
             feedback.msg = msg if type(msg) == str else ''
             goalHandle.publish_feedback(feedback)
 
-        def completed(result):
+        def completed(result, msg=''):
             status = goalHandle.get_goal_status().status
-            updateStatus(status, "Finished action %s on %s" % (goal.action, goal.robot))
+            updateStatus(status, msg)
 
             if status == actionlib.GoalStatus.ACTIVE:
                 goalHandle.set_succeeded(result)
@@ -138,8 +142,8 @@ class SunflowerController(object):
                 goalHandle.set_canceled(result)
 
         if goal.action in self._actions:
-            updateStatus(goalHandle.get_goal_status().status, "Starting action %s on %s" % (goal.action, goal.robot))
-            self._actions[goal.action](goalHandle, updateStatus, completed)
+            updateStatus(goalHandle.get_goal_status().status, "Starting action %s" % (goal.action, ))
+            Thread(target=self._actions[goal.action], args=(goalHandle, updateStatus, completed)).start()
         else:
             rospy.logwarn("Unknown action %s", goal.action)
             goalHandle.set_rejected()
@@ -190,7 +194,9 @@ class SunflowerController(object):
             doneCB(result, msg)
 
         if goal.namedPosition:
-            goal.jointPositions = rospy.get_param('%s/%s/positions/%s' % (self._joints, goal.component, goal.namedPosition), [None])[0]
+            global ros_param_lock
+            with ros_param_lock:
+                goal.jointPositions = rospy.get_param('%s/%s/positions/%s' % (self._joints, goal.component, goal.namedPosition), [None])[0]
 
         rospy.loginfo("%s: Setting %s to %s",
                       rospy.get_name(),
@@ -294,7 +300,8 @@ class SunflowerController(object):
 
         controller = self._jointControllers.get(name, None)
         if controller:
-            joint_names = rospy.get_param('%s/%s/joint_names' % (self._joints, name), [name, ])
+            with ros_param_lock:
+                joint_names = rospy.get_param('%s/%s/joint_names' % (self._joints, name), [name, ])
             goal = FollowJointTrajectoryGoal()
             goal.trajectory.joint_names = joint_names
             point = JointTrajectoryPoint()
@@ -311,15 +318,17 @@ class SunflowerController(object):
 if __name__ == '__main__':
     rospy.init_node('sf_controller')
 
-    if len(sys.argv) == 1:
-        rospy.set_param('~joints', 'sunflower1_1/joints')
+    global ros_param_lock
+    with ros_param_lock:
+        if len(sys.argv) == 1:
+            rospy.set_param('~joints', 'sunflower1_1/joints')
 
-    try:
-        topic = rospy.get_param('~topic')
-        joints = rospy.get_param('~joints')
-    except KeyError as e:
-        rospy.logfatal("sf_controller Missing param: %s" % (e.message,))
-        exit(0)
+        try:
+            topic = rospy.get_param('~topic')
+            joints = rospy.get_param('~joints')
+        except KeyError as e:
+            rospy.logfatal("sf_controller Missing param: %s" % (e.message,))
+            exit(0)
 
     SunflowerController(topic, joints)
 
