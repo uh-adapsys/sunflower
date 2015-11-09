@@ -5,8 +5,9 @@
 	<arg name="global_frame" default="/map" />
 	<arg name="static_map" default="/static_map" />
 	<arg name="rviz_config" default="$(find sf_simulation)/config/simulation.rviz" />	
+	<arg name="use_gui" default="true" />
 	
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config)" />
+	<node if="$(arg use_gui)" pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config)" />
 
 	<include file="$(find uh_environments)/launch/robot_house_map.launch">
 		<arg name="frame_id" value="$(arg global_frame)" />
