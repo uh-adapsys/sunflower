@@ -6,7 +6,7 @@
 
 	<include file="$(find sf_controller)/launch/start_dynamixels.launch" />
 
-	<node name="sf_controller" pkg="sf_controller" type="controller_server.py" output="screen">
+	<node name="sf_controller" pkg="sf_controller" type="controller_server.py" output="screen" required="true">
 		<param name="topic" value="$(arg topic)" />
 		<param name="joints" value="$(arg joints)" />
 	</node>

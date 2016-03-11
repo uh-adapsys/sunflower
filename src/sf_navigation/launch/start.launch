@@ -10,7 +10,7 @@
 	</include>
 
 	<!-- move_base node -->
-	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" required="true">
 		<rosparam file="$(find sf_navigation)/config/navigation.yaml" command="load" />
 		<rosparam file="$(find sf_navigation)/config/local_planner.yaml" command="load" />
 

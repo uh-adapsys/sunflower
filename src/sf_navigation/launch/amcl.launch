@@ -2,7 +2,7 @@
 	<arg name="odom" default="odom" />
 	<arg name="base_link" default="base_link" />
 
-	<node pkg="amcl" type="amcl" name="amcl" output="screen">
+	<node pkg="amcl" type="amcl" name="amcl" output="screen" required="true">
 		<rosparam file="$(find sf_navigation)/config/amcl.yaml" command="load" />
 		<remap from="scan" to="scan_front" />
 

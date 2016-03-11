@@ -80,7 +80,7 @@
 		reflect="1" />
 	<xacro:p3dx_swivel parent="base" />
 
-	<xacro:macro name="gazebo_plugin" params="ns">
+	<xacro:macro name="p3dx_gazebo_plugin" params="ns">
 		<gazebo>
 			<plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
 				<alwaysOn>1</alwaysOn>

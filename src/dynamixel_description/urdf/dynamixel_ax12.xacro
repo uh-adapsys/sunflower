@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
-	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
-	xmlns:xacro="http://ros.org/wiki/xacro">
-	<xacro:macro name="ax12"
-		params="name parent minPosition maxPosition maxVelocity *origin">
+<robot xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller" xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+	<xacro:macro name="ax12" params="name parent minPosition maxPosition maxVelocity *origin">
 		<link name="${name}_box_link">
 			<visual>
 				<geometry name="ax12mesh">
-					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
-						scale="0.001 0.001 0.001" />
+					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl" scale="0.001 0.001 0.001" />
 				</geometry>
 				<material name="plastic_black">
 					<color rgba="0.33 0.33 0.33 1" />
@@ -18,8 +14,7 @@
 			</visual>
 			<inertial>
 				<mass value="0.01" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<collision>
 				<geometry name="ax12simple">
@@ -39,8 +34,7 @@
 			</visual>
 			<inertial>
 				<mass value="0.001" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 		</link>
 		<joint name="${name}_joint" type="revolute">
@@ -49,6 +43,7 @@
 			<origin xyz="0.0165 0 0.037" />
 			<axis xyz="1 0 0" />
 			<limit effort="0" lower="-1.5707" upper="1.5707" velocity="1" />
+			<dynamics damping="0.1" />
 		</joint>
 		<joint name="${name}_box_joint" type="fixed">
 			<parent link="${parent}_link" />
@@ -60,10 +55,10 @@
 		<transmission name="${name}_trans">
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_joint">
-				<hardwareInterface>PositionJointInterface</hardwareInterface>
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
 			</joint>
 			<actuator name="${name}_motor">
-				<hardwareInterface>PositionJointInterface</hardwareInterface>
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
 				<mechanicalReduction>1</mechanicalReduction>
 			</actuator>
 		</transmission>
@@ -75,13 +70,11 @@
 			<material>Gazebo/White</material>
 		</gazebo>
 	</xacro:macro>
-	<xacro:macro name="ax12inverted"
-		params="name parent minPosition maxPosition maxVelocity *origin">
+	<xacro:macro name="ax12inverted" params="name parent minPosition maxPosition maxVelocity *origin">
 		<link name="${name}_box_link">
 			<visual>
 				<geometry name="ax12mesh">
-					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl"
-						scale="0.001 0.001 0.001" />
+					<mesh filename="package://dynamixel_description/meshes/ax12_box_plain.stl" scale="0.001 0.001 0.001" />
 				</geometry>
 				<material name="plastic_black" />
 				<origin rpy="1.57075 0 3.14159" xyz="-0.012 0 0.019" />
@@ -89,8 +82,7 @@
 			<inertial>
 				<mass value="0.01" />
 				<origin rpy="0 0 0" xyz="-0.012 0 0.019" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 			</inertial>
 			<collision>
 				<origin rpy="1.57075 0 3.14159" xyz="-0.012 0 0.019" />
@@ -109,8 +101,7 @@
 			</visual>
 			<inertial>
 				<mass value="0.001" />
-				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
-					izz="0.001" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
 				<origin rpy="0 0 0" xyz="0 0 0.0025" />
 			</inertial>
 			<collision>
@@ -143,10 +134,10 @@
 		<transmission name="${name}_trans">
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_joint">
-				<hardwareInterface>PositionJointInterface</hardwareInterface>
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
 			</joint>
 			<actuator name="${name}_motor">
-				<hardwareInterface>PositionJointInterface</hardwareInterface>
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
 				<mechanicalReduction>1</mechanicalReduction>
 			</actuator>
 		</transmission>
