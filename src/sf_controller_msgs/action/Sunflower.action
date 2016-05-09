@@ -1,0 +1,13 @@
+#goal definition
+string component
+string action
+string namedPosition
+float64[] jointPositions
+---
+#result definition
+string msg
+int32 result
+---
+#feedback
+string msg
+int32 status

@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:xacro="http://ros.org/wiki/xacro">
+
+	<xacro:macro name="p3dx_swivel" params="parent">
+		<!-- Swivel Joint -->
+		<link name="${parent}_swivel">
+			<inertial>
+				<mass value="0.1" />
+				<origin xyz="0 0 0" />
+				<inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
+			</inertial>
+			<visual name="${parent}_swivel_visual">
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry name="${parent}_swivel_geom">
+					<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/swivel.stl" />
+				</geometry>
+				<material name="swivel">
+					<color rgba="0.5 0.5 0.5 1" />
+				</material>
+			</visual>
+			<collision>
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry>
+					<box size="0 0 0" />
+				</geometry>
+			</collision>
+		</link>
+		<gazebo reference="${parent}_swivel">
+			<material value="Gazebo/Grey" />
+		</gazebo>
+
+		<joint name="${parent}_swivel_joint" type="continuous">
+			<origin xyz="-0.185 0 0.055" rpy="0 0 0" />
+			<axis xyz="0 0 1" />
+			<anchor xyz="0 0 0" />
+			<dynamics damping="0.005" friction="0.03" />
+			<parent link="${parent}_link" />
+			<child link="${parent}_swivel" />
+		</joint>
+
+		<!-- Swivel Wheel + Hubcap -->
+		<link name="${parent}_swivel_wheel_hubcap">
+			<inertial>
+				<mass value="0.01" />
+				<origin xyz="0 0 0" />
+				<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983"
+					iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943" />
+			</inertial>
+			<visual name="${parent}_swivel_wheel_visual">
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry name="${parent}_swivel_wheel_geom">
+					<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/center_hubcap.stl" />
+				</geometry>
+				<material name="HubcapYellow">
+					<color rgba="1.0 0.811 0.151 1.0" />
+				</material>
+			</visual>
+			<collision>
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry>
+					<box size="0 0 0" />
+				</geometry>
+			</collision>
+		</link>
+		<gazebo reference="${parent}_swivel_wheel_hubcap">
+			<material value="Gazebo/Yellow" />
+		</gazebo>
+
+		<joint name="${parent}_swivel_wheel" type="fixed">
+			<origin xyz="-0.0035 0 -0.001" rpy="0 0 0" />
+			<parent link="${parent}_swivel_wheel" />
+			<child link="${parent}_swivel_wheel_hubcap" />
+		</joint>
+
+		<link name="${parent}_swivel_wheel">
+			<inertial>
+				<mass value="0.1" />
+				<origin xyz="0 0 0" />
+				<inertia ixx="0.012411765597" ixy="-0.000711733678" ixz="0.00050272983"
+					iyy="0.015218160428" iyz="-0.000004273467" izz="0.011763977943" />
+			</inertial>
+			<visual name="${parent}_swivel_wheel_visual">
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry name="pioneer_geom">
+					<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/center_wheel.stl" />
+				</geometry>
+				<material name="WheelBlack">
+					<color rgba="0.117 0.117 0.117 1" />
+				</material>
+			</visual>
+			<collision>
+				<origin xyz="0 0 0" rpy="${-3.1415927/2.0} 0 0" />
+				<geometry>
+					<!--<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/center_wheel.stl"/> -->
+					<cylinder radius="0.0375" length="0.01" />
+				</geometry>
+			</collision>
+		</link>
+		<gazebo reference="${parent}_swivel_wheel">
+			<material value="Gazebo/Black" />
+		</gazebo>
+
+		<joint name="${parent}_swivel_wheel_joint" type="continuous">
+			<origin xyz="-0.026 0 -0.016" rpy="0 0 0" />
+			<axis xyz="0 1 0" />
+			<anchor xyz="0 0 0" />
+			<dynamics damping="0.005" friction="0.03" />
+			<parent link="${parent}_swivel" />
+			<child link="${parent}_swivel_wheel" />
+		</joint>
+	</xacro:macro>
+
+	<!-- Hubcap + Wheel -->
+	<xacro:macro name="p3dx_wheel" params="prefix parent reflect">
+		<link name="${parent}_${prefix}_hubcap">
+			<inertial>
+				<mass value="0.01" />
+				<origin xyz="0 0 0" />
+				<inertia ixx="0.012411765597" ixy="0" ixz="0" iyy="0.015218160428"
+					iyz="0" izz="0.011763977943" />
+			</inertial>
+			<visual name="${parent}_${prefix}_hubcap_visual">
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry name="${parent}_${prefix}_hubcap_geom">
+					<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/${prefix}_hubcap.stl" />
+				</geometry>
+				<material name="HubcapYellow">
+					<color rgba="1.0 0.811 0.151 1.0" />
+				</material>
+			</visual>
+		</link>
+		<gazebo reference="${parent}_${prefix}_hubcap">
+			<material value="Gazebo/Yellow" />
+		</gazebo>
+
+		<joint name="base_${prefix}_hubcap_joint" type="fixed">
+			<!-- <origin xyz="0 ${reflect*0.158} 0.091" rpy="0 0 0" /> -->
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<parent link="${parent}_${prefix}_wheel" />
+			<child link="${parent}_${prefix}_hubcap" />
+		</joint>
+
+		<link name="${parent}_${prefix}_wheel">
+			<inertial>
+				<mass value="0.5" />
+				<origin xyz="0 0 0" />
+				<inertia ixx="0.012411765597" ixy="0" ixz="0" iyy="0.015218160428"
+					iyz="0" izz="0.011763977943" />
+			</inertial>
+			<visual name="${parent}_${prefix}_wheel_visual">
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry name="${parent}_${prefix}_wheel_geom">
+					<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/${prefix}_wheel.stl" />
+				</geometry>
+				<material name="WheelBlack">
+					<color rgba="0.117 0.117 0.117 1" />
+				</material>
+			</visual>
+			<collision>
+				<origin xyz="0 0 0" rpy="${-3.1415927/2} 0 0" />
+				<geometry>
+					<!--<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/${prefix}_wheel.stl"/> -->
+					<cylinder radius="0.09" length="0.01" />
+				</geometry>
+			</collision>
+		</link>
+		<gazebo reference="${parent}_${prefix}_wheel">
+			<material value="Gazebo/Black" />
+		</gazebo>
+
+		<joint name="${parent}_${prefix}_wheel_joint" type="continuous">
+			<axis xyz="0 1 0" />
+			<anchor xyz="0 0 0" />
+			<limit effort="100" velocity="100" />
+			<dynamics damping="0.0" friction="0.0" />
+			<origin xyz="0 ${reflect*0.158} 0.091" rpy="0 0 0" />
+			<parent link="${parent}_link" />
+			<child link="${parent}_${prefix}_wheel" />
+		</joint>
+
+		<transmission name="${parent}_${prefix}_wheel_trans">
+			<type>transmission_interface/SimpleTransmission</type>
+			<joint name="${parent}_${prefix}_wheel_joint">
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
+			</joint>
+			<actuator name="${parent}_${prefix}_wheel_motor">
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
+				<mechanicalReduction>${reflect * (624/35) * (80/19)}</mechanicalReduction>
+			</actuator>
+		</transmission>
+	</xacro:macro>
+</robot>

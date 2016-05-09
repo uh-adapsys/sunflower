@@ -1,0 +1,30 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<arg name="robot_name" default="sunflower1_1" />
+	<arg name="robot_ns" default="/$(arg robot_name)" />
+	<arg name="global_frame" default="/map" />
+	<arg name="static_map" default="/static_map" />
+	<arg name="world" default="$(find uh_simulation)/webots/worlds/robotHouse.wbt" />
+	<arg name="world_partials"
+		default="['$(find uh_simulation)/webots/partials/sunflower.partial', 
+		          '$(find uh_simulation)/webots/partials/rosclock.partial']" />
+	<arg name="rviz_config" default="$(find sf_simulation)/config/simulation.rviz" />
+	<arg name="use_gui" default="true" />
+
+	<param name="/use_sim_time" value="true" />
+	<include file="$(find sf_simulation)/launch/sim_common.launch">
+		<arg name="robot_ns" value="$(arg robot_ns)" />
+		<arg name="robot_name" value="$(arg robot_name)" />
+		<arg name="global_frame" value="$(arg global_frame)" />
+		<arg name="static_map" value="$(arg static_map)" />
+		<arg name="rviz_config" value="$(arg rviz_config)" />
+		<arg name="use_gui" value="$(arg use_gui)" />
+	</include>
+
+	<include file="$(find uh_simulation)/launch/start_webots.launch">
+		<arg name="world" value="$(arg world)" />
+		<arg name="partials" value="$(arg world_partials)" />
+		<arg name="args" value="--minimize" unless="$(arg use_gui)" />
+	</include>
+</launch>

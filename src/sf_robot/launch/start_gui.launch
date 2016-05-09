@@ -1,0 +1,5 @@
+<!-- -*- mode: XML -*- -->
+<launch>
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find sf_robot)/config/sunflower.rviz" />
+	<include file="$(find sf_robot)/launch/dashboard.launch" />
+</launch>

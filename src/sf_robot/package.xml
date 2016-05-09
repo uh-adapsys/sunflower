@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package>
+	<name>sf_robot</name>
+	<version>1.0.0</version>
+	<description>Launch files for the Sunflower robot</description>
+	<maintainer email="n.burke@natbur.com">Nathan Burke</maintainer>
+	<license>MIT</license>
+	
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<run_depend>hokuyo_node</run_depend>
+	<run_depend>joy</run_depend>
+	<run_depend>p2os_dashboard</run_depend>
+	<run_depend>p2os_teleop</run_depend>
+	<run_depend>p2os_driver</run_depend>
+	<run_depend>p2os_urdf</run_depend>
+	<run_depend>pr2_teleop</run_depend>
+	
+	<run_depend>sf_controller</run_depend>
+	<run_depend>sf_lights</run_depend>
+	<run_depend>sf_robot_description</run_depend>
+	<run_depend>uh_environments</run_depend>
+</package>

@@ -1,0 +1,9 @@
+<!-- -*- mode: XML -*- -->
+<launch>
+	<include file="$(find uh_environments)/launch/robot_house_map.launch" />
+
+	<include file="$(find sf_robot)/launch/sunflower.launch">
+		<arg name="robot_name" value="sunflower1_1" />
+		<arg name="robot_controller" value="/sf_controller" />
+	</include>
+</launch>

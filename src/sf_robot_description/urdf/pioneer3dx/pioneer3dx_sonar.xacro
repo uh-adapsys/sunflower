@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:xacro="http://ros.org/wiki/xacro">
+
+	<!-- Sonar -->
+	<xacro:macro name="p3dx_sonar" params="parent prefix *origin">
+		<link name="${parent}_${prefix}_sonar">
+			<inertial>
+				<mass value="0.0001" />
+				<origin xyz="0 0 0" />
+				<inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+			</inertial>
+			<visual name="${parent}_${prefix}_sonar_visual">
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry name="${prefix}_sonar_geom">
+					<mesh filename="package://p2os_urdf/meshes/p3dx_meshes/${prefix}_sonar.stl" />
+				</geometry>
+				<material name="SonarYellow">
+					<color rgba="0.715 0.583 0.210 1.0" />
+				</material>
+			</visual>
+			<collision>
+				<origin xyz="0 0 0" rpy="0 0 0" />
+				<geometry>
+					<box size="0 0 0" />
+				</geometry>
+			</collision>
+		</link>
+		<gazebo reference="${prefix}_sonar">
+			<material value="Gazebo/Yellow" />
+		</gazebo>
+
+		<joint name="${parent}_${prefix}_sonar_joint" type="fixed">
+			<insert_block name="origin" />
+			<parent link="${parent}_link" />
+			<child link="${parent}_${prefix}_sonar" />
+		</joint>
+	</xacro:macro>
+</robot>

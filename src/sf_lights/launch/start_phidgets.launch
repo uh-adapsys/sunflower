@@ -1,0 +1,8 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+	<arg name="topic" default="sf_lights" />
+	<node pkg="sf_lights" type="sf_lights" name="lights" required="true" output="screen">
+		<param name="topic" value="$(arg sf_lights)" />
+	</node>
+</launch>

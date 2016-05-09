@@ -1,0 +1,36 @@
+<launch>
+	<arg name="robot_name" default="sunflower1_1" />
+	<arg name="robot_ns" default="/$(arg robot_name)" />
+	<arg name="person_name" default="person" />
+	<arg name="person_ns" default="/$(arg person_name)" />
+	<arg name="gui" default="True" />
+
+	<include file="$(find sf_simulation)/launch/sim_common.launch">
+		<arg name="robot_ns" value="$(arg robot_ns)" />
+		<arg name="robot_name" value="$(arg robot_name)" />
+	</include>
+
+	<include file="$(find uh_simulation)/launch/robot_house_gazebo.launch" />
+
+	<!-- <include file="$(find uh_simulation)/launch/start_person_sim.launch" ns="$(arg person_ns)"> -->
+	<!-- <arg name="ns" value="$(arg person_ns)" /> -->
+	<!-- </include> -->
+
+	<group ns="$(arg robot_ns)">
+		<!-- Load joing parameters -->
+		<rosparam file="$(find sf_simulation)/config/jointParams.yaml" command="load" />
+	<param name="/robot_description" command="$(find xacro)/xacro.py $(find sf_robot_description)/robots/$(arg robot_name).xacro" />
+
+		<!-- Spawn a robot into Gazebo -->
+		<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model sf1_1 -z 0.05 -Y 3.14159" />
+
+		<remap from="/robot_description" to="$(arg robot_ns)/robot_description" />
+		<remap from="robot_description" to="$(arg robot_ns)/robot_description" />
+		<!-- load the controllers -->
+		<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+			args="tray_controller neck_lower_controller neck_upper_controller head_pan_controller head_tilt_controller joint_state_controller">
+			<remap from="/robot_description" to="$(arg robot_ns)/robot_description" />
+			<remap from="robot_description" to="$(arg robot_ns)/robot_description" />
+		</node>
+	</group>
+</launch>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot 
+	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:xacro="http://ros.org/wiki/xacro">
+	<xacro:macro name="fp04_02" params="name parent">
+		<link name="${name}_mesh_link">
+			<visual>
+				<geometry name="fp04_02mesh">
+					<mesh filename="package://dynamixel_description/meshes/F2.stl" scale="0.001 0.001 0.001" />
+				</geometry>
+				<material name="plastic_green">
+					<color rgba="0.1 0.8 0.3 1" />
+				</material>
+				<origin rpy="-1.57075 0 1.57075" xyz="0 0 0.0" />
+			</visual>
+			<inertial>
+				<mass value="0.005" />
+				<inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0"
+					izz="0.001" />
+				<origin rpy="0 0 0" xyz="0 0 0.0025" />
+			</inertial>
+		</link>
+		<link name="${name}_link"></link>
+		<joint name="${name}_joint" type="fixed">
+			<parent link="${name}_mesh_link" />
+			<child link="${name}_link" />
+			<origin xyz="0 0 0.027" />
+		</joint>
+		<joint name="${name}_mesh_joint" type="fixed">
+			<parent link="${parent}_link" />
+			<child link="${name}_mesh_link" />
+			<origin xyz="-0.015 0 0" />
+		</joint>
+		<gazebo reference="${name}_mesh_link">
+			<material>Gazebo/Green</material>
+		</gazebo>
+	</xacro:macro>
+</robot>
